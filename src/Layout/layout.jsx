@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import './style.css';
 import SettingsDropdown from './SettingsDropdown';
 
+
+
 const Layout = () => {
   const [navbarOpen, setNavbarOpen] = useState(false);
   const [activeLink, setActiveLink] = useState('Dashboard');
@@ -10,6 +12,7 @@ const Layout = () => {
     setNavbarOpen(!navbarOpen);
   };
 
+ 
   const handleLinkClick = (linkName) => {
     setActiveLink(linkName);
   };
@@ -59,7 +62,7 @@ const Layout = () => {
                 <span className="nav_name">Dashboard</span>
               </a>
               <a
-                href="#"
+                href="Users"
                 className={`nav_link ${activeLink === 'Users' ? 'active' : ''}`}
                 onClick={() => handleLinkClick('Users')}
               >
@@ -120,7 +123,7 @@ const Layout = () => {
         </nav>
       </div>
       <div className="height-100 bg-light">
-        <h4>Main Components</h4>
+       
       </div>
     </div>
   );

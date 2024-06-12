@@ -1,11 +1,13 @@
 import './App.css'
-import Layout from './Layout/layout'
+import FieldConfig from './FieldConfiguration/FieldConfig'
+
 
 function App() {
 
   return (
     <>
-     <Layout/>
+    
+     <FieldConfig/>
     </>
   )
 }
