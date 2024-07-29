@@ -1,0 +1,29 @@
+.tabcircle {
+  width: 70px;
+  height: 70px;
+  background-color: #fff;
+  position: relative;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px #dadada;
+}
+.tabcircle span i{
+  position: relative;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 25px;
+}
+.tabline{
+  width:24%;
+  height: 2px;
+  box-shadow: 0 1px 3px #dadada;
+  background-color: #dadada;
+}
+.alert-success {
+  color: green;
+  font-weight: bold;
+}
+.alert-error {
+  color: red;
+  font-weight: bold;
+}

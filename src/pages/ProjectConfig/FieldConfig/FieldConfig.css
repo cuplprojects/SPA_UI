@@ -1,0 +1,17 @@
+.field-configuration {
+    padding: 2rem;
+  }
+  
+  .field-configuration h2 {
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-inline .form-group {
+    margin-right: 1rem;
+    display: inline-block; /* Display inline-block to keep form groups in one row */
+  }
+  
+  .form-inline .form-control {
+    width: auto;
+    vertical-align: middle;
+  }

@@ -1,0 +1,64 @@
+# Ignore shell scripts
+*.sh
+
+# Ignore node_modules directory
+node_modules
+
+# Ignore lock files
+*.lock
+
+# Ignore SVG files
+**/*.svg
+
+# Ignore Markdown files
+**/*.md
+
+# Ignore EJS files
+**/*.ejs
+
+# Ignore HTML files
+**/*.html
+
+# Ignore PNG files
+**/*.png
+
+# Ignore TOML files
+**/*.toml
+
+# Ignore .vscode directory
+.vscode
+
+# Ignore .idea directory
+.idea
+
+# Ignore dist directory
+dist
+
+# Ignore public directory
+/public
+
+# Ignore docs directory
+/docs
+
+# Ignore .husky directory
+.husky
+
+# Ignore .local directory
+.local
+
+# Ignore bin directory
+/bin
+
+# Ignore Dockerfile
+Dockerfile
+
+# Ignore pnpm lock file
+pnpm-lock.yaml
+
+# Ignore tsconfig.node.json file
+tsconfig.node.json
+
+# Ignore _mock directory under src
+/src/_mock
+
+msw

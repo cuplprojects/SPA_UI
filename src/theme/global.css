@@ -1,0 +1,15 @@
+/* editor */
+@import 'react-quill/dist/quill.snow.css';
+
+/* simplebar */
+@import 'simplebar-react/dist/simplebar.min.css';
+
+/*Import Tailwind CSS base styles (also called "base" styles) into the current file, including some basic HTML element styles, resetting element default styles, etc.*/
+@import 'tailwindcss/base';
+
+/*Import Tailwind CSS component styles, including predefined button, table, form, card and other component styles.*/
+@import 'tailwindcss/components';
+
+/*Import utility classes from Tailwind CSS. These classes are usually used to add styles related to layout, spacing, responsive design, etc., allowing you to quickly build complex pages.*/
+@import 'tailwindcss/utilities';
+

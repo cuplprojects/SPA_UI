@@ -1,0 +1,5 @@
+.form-control:focus,
+.form-control:active,
+.form-control:hover {
+  box-shadow: none !important;
+}
