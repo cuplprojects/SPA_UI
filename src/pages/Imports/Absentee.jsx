@@ -9,8 +9,7 @@ const Absentee = ({
   mapping,
   handleMappingChange,
   loading,
-  alertMessage,
-  alertType,
+ 
 }) => {
   const [isValidData, setIsValidData] = useState(false);
 
@@ -69,11 +68,7 @@ const Absentee = ({
           </button>
         </div>
       )}
-      {alertMessage && (
-        <div className={`alert alert-${alertType} mt-3`} role="alert">
-          {alertMessage}
-        </div>
-      )}
+   
     </>
   );
 };

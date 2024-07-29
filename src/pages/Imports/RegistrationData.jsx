@@ -7,8 +7,7 @@ const Registration = ({
   headers,
   registrationMapping,
   handleRegistrationMappingChange,
-  alertMessage,
-  alertType,
+ 
   loading,
 }) => {
   const [isValidData, setIsValidData] = useState(false);
@@ -74,11 +73,7 @@ const Registration = ({
           </button>
         )}
       </div>
-      {alertMessage && (
-        <div className={`alert alert-${alertType} mt-3`} role="alert">
-          {alertMessage}
-        </div>
-      )}
+     
     </>
   );
 };

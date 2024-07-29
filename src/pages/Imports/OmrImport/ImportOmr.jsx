@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Button, Progress, Alert } from 'antd';
+import { Button, Progress, notification } from 'antd';
 import { useProjectId } from '@/store/ProjectState';
 import { handleEncrypt } from '@/Security/Security';
 import { useDatabase } from '@/store/DatabaseStore';
@@ -15,9 +15,9 @@ const ImportOmr = () => {
   const [showSkipAllBtn, setShowSkipAllBtn] = useState(false);
   const [showReplaceAllBtn, setShowReplaceAllBtn] = useState(false);
   const [conflictingFiles, setConflictingFiles] = useState([]);
-  const [alertMessage, setAlertMessage] = useState('');
+  
   const [lastUploadedFile, setLastUploadedFile] = useState('');
-  const [alertType, setAlertType] = useState('');
+
   const [progress, setProgress] = useState(0);
 
   const ProjectId = useProjectId();
@@ -120,11 +120,16 @@ const ImportOmr = () => {
       setShowReplaceBtn(true);
       setShowSkipAllBtn(true);
       setShowReplaceAllBtn(true);
-      setAlertMessage('Some files have conflicts.');
-      setAlertType('warning');
+      notification.warning({
+        message: 'Some files have conflicts.',
+        duration: 3
+      })
     } else {
-      setAlertMessage('All files uploaded successfully.');
-      setAlertType('success');
+      notification.success({
+        message: 'All files uploaded successfully.',
+        duration: 3
+      })
+   
       setFiles([]);
     }
     setLoading(false);
@@ -149,8 +154,7 @@ const ImportOmr = () => {
       setShowReplaceBtn(false);
       setShowSkipAllBtn(false);
       setShowReplaceAllBtn(false);
-      setAlertMessage('');
-      setAlertType('');
+      
       setLoading(false);
     }
   };
@@ -176,13 +180,15 @@ const ImportOmr = () => {
     setShowReplaceBtn(false);
     setShowSkipAllBtn(false);
     setShowReplaceAllBtn(false);
-    setAlertMessage('');
-    setAlertType('');
+   
     setLoading(false);
   };
 
   return (
-    <div>
+    <>
+    <div className='d-flex align-items-center justify-content-between'>
+    
+     <h3 className="head fs-3 text-center">Upload OMR Images</h3>
       <form onSubmit={handleSubmit}>
         <input
           type="file"
@@ -196,19 +202,7 @@ const ImportOmr = () => {
           Upload Files
         </Button>
       </form>
-      {alertMessage && (
-        <Alert
-          message={alertMessage}
-          type={alertType}
-          showIcon
-          className="my-5"
-          closable
-          onClose={() => {
-            setAlertMessage('');
-            setAlertType('');
-          }}
-        />
-      )}
+  
       <div className="d-flex gap-4">
         {showSkipBtn && (
           <Button danger onClick={() => resolveConflict(conflictingFiles[0], 'skip')}>
@@ -231,9 +225,11 @@ const ImportOmr = () => {
           </Button>
         )}
       </div>
-      {loading && <Progress percent={progress} status="active" />}
-      {lastUploadedFile && <p>Last Uploaded File: {lastUploadedFile}</p>}
+      
     </div>
+    {loading && <Progress percent={progress} status="active" />}
+      {lastUploadedFile && <p>Last Uploaded File: {lastUploadedFile}</p>}
+    </>
   );
 };
 

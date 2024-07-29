@@ -4,8 +4,7 @@ const Scanned = ({
   handleFileUpload,
   handleScannedUpload,
   selectedFile,
-  alertMessage,
-  alertType,
+  
   loading,
   headers,
   fieldMappings,
@@ -84,11 +83,7 @@ const Scanned = ({
             {loading ? 'Uploading...' : 'Upload'}
           </button>
         )}
-        {alertMessage && (
-          <div className={`alert alert-${alertType} mt-3`} role="alert">
-            {alertMessage}
-          </div>
-        )}
+       
       </div>
     </>
   );

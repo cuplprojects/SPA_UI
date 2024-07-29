@@ -600,8 +600,7 @@ const Import = () => {
                     onClick={() => {
                       setActivetab('scanned');
                       setSelectedFile(null);
-                      setAlertMessage(null);
-                      setAlertType(null);
+                      
                       setHeaders([]);
                     }}
                   >
@@ -620,8 +619,7 @@ const Import = () => {
                       setActivetab('registration');
                       setSelectedFile(null);
                       setHeaders([]);
-                      setAlertMessage(null);
-                      setAlertType(null);
+                   
                     }}
                   >
                     <a data-toggle="tab" title="Registration Data">
@@ -639,8 +637,7 @@ const Import = () => {
                       setActivetab('absentee');
                       setSelectedFile(null);
                       setHeaders([]);
-                      setAlertMessage(null);
-                      setAlertType(null);
+                     
                     }}
                   >
                     <a data-toggle="tab" title="Absentee Data">
@@ -659,8 +656,7 @@ const Import = () => {
                     handleFileUpload={handleFileUpload}
                     handleScannedUpload={handleScannedUpload}
                     selectedFile={selectedFile}
-                    alertMessage={alertMessage}
-                    alertType={alertType}
+                  
                     loading={loading}
                     headers={headers}
                     fieldMappings={fieldMappings}
@@ -672,8 +668,7 @@ const Import = () => {
                     handleFileUpload={handleFileUpload}
                     handleRegistrationUpload={handleRegistrationUpload}
                     selectedFile={selectedFile}
-                    alertMessage={alertMessage}
-                    alertType={alertType}
+                 
                     headers={headers}
                     registrationMapping={registrationMapping}
                     handleRegistrationMappingChange={handleRegistrationMappingChange}
@@ -685,8 +680,7 @@ const Import = () => {
                     handleFileUpload={handleFileUpload}
                     handleAbsenteeUpload={handleAbsenteeUpload}
                     selectedFile={selectedFile}
-                    alertMessage={alertMessage}
-                    alertType={alertType}
+                   
                     headers={headers}
                     mapping={mapping}
                     handleMappingChange={handleMappingChange}
