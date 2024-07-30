@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Form, Input, InputNumber, Popconfirm, Table, Typography, message, Select,Modal, notification } from 'antd';
+import { Button, Form, Input, InputNumber, Popconfirm, Table, Typography, message, Select, Modal, notification } from 'antd';
 import './Project.css';
 import { useUserInfo } from '@/store/UserDataStore';
 import axios from 'axios';
 import { useDatabase } from '@/store/DatabaseStore';
+import ImportProject from './ImportProject';
 
 const apiurl = import.meta.env.VITE_API_URL;
 
@@ -65,17 +66,18 @@ function Project() {
   const [sortedInfo, setSortedInfo] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [users, setUsers] = useState([]);
-  const {userId} = useUserInfo();
+  const { userId } = useUserInfo();
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState('');
   const database = useDatabase();
+  const [filteredData, setFilteredData] = useState([]);
 
   useEffect(() => {
     fetchData();
     fetchUsers();
   }, []);
 
- 
+
 
   const fetchData = async () => {
     try {
@@ -84,14 +86,14 @@ function Project() {
         ...item,
         key: item.projectId.toString(),
       }));
-    
+
       setData(fetchedData);
-      // setFilteredData(fetchedData); // Update filteredData as well
+      setFilteredData(fetchedData); // Update filteredData as well
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
-  
+
   const fetchUsers = async () => {
     try {
       const response = await fetch(`${apiurl}/Users?WhichDatabase=${database}`);
@@ -128,6 +130,7 @@ function Project() {
       const newData = [...data];
       newData.pop();
       setData(newData);
+      setFilteredData(newData);
       setHasUnsavedChanges(false);
     }
   };
@@ -137,7 +140,7 @@ function Project() {
       const row = await form.validateFields();
       const newData = [...data];
       const index = newData.findIndex((item) => key === item.key);
-  
+
       if (index > -1) {
         const isDuplicate = newData.some((item, idx) => idx !== index && item.projectName === row.projectName);
         if (isDuplicate) {
@@ -147,14 +150,14 @@ function Project() {
           });
           return;
         }
-  
+
         const item = newData[index];
         const updatedRow = {
           ...item,
           ...row,
           userAssigned: row.userAssigned.map(userName => users.find(user => user.label === userName)?.value || userName) // Convert user names to IDs
         };
-  
+
         if (item.method === 'POST') {
           await addRow(updatedRow);
         } else {
@@ -162,6 +165,7 @@ function Project() {
           await updateRow(updatedRow);
         }
         setData(newData);
+        setFilteredData(newData);
         setEditingKey('');
         setHasUnsavedChanges(false);
       } else {
@@ -173,13 +177,14 @@ function Project() {
           });
           return;
         }
-  
+
         const newRow = {
           ...row,
           userAssigned: row.userAssigned.map(userName => users.find(user => user.label === userName)?.value || userName) // Convert user names to IDs
         };
         await addRow(newRow);
         setData([...newData, newRow]);
+        setFilteredData([...newData, newRow]);
         setEditingKey('');
         setHasUnsavedChanges(false);
       }
@@ -187,8 +192,8 @@ function Project() {
       console.log('Validate Failed:', errInfo);
     }
   };
-  
-  
+
+
 
   const updateRow = async (updatedRow) => {
     try {
@@ -210,7 +215,7 @@ function Project() {
       console.error('Error updating project:', error);
     }
   };
-  
+
 
   const addRow = async (newRow) => {
     try {
@@ -249,14 +254,16 @@ function Project() {
             },
           },
         );
-  
+
         if (response.ok) {
           notification.success({
             message: 'Success',
             description: 'Project Archived successfully',
-            duration:2
+            duration: 2
           });
-          setData(data.filter((item) => item.key !== projectToArchive));
+          const newData = data.filter((item) => item.key !== projectToArchive);
+          setData(newData);
+          setFilteredData(newData); // Update filteredData as well
         } else {
           notification.error({
             message: 'Error',
@@ -272,14 +279,19 @@ function Project() {
       }
     }
   };
-  
+
 
   const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    const filteredData = data.filter(item =>
-      item.projectName.toLowerCase().includes(e.target.value.toLowerCase())
-    );
-    setData(filteredData);
+    const { value } = e.target;
+    setSearchTerm(value);
+    if (value) {
+      const filteredData = data.filter(item =>
+        item.projectName.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredData(filteredData);
+    } else {
+      setFilteredData(data); // Reset to full data when search term is cleared
+    }
   };
 
   const handleAdd = () => {
@@ -292,9 +304,15 @@ function Project() {
       method: 'POST',
     };
     setData([...data, newData]);
+    setFilteredData(updatedData);
     setEditingKey(newRowKey.toString());
     setHasUnsavedChanges(true);
   };
+
+  const handleImport = () => {
+
+  }
+
 
   const columns = [
     {
@@ -380,23 +398,27 @@ function Project() {
 
   return (
     <div className="mt-5">
-      <div className="d-flex align-items-center justify-content-between w-100"  style={{ marginBottom: 16 }}>
-      <Button
-        onClick={handleAdd}
-        type="primary"
-        style={{ marginBottom: 16 }}
-        disabled={hasUnsavedChanges}
+      <div className="d-flex align-items-center justify-content-between w-100" style={{ marginBottom: 16 }}>
+        <Button
+          onClick={handleAdd}
+          type="primary"
+          style={{ marginBottom: 16 }}
+          disabled={hasUnsavedChanges}
         >
-        Add Project
-      </Button>
+          Add Project
+        </Button>
+        <Button>
+
+          <ImportProject />
+        </Button>
         <Input
           placeholder="Search Project"
           value={searchTerm}
           onChange={handleSearchChange}
           style={{ width: 100, marginRight: 8 }}
         />
-      
-        </div>
+
+      </div>
       <Form form={form} component={false}>
         <Table
           components={{
@@ -405,7 +427,7 @@ function Project() {
             },
           }}
           bordered
-          dataSource={data}
+          dataSource={filteredData}
           columns={mergedColumns}
           rowClassName="editable-row"
           pagination={{ onChange: cancel }}
