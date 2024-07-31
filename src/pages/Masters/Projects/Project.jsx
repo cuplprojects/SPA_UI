@@ -83,6 +83,7 @@ function Project() {
       const fetchedData = response.data.map((item, index) => ({
         ...item,
         key: item.projectId.toString(),
+        serialNo: index + 1,
       }));
     
       setData(fetchedData);
@@ -251,6 +252,7 @@ function Project() {
         );
   
         if (response.ok) {
+          fetchData()
           notification.success({
             message: 'Success',
             description: 'Project Archived successfully',
@@ -298,11 +300,12 @@ function Project() {
 
   const columns = [
     {
-      title: 'Project ID', // Changed from 'Serial No' to 'Project ID'
-      dataIndex: 'projectId', // Changed from 'serialNo' to 'projectId'
+      title: 'Serial No',
+      dataIndex: 'serialNo',
       width: '10%',
-      sorter: (a, b) => a.projectId - b.projectId, // Updated sorter
-      sortOrder: sortedInfo.columnKey === 'projectId' && sortedInfo.order, // Updated sortOrder
+      sorter: (a, b) => a.serialNo - b.serialNo,
+      sortOrder: sortedInfo.columnKey === 'serialNo' && sortedInfo.order,
+      render: (text) => <span>{text}</span>,
     },
     {
       title: 'Project Name',

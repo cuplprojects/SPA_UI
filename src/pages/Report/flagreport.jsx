@@ -1,575 +1,261 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Row, Col, Dropdown, Menu, message, Select } from 'antd';
-import axios from 'axios';
-import { PDFViewer } from '@react-pdf/renderer';
-import PDFReport from './PdfReport';
-import { useUserInfo } from '@/store/UserDataStore';
+import { Card, Button, Row, Col, Typography, message, Dropdown, Menu, Input, Table } from 'antd';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { useProjectId } from '@/store/ProjectState';
 import { useDatabase } from '@/store/DatabaseStore';
+import { fetchUserName } from '@/CustomHooks/useUserName';
 
-const apiUrl = import.meta.env.VITE_API_URL; // Adjust API URL as needed
+const { Title } = Typography;
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const ReportForm = () => {
-  const [projectOptions, setProjectOptions] = useState([]);
-  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [projectName, setProjectName] = useState('');
   const [data, setData] = useState([]);
-  const [previewType, setPreviewType] = useState(null);
-  const { userId } = useUserInfo();
+  const [reportGenerated, setReportGenerated] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const projectId = useProjectId();
   const database = useDatabase();
 
-  // Fetch Projects Onload
   useEffect(() => {
-    fetchProjects();
+    fetchProjectDetails();
   }, []);
 
-  // Fetch data when project changes
-  useEffect(() => {
-    if (selectedProjectId) {
-      fetchFlagsByProject(selectedProjectId);
+  const fetchProjectDetails = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/Projects/1?WhichDatabase=${database}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setProjectName(data.projectName);
+    } catch (error) {
+      console.error('Error fetching project details:', error);
     }
-  }, [selectedProjectId]);
-
-  // Fetch Projects function
-  const fetchProjects = () => {
-    axios
-      .get(`${apiUrl}/Projects/YourProject?WhichDatabase=${database}&userId=${userId}`)
-      .then((response) => {
-        const options = response.data.map((project) => ({
-          value: project.projectId,
-          label: project.projectName || 'Unnamed Project',
-        }));
-        setProjectOptions(options);
-      })
-      .catch((error) => {
-        console.error('Error fetching projects:', error);
-      });
   };
 
-  // Fetch flags by the project ID
-  const fetchFlagsByProject = (projectId) => {
-    axios
-      .get(`${apiUrl}/Flags/GetFlagbyProject/${projectId}`)
-      .then((response) => {
-        setData(response.data || []);
-      })
-      .catch((error) => {
-        console.error('Error fetching flags:', error);
-      });
+  const fetchFlagData = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/Flags/ByProject/${projectId}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const flagData = await response.json();
+      console.log('Fetched Flag Data:', flagData); // Debugging statement
+
+      const updatedData = await Promise.all(flagData.map(async (item, index) => {
+        const updatedByName = await fetchUserName(item?.updatedByUserId, database);
+        return {
+          key: index + 1,
+          'S.No.': index + 1,
+          'Field': item.field,
+          'Old Value': item.fieldNameValue,
+          'Remarks': item.remarks,
+          'Bar Code': item.barCode,
+          'Updated By': updatedByName || '', // Ensure there's always a value
+        };
+      }));
+
+      console.log('Updated Data:', updatedData); // Debugging statement
+      setData(updatedData);
+      setReportGenerated(true);
+    } catch (error) {
+      console.error('Error fetching flag data:', error);
+    }
   };
 
-  // Handle project change
-  const handleProjectChange = (value) => {
-    setSelectedProjectId(value);
-  };
-
-  // Handle menu click for preview
   const handleMenuClick = (e) => {
-    if (e.key === 'pdf') {
-      setPreviewType('pdf');
-    } else {
-      message.error('Invalid option');
+    switch (e.key) {
+      case 'pdf':
+        handlePDFAction();
+        break;
+      case 'excel':
+        handleExcelAction();
+        break;
+      default:
+        message.error('Invalid option');
     }
   };
 
-  const menu = (
-    <Menu onClick={handleMenuClick}>
-      <Menu.Item key="pdf">Open PDF Report</Menu.Item>
-    </Menu>
-  );
+  const handlePDFAction = () => {
+    const doc = new jsPDF();
+  
+    // Title
+    doc.text(`Flag Report for ${projectName}`, 14, 16);
+  
+    // Columns and Rows
+    const tableColumn = ['S.No.', 'Field', 'Old Value', 'Remarks', 'Bar Code', 'Updated By'];
+    const tableRows = data.map(item => [
+      item['S.No.'],
+      item['Field'],
+      item['Old Value'],
+      item['Remarks'],
+      item['Bar Code'],
+      item['Updated By']
+    ]);
+  
+    // Add Table
+    doc.autoTable({
+      head: [tableColumn], // Header columns
+      body: tableRows,    // Row data
+      startY: 30,         // Position below title
+      styles: {
+        fontSize: 6,
+        cellPadding: 2,
+        lineColor: [44, 62, 80],
+        lineWidth: 0.2,
+        textColor: [0, 0, 0],
+      },
+      headStyles: {
+        fontSize: 8,
+        fillColor: [22, 160, 133],
+        textColor: [255, 255, 255],
+        lineColor: [44, 62, 80],
+        lineWidth: 0.2,
+        halign: 'center',
+        valign: 'middle',
+      },
+      theme: 'striped',
+      margin: { top: 20 },
+      didDrawPage: (data) => {
+        // Page Numbering
+        const pageCount = doc.internal.getNumberOfPages();
+        const pageSize = doc.internal.pageSize;
+        const pageHeight = pageSize.height || pageSize.getHeight();
+        const pageWidth = pageSize.width || pageSize.getWidth();
+  
+        doc.setFontSize(8);
+        const pageNumberText = `Page ${data.pageNumber} of ${pageCount}`;
+        const textWidth = doc.getStringUnitWidth(pageNumberText) * doc.internal.scaleFactor;
+        const xPosition = pageWidth - textWidth - 10;
+        const yPosition = pageHeight - 10;
+  
+        doc.text(pageNumberText, xPosition, yPosition);
+      },
+    });
+  
+    // Save the PDF
+    doc.save('flag_report.pdf');
+  };
+  ;
+
+  const handleExcelAction = () => {
+    // Prepare title, headers, and data
+    const title = [`Flag Report for ${projectName}`];
+    const headers = ['S.No.', 'Field', 'Old Value', 'Remarks', 'Bar Code', 'Updated By'];
+    const cleanData = data.map(({ key, ...rest }) => rest); // Remove the 'key' field
+    
+    // Create worksheet
+    const worksheet = XLSX.utils.json_to_sheet([], { header: headers });
+  
+    // Insert title
+    XLSX.utils.sheet_add_aoa(worksheet, [title], { origin: 'A1' });
+    
+    // Insert headers
+    XLSX.utils.sheet_add_aoa(worksheet, [headers], { origin: 'A2' });
+    
+    // Add data
+    XLSX.utils.sheet_add_json(worksheet, cleanData, { header: headers, skipHeader: true, origin: 'A3' });
+    
+    // Merge title cells
+    worksheet['!merges'] = [
+      {
+        s: { r: 0, c: 0 }, // Start cell (row 0, column 0)
+        e: { r: 0, c: headers.length - 1 } // End cell (row 0, last column)
+      }
+    ];
+    
+    // Style the title cell
+    worksheet['A1'] = {
+      v: title[0], // Cell value
+      s: {
+        fill: {
+          fgColor: { rgb: 'ff000' } // Background color (e.g., yellow)
+        },
+        alignment: {
+          horizontal: 'center', // Center the text horizontally
+          vertical: 'center' // Center the text vertically
+        },
+        font: {
+          sz: 14, // Font size
+          bold: true // Optional: make font bold
+        }
+      }
+    };
+  
+    // Set column width (optional)
+    // worksheet['!cols'] = headers.map(() => ({ wch: 20 })); // Adjust width as needed
+  
+    // Create a new workbook and append the worksheet to it
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    
+    // Generate the Excel file and trigger a download
+    XLSX.writeFile(workbook, 'flag_report.xlsx');
+  };
+    
+
+  const columns = [
+    { title: 'S.No.', dataIndex: 'S.No.', key: 'S.No.' },
+    { title: 'Field', dataIndex: 'Field', key: 'Field' },
+    { title: 'Old Value', dataIndex: 'Old Value', key: 'Old Value' },
+    { title: 'Remarks', dataIndex: 'Remarks', key: 'Remarks' },
+    { title: 'Bar Code', dataIndex: 'Bar Code', key: 'Bar Code' },
+    { title: 'Updated By', dataIndex: 'Updated By', key: 'Updated By' }
+  ];
+
+  const handleTableChange = (pagination) => {
+    setCurrentPage(pagination.current);
+    setPageSize(pagination.pageSize);
+  };
 
   return (
-    <Card title="Report Form" style={{ width: '100%' }}>
+    <Card title="Generate Report" style={{ width: '100%' }}>
       <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col span={24}>
-          <Select
-            placeholder="Select Project"
-            onChange={handleProjectChange}
-            style={{ width: '100%' }}
-          >
-            {projectOptions.map((option) => (
-              <Select.Option key={option.value} value={option.value}>
-                {option.label}
-              </Select.Option>
-            ))}
-          </Select>
+        <Col span={8}>
+          <Input value={projectName} style={{ width: '100%' }} disabled />
+        </Col>
+        <Col span={8}>
+          <Button type="primary" onClick={fetchFlagData}>Fetch Flag Data</Button>
         </Col>
       </Row>
-      <Dropdown overlay={menu}>
-        <Button type="primary">Actions</Button>
-      </Dropdown>
-      {data.length > 0 && previewType === 'pdf' && (
-        <PDFViewer width="100%" height={600}>
-          <PDFReport data={data || []} />
-        </PDFViewer>
+      {reportGenerated && (
+        <>
+          <Row gutter={16} style={{ marginTop: 16 }}>
+            <Col span={24} className='text-end'>
+              <Dropdown
+                overlay={
+                  <Menu onClick={handleMenuClick}>
+                    <Menu.Item key="pdf">Download PDF</Menu.Item>
+                    <Menu.Item key="excel">Download Excel</Menu.Item>
+                  </Menu>
+                }
+              >
+                <Button type="primary">Download Report</Button>
+              </Dropdown>
+            </Col>
+          </Row>
+          <Row gutter={16} style={{ marginTop: 16 }}>
+            <Col span={24}>
+              <Table
+                dataSource={data}
+                columns={columns}
+                pagination={{
+                  current: currentPage,
+                  pageSize: pageSize,
+                  total: data.length,
+                  onChange: handleTableChange,
+                }}
+                bordered
+              />
+            </Col>
+          </Row>
+        </>
       )}
     </Card>
   );
 };
 
 export default ReportForm;
-
-
-
-
-// import React, { useState, useEffect, useRef } from 'react';
-// import Select from 'react-select';
-// import {
-//   Card,
-//   Button,
-//   Row,
-//   Col,
-//   Table,
-//   Typography,
-//   Dropdown,
-//   Menu,
-//   Input,
-//   message,
-// } from 'antd';
-// import { PDFViewer } from '@react-pdf/renderer';
-// import * as XLSX from 'xlsx';
-// import { DndProvider, useDrag, useDrop } from 'react-dnd';
-// import { HTML5Backend } from 'react-dnd-html5-backend';
-// import axios from 'axios';
-// import { useUserInfo } from '@/store/UserDataStore';
-// import PDFReport from './PdfReport';
-
-// const { Title } = Typography;
-// const apiUrl = import.meta.env.VITE_API_URL; // Adjust API URL as needed
-
-// // DraggableField Component
-// const DraggableField = ({ field, index, moveField, isSelected, onSelect }) => {
-//   const [, ref] = useDrag({
-//     type: 'FIELD',
-//     item: { index },
-//   });
-
-//   const [, drop] = useDrop({
-//     accept: 'FIELD',
-//     hover: (item) => {
-//       if (item.index !== index) {
-//         moveField(item.index, index);
-//         item.index = index;
-//       }
-//     },
-//   });
-
-//   return (
-//     <div
-//       ref={(node) => ref(drop(node))}
-//       style={{
-//         padding: '8px',
-//         border: isSelected ? '2px solid #1890ff' : '1px solid #ddd',
-//         marginBottom: '4px',
-//         cursor: 'move',
-//         backgroundColor: isSelected ? '#e6f7ff' : '#fff',
-//         borderRadius: '4px',
-//         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-//       }}
-//       onClick={() => onSelect(field.value)}
-//     >
-//       {field.label}
-//     </div>
-//   );
-// };
-
-// // EditableCell Component
-// const EditableCell = ({
-//   title,
-//   editable,
-//   children,
-//   dataIndex,
-//   record,
-//   handleSave,
-//   ...restProps
-// }) => {
-//   const [editing, setEditing] = useState(false);
-//   const inputRef = useRef(null);
-
-//   useEffect(() => {
-//     if (editing) {
-//       inputRef.current.focus();
-//     }
-//   }, [editing]);
-
-//   const toggleEdit = () => {
-//     setEditing(!editing);
-//   };
-
-//   const save = async () => {
-//     try {
-//       const values = await form.current.validateFields();
-//       toggleEdit();
-//       handleSave({ ...record, ...values });
-//     } catch (errInfo) {
-//       console.log('Save failed:', errInfo);
-//     }
-//   };
-
-//   let childNode = children;
-
-//   if (editable) {
-//     childNode = editing ? (
-//       <Input
-//         ref={inputRef}
-//         defaultValue={record[dataIndex]}
-//         onPressEnter={save}
-//         onBlur={save}
-//         style={{ borderRadius: '4px' }}
-//       />
-//     ) : (
-//       <div style={{ paddingRight: 24, cursor: 'pointer' }} onClick={toggleEdit}>
-//         {children}
-//       </div>
-//     );
-//   }
-
-//   return <td {...restProps}>{childNode}</td>;
-// };
-
-// // Main Component
-// const ReportForm = () => {
-//   const [project, setProject] = useState('');
-//   const { userId } = useUserInfo();
-//   const [selectedProjectId, setSelectedProjectId] = useState(null);
-//   const [workedBy, setWorkedBy] = useState(null);
-//   const [projectOptions, setProjectOptions] = useState([]);
-//   const [fieldsOptions, setFieldsOptions] = useState([
-//     { value: 'remarks', label: 'Remarks' },
-//     { value: 'updatedBy', label: 'Updated By' },
-//     { value: 'fieldNameValue', label: 'Field Name Value' },
-//     { value: 'field', label: 'Field' },
-//     { value: 'barCode', label: 'Bar Code' },
-//     { value: 'jectId', label: 'Project ID' },
-//     { value: 'isCorreprocted', label: 'Is Corrected' },
-//     { value: 'updatedByUserId', label: 'Updated By User ID' },
-//     // Add other common fields here
-//   ]);
-//   const [selectedFields, setSelectedFields] = useState([]);
-//   const [data, setData] = useState([]);
-//   const [previewType, setPreviewType] = useState(null);
-//   const [excelData, setExcelData] = useState(null);
-//   const [users, setUsers] = useState([]);
-//   const [selectedField, setSelectedField] = useState(null);
-
-//   // Fetch Projects Onload
-//   useEffect(() => {
-//     fetchProjects();
-//   }, []);
-
-//   // Fetch users on project selection
-//   useEffect(() => {
-//     if (selectedProjectId) {
-//       fetchUsersByProject(selectedProjectId);
-//     }
-//   }, [selectedProjectId]);
-
-//   // Fetch field data on field selection
-//   useEffect(() => {
-//     if (selectedFields.length > 0) {
-//       fetchFieldData();
-//     }
-//   }, [selectedFields, selectedProjectId]);
-
-//   // Fetch Projects function
-//   const fetchProjects = () => {
-//     axios
-//       .get(`${apiUrl}/Projects/YourProject?WhichDatabase=Local&userId=${userId}`)
-//       .then((response) => {
-//         const options = response.data.map((project) => ({
-//           value: project.projectId,
-//           label: project.projectName || 'Unnamed Project',
-//         }));
-//         setProjectOptions(options);
-//       })
-//       .catch((error) => {
-//         console.error('Error fetching projects:', error);
-//       });
-//   };
-
-//   // Fetch users by the project Id
-//   const fetchUsersByProject = (projectId) => {
-//     fetch(`${apiUrl}/Projects/users/${projectId}?WhichDatabase=Local`)
-//       .then((response) => response.json())
-//       .then((users) => {
-//         const options = users.map((user) => ({
-//           value: user.userId,
-//           label: user.fullName,
-//         }));
-//         setUsers(options);
-//       })
-//       .catch((error) => {
-//         console.error('Error fetching users:', error);
-//       });
-//   };
-
-//   // Fetch Field Data function
-//   const fetchFieldData = () => {
-//     axios
-//       .get(`${apiUrl}/Flags`)
-//       .then((response) => {
-//         console.log("Fetched data:", response.data);
-//         setData(response.data || []);
-//       })
-//       .catch((error) => {
-//         console.error('Error fetching field data:', error);
-//       });
-//   };
-
-//   // Handle project change
-//   const handleProjectChange = (selectedOption) => {
-//     setProject(selectedOption.label);
-//     setSelectedProjectId(selectedOption.value);
-//   };
-
-//   // Handle user change
-//   const handleUserChange = (selectedOption) => {
-//     setWorkedBy(selectedOption.value);
-//   };
-
-//   // Select fields to be printed on the screen or Report
-//   const handleFieldChange = (selectedOptions) => {
-//     setSelectedFields(selectedOptions || []);
-//   };
-
-//   // Select the option to perform download or preview action
-//   const handleMenuClick = (e) => {
-//     switch (e.key) {
-//       case 'pdf':
-//         setPreviewType('pdf');
-//         break;
-//       case 'excel':
-//         handleExcelAction();
-//         break;
-//       case 'html':
-//         setPreviewType('html');
-//         break;
-//       default:
-//         message.error('Invalid option');
-//     }
-//   };
-
-//   // Move field in the list
-//   const moveField = (fromIndex, toIndex) => {
-//     const updatedFields = [...selectedFields];
-//     const [movedField] = updatedFields.splice(fromIndex, 1);
-//     updatedFields.splice(toIndex, 0, movedField);
-//     setSelectedFields(updatedFields);
-//   };
-
-//   // Handle Excel Action
-//   const handleExcelAction = () => {
-//     const worksheet = XLSX.utils.json_to_sheet(
-//       data.map((item) => ({
-//         ...item,
-//         key: item.key,
-//       })),
-//     );
-//     const workbook = XLSX.utils.book_new();
-//     XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-//     XLSX.writeFile(workbook, 'report.xlsx');
-//   };
-
-//   // Handle save operation
-//   const handleSave = (row) => {
-//     // Save logic
-//   };
-
-//   // Handle field selection
-//   const handleFieldSelect = (fieldValue) => {
-//     setSelectedField((prevSelectedField) => (prevSelectedField === fieldValue ? null : fieldValue));
-//   };
-
-//   return (
-//     <Card title="Standard Report" style={{ width: '100%' }}>
-//       <Row gutter={16} style={{ marginBottom: 16 }}>
-//         <Col span={8}>
-//           <Select
-//             placeholder="Select Project"
-//             options={projectOptions}
-//             onChange={handleProjectChange}
-//             style={{ width: '100%' }}
-//           />
-//         </Col>
-//         <Col span={8}>
-//           <Select
-//             placeholder="Select User"
-//             options={users}
-//             onChange={handleUserChange}
-//             style={{ width: '100%' }}
-//           />
-//         </Col>
-//         <Col span={8}>
-//           <Select
-//             placeholder="Select Fields"
-//             options={fieldsOptions}
-//             onChange={handleFieldChange}
-//             style={{ width: '100%' }}
-//             isMulti
-//           />
-//         </Col>
-//       </Row>
-//       <Row gutter={16}>
-//         <Col span={24}>
-//           <Table
-//             components={{
-//               body: {
-//                 cell: EditableCell,
-//               },
-//             }}
-//             rowClassName={() => 'editable-row'}
-//             dataSource={data || []}
-//             columns={
-//               selectedFields && selectedFields.length > 0
-//                 ? selectedFields.map((field, index) => ({
-//                     title: field.label,
-//                     dataIndex: field.value,
-//                     key: field.value,
-//                     editable: true,
-//                     onCell: (record) => ({
-//                       record,
-//                       editable: true,
-//                       dataIndex: field.value,
-//                       title: field.label,
-//                       handleSave: handleSave,
-//                     }),
-//                   }))
-//                 : []
-//             }
-//           />
-//         </Col>
-//       </Row>
-//       <Dropdown
-//         overlay={
-//           <Menu onClick={handleMenuClick}>
-//             <Menu.Item key="pdf">Download PDF</Menu.Item>
-//             <Menu.Item key="excel">Download Excel</Menu.Item>
-//             <Menu.Item key="html">Preview HTML</Menu.Item>
-//           </Menu>
-//         }
-//       >
-//         <Button type="primary">Actions</Button>
-//       </Dropdown>
-//       {previewType === 'pdf' && (
-//         <PDFViewer width="100%" height={600}>
-//           <PDFReport data={data || []} />
-//         </PDFViewer>
-//       )}
-//     </Card>
-//   );
-// };
-
-// export default ReportForm;
-
-// import React, { useState, useEffect } from 'react';
-// import { Card, Button, Row, Col, Select, message, Dropdown, Menu } from 'antd';
-// import axios from 'axios';
-// import { PDFViewer } from '@react-pdf/renderer';
-// import PDFReport from './PdfReport';
-// import { useUserInfo } from '@/store/UserDataStore';
-
-// const { Option } = Select;
-// const apiUrl = import.meta.env.VITE_API_URL; // Adjust API URL as needed
-
-// // Main Component
-// const ReportForm = () => {
-//   const [projectOptions, setProjectOptions] = useState([]);
-//   const [selectedProjectId, setSelectedProjectId] = useState(null);
-//   const [data, setData] = useState([]);
-//   const [previewType, setPreviewType] = useState(null);
-//   const { userId } = useUserInfo();
-
-//   // Fetch Projects Onload
-//   useEffect(() => {
-//     fetchProjects();
-//   }, []);
-
-//   // Fetch flags when project changes
-//   useEffect(() => {
-//     if (selectedProjectId) {
-//       fetchFlagsByProject(selectedProjectId);
-//     }
-//   }, [selectedProjectId]);
-
-//   // Fetch Projects function
-//   const fetchProjects = () => {
-//     axios
-//       .get(`${apiUrl}/Projects/YourProject?WhichDatabase=Local&userId=${userId}`)
-//       .then((response) => {
-//         const options = response.data.map((project) => ({
-//           value: project.projectId,
-//           label: project.projectName || 'Unnamed Project',
-//         }));
-//         setProjectOptions(options);
-//       })
-//       .catch((error) => {
-//         console.error('Error fetching projects:', error);
-//       });
-//   };
-
-//   // Fetch flags by the project ID
-//   const fetchFlagsByProject = (projectId) => {
-//     axios
-//       .get(`${apiUrl}/Flags/GetFlagbyProject/${projectId}`)
-//       .then((response) => {
-//         setData(response.data || []);
-//         console.log(response.data);
-//       })
-//       .catch((error) => {
-//         console.error('Error fetching flags:', error);
-//       });
-//   };
-
-//   // Handle project change
-//   const handleProjectChange = (value) => {
-//     setSelectedProjectId(value);
-//   };
-
-//   // Handle menu click for preview
-//   const handleMenuClick = (e) => {
-//     if (e.key === 'pdf') {
-//       setPreviewType('pdf');
-//     } else {
-//       message.error('Invalid option');
-//     }
-//   };
-
-//   return (
-//     <Card title="Report Form" style={{ width: '100%' }}>
-//       <Row gutter={16} style={{ marginBottom: 16 }}>
-//         <Col span={24}>
-//           <Select
-//             placeholder="Select Project"
-//             onChange={handleProjectChange}
-//             style={{ width: '100%' }}
-//           >
-//             {projectOptions.map((option) => (
-//               <Option key={option.value} value={option.value}>
-//                 {option.label}
-//               </Option>
-//             ))}
-//           </Select>
-//         </Col>
-//       </Row>
-//       <Dropdown
-//         overlay={
-//           <Menu onClick={handleMenuClick}>
-//             <Menu.Item key="pdf">Open PDF Report</Menu.Item>
-//           </Menu>
-//         }
-//       >
-//         <Button type="primary">Actions</Button>
-//       </Dropdown>
-//       {d(
-//         <div>
-//           <h1>Report</h1>
-//         </div>,
-//       )}
-//       {data.length > 0 && previewType === 'pdf' && (
-//         <PDFViewer width="100%" height={600}>
-//           <PDFReport data={data || []} />
-//         </PDFViewer>
-//       )}
-//     </Card>
-//   );
-// };
-
-// export default ReportForm;
