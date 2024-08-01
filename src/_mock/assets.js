@@ -9,7 +9,7 @@ import { BasicStatus, PermissionType } from '#/enum';
 const SUPER_ADMIN = {
   id: '1',
   parentId: '',
-  label: 'SuperAdmin',
+  label: 'sys.menu.superadmin.superadmin',
   name: 'superadmin',
   icon: 'ic-analysis',
   type: PermissionType.CATALOGUE,
@@ -19,7 +19,7 @@ const SUPER_ADMIN = {
     {
       id: '1.1',
       parentId: '1',
-      label: 'AlertPage',
+      label: 'sys.menu.superadmin.AlertPage',
       name: 'AlertPage',
       type: PermissionType.MENU,
       route: 'AlertPage',
@@ -118,15 +118,15 @@ const MANAGEMENT_PERMISSION = {
       type: PermissionType.CATALOGUE,
       route: 'system',
       children: [
-        {
-          id: '4.2.1',
-          parentId: '4.2',
-          label: 'sys.menu.system.permission',
-          name: 'Permission',
-          type: PermissionType.MENU,
-          route: 'permission',
-          component: '/management/system/permission/index.tsx',
-        },
+        // {
+        //   id: '4.2.1',
+        //   parentId: '4.2',
+        //   label: 'sys.menu.system.permission',
+        //   name: 'Permission',
+        //   type: PermissionType.MENU,
+        //   route: 'permission',
+        //   component: '/management/system/permission/index.tsx',
+        // },
         {
           id: '4.2.1',
           parentId: '4.2',
@@ -346,7 +346,7 @@ const OTHERS_PERMISSION = [
   {
     id: '9',
     parentId: '',
-    label: 'Project Dashboard',
+    label: 'sys.menu.ProjectDashboard',
     name: 'ProjectDashboard',
     icon: 'hugeicons:audit-01',
     type: PermissionType.MENU,
@@ -423,7 +423,7 @@ const OTHERS_PERMISSION = [
   {
     id: '16',
     parentId: '',
-    label: 'Report',
+    label: 'sys.menu.Report',
     name: 'Report',
     icon: 'solar:document-add-bold-duotone',
     type: PermissionType.MENU,
@@ -433,7 +433,7 @@ const OTHERS_PERMISSION = [
   {
     id: '17',
     parentId: '',
-    label: 'Archive',
+    label: 'sys.menu.Archive',
     name: 'Archive',
     icon: 'solar:document-add-bold-duotone',
     type: PermissionType.MENU,
@@ -445,7 +445,7 @@ const OTHERS_PERMISSION = [
 const DEFAULT_PPERMISSIONS = {
   id: '20',
   parentId: '',
-  label: 'default',
+  label: 'sys.menu.default',
   name: 'default',
   icon: 'ic-analysis',
   type: PermissionType.CATALOGUE,
@@ -455,11 +455,20 @@ const DEFAULT_PPERMISSIONS = {
     {
       id: '20.1',
       parentId: '20',
-      label: 'Profile',
+      label: 'sys.menu.Profile',
       name: 'profile',
       type: PermissionType.MENU,
       route: 'profile',
       component: '/management/user/profile/index.tsx',
+    },
+    {
+      id: '20.2',
+      parentId: '20',
+      label: 'sys.menu.ViewScore',
+      name: 'View Score',
+      type: PermissionType.MENU,
+      route: 'ViewScore/:course',
+      component: '/ScoreProcessing/ViewScore/index.tsx',
     },
   ],
 };

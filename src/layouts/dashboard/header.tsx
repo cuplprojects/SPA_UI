@@ -1,7 +1,7 @@
 import { Drawer, Select } from 'antd'; // Importing the Drawer and Select components from antd
 import Color from 'color'; // Importing the Color library for color manipulations
-import { CSSProperties, useEffect, useState } from 'react'; // Importing the CSSProperties type and useState hook from React
-import axios from 'axios'; // Importing Axios for HTTP requests
+import { CSSProperties, useState } from 'react'; // Importing the CSSProperties type and useState hook from React
+// import axios from 'axios'; // Importing Axios for HTTP requests
 
 import { IconButton, SvgIcon } from '@/components/icon'; // Importing IconButton, Iconify, and SvgIcon components
 import LocalePicker from '@/components/locale-picker'; // Importing the LocalePicker component
@@ -50,7 +50,7 @@ export default function Header({ className = '', offsetTop = false }: Props) {
   const { screenMap } = useResponsive();
 
   // API URL
-  const apiUrl = import.meta.env.VITE_API_URL;
+  // const apiUrl = import.meta.env.VITE_API_URL;
 
   // Fetch project data whenever the project ID changes
  

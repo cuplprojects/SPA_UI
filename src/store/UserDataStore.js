@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { useMutation } from '@tanstack/react-query';
 import { App } from 'antd';
@@ -9,10 +8,11 @@ import { create } from 'zustand';
 import { getItem, removeItem, setItem } from '@/utils/storage';
 import { PERMISSION_LIST } from '@/_mock/assets';
 import Cookies from 'js-cookie';
+import { d, e } from '@/Security/ParamSecurity';
+import { handleDecrypt, handleEncrypt } from '@/Security/Security';
 
 const { VITE_APP_HOMEPAGE: HOMEPAGE } = import.meta.env;
 const apiUrl = import.meta.env.VITE_API_URL;
-
 
 // Function to recursively filter permissions
 const filterPermissions = (menuItems, permissionIds) => {
@@ -50,24 +50,25 @@ const filterPermissions = (menuItems, permissionIds) => {
 };
 
 // Filtering based on userpermissionbyid
-
+const userInfoKey = '2dde777c17e139d3ad57U';
+const userTokenKey = 'f1c86227d4abb0a3fbd36T';
 
 const userDataStore = create((set) => ({
-  userInfo: getItem('user') || {},
-  userToken: getItem('Token') || '',
+  userInfo: userInfoKey && getItem(userInfoKey) ? JSON.parse(handleDecrypt(getItem(userInfoKey))) : {},
+  userToken: userTokenKey && getItem(userTokenKey) ? JSON.parse(handleDecrypt(getItem(userTokenKey))) : '',
   actions: {
     setUserInfo: (userInfo) => {
       set({ userInfo });
-      setItem('user', userInfo);
+      setItem(userInfoKey, handleEncrypt(JSON.stringify(userInfo)));
     },
     setUserToken: (userToken) => {
       set({ userToken });
-      setItem('Token', userToken);
+      setItem(userTokenKey, handleEncrypt(JSON.stringify(userToken)));
     },
     clearUserInfoAndToken() {
       set({ userInfo: {}, userToken: '' });
-      removeItem('user');
-      Cookies.remove('Token');
+      removeItem(userInfoKey);
+      removeItem(userTokenKey);
     },
   },
 }));
@@ -102,7 +103,7 @@ export const useSignIn = () => {
           userId,
           autogenPass,
           role,
-          permissions: filterPermissions(PERMISSION_LIST, role.permissionList)
+          permissions: filterPermissions(PERMISSION_LIST, role.permissionList),
         };
 
         const accessToken = {

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { App, Button, Form, Input, Typography } from 'antd';
 import Card from '@/components/card';
 import useChangePassword from '@/CustomHooks/useChangePassword'; // Adjust the import path as needed
 
 const SecurityTab = () => {
   const { notification } = App.useApp();
+  const [form] = Form.useForm(); // Get the form instance
   const { changePassword, loading, error, success } = useChangePassword(); // Use the custom hook
 
   const initFormValues = {
@@ -22,33 +23,32 @@ const SecurityTab = () => {
       return;
     }
 
-    try {
-      await changePassword(values.oldPassword, values.newPassword);
+    await changePassword(values.oldPassword, values.newPassword);
+  };
 
-      if (success) {
-        notification.success({
-          message: 'Update success!',
-          duration: 3,
-        });
-      } else {
-        notification.error({
-          message: 'Update failed!',
-          duration: 3,
-        });
-      }
-    } catch (error) {
+  // Handle error and success display in the component
+  useEffect(() => {
+    if (error) {
       notification.error({
         message: 'Update failed!',
-        description: error.message,
+        description: error,
         duration: 3,
       });
     }
-  };
+    if (success) {
+      notification.success({
+        message: 'Password updated successfully!',
+        duration: 3,
+      });
+      form.resetFields(); // Clear the form fields on success
+    }
+  }, [error, success, notification, form]);
 
   return (
     <Card className="!h-auto flex-col">
       <Typography.Title level={5}>Change Password</Typography.Title>
       <Form
+        form={form} // Pass the form instance
         layout="vertical"
         initialValues={initFormValues}
         onFinish={handleSubmit}

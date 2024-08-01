@@ -1,392 +1,273 @@
-import React, { useState, useEffect, useRef } from 'react';
-import Select from 'react-select';
-import {
-  Card,
-  Button,
-  Row,
-  Col,
-  Table,
-  Typography,
-  Dropdown,
-  Menu,
-  Input,
-  List,
-  message,
-  Avatar,
-  Tooltip,
-} from 'antd';
-import { PDFViewer, Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
+import React, { useState, useCallback } from 'react';
+import { Select, Button, Table, Spin, Input, Space } from 'antd';
+import { saveAs } from 'file-saver';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 import axios from 'axios';
+import { useDatabase } from '@/store/DatabaseStore';
+import { useProjectId } from '@/store/ProjectState';
 import { useUserInfo } from '@/store/UserDataStore';
-import { UserOutlined } from '@ant-design/icons';
+import useProject from '@/CustomHooks/useProject';
 
-const { Title } = Typography;
-const apiUrl = import.meta.env.VITE_API_URL; // Adjust API URL as needed
+const { Option } = Select;
+const apiUrl = import.meta.env.VITE_API_URL;
 
-// DraggableField Component
-const DraggableField = ({ field, index, moveField, isSelected, onSelect }) => {
-  const [, ref] = useDrag({
-    type: 'FIELD',
-    item: { index },
-  });
-
-  const [, drop] = useDrop({
-    accept: 'FIELD',
-    hover: (item) => {
-      if (item.index !== index) {
-        moveField(item.index, index);
-        item.index = index;
-      }
-    },
-  });
-
-  return (
-    <div
-      ref={(node) => ref(drop(node))}
-      style={{
-        padding: '8px',
-        border: isSelected ? '2px solid #1890ff' : '1px solid #ddd',
-        marginBottom: '4px',
-        cursor: 'move',
-        backgroundColor: isSelected ? '#e6f7ff' : '#fff',
-        borderRadius: '4px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-      }}
-      onClick={() => onSelect(field.value)}
-    >
-      {field.label}
-    </div>
-  );
+const fieldTitleMapping = {
+  rollNumber: 'Roll Number',
+  candidateName: 'Candidate Name',
+  fathersName: "Father's Name",
+  courseName: 'Course Name',
+  omrDataBarCode: 'OMR Data Bar Code',
+  marksObtained: 'Marks Obtained',
+  // Add more mappings as needed
 };
 
-// EditableCell Component
-const EditableCell = ({
-  title,
-  editable,
-  children,
-  dataIndex,
-  record,
-  handleSave,
-  ...restProps
-}) => {
-  const [editing, setEditing] = useState(false);
-  const inputRef = useRef(null);
-  const form = useRef(null);
-
-  useEffect(() => {
-    if (editing) {
-      inputRef.current.focus();
-    }
-  }, [editing]);
-
-  const toggleEdit = () => {
-    setEditing(!editing);
-  };
-
-  const save = async () => {
-    try {
-      const values = await form.current.validateFields();
-      toggleEdit();
-      handleSave({ ...record, ...values });
-    } catch (errInfo) {
-      console.log('Save failed:', errInfo);
-    }
-  };
-
-  let childNode = children;
-
-  if (editable) {
-    childNode = editing ? (
-      <Input
-        ref={inputRef}
-        defaultValue={record[dataIndex]}
-        onPressEnter={save}
-        onBlur={save}
-        style={{ borderRadius: '4px' }}
-      />
-    ) : (
-      <div style={{ paddingRight: 24, cursor: 'pointer' }} onClick={toggleEdit}>
-        {children}
-      </div>
-    );
-  }
-
-  return <td {...restProps}>{childNode}</td>;
-};
-
-// Main Component
 const ReportForm = () => {
-  const [project, setProject] = useState('');
   const { userId } = useUserInfo();
-  const [selectedProjectId, setSelectedProjectId] = useState(null);
-  const [workedBy, setWorkedBy] = useState(null);
-  const [projectOptions, setProjectOptions] = useState([]);
-  const [fieldsOptions, setFieldsOptions] = useState([]);
+  const database = useDatabase();
+  const projectId = useProjectId();
+  const { projectName } = useProject(projectId);
+  const [reportData, setReportData] = useState([]);
   const [selectedFields, setSelectedFields] = useState([]);
-  const [data, setData] = useState([]);
-  const [previewType, setPreviewType] = useState(null);
-  const [excelData, setExcelData] = useState(null);
-  const [users, setUsers] = useState([]);
-  const [selectedField, setSelectedField] = useState(null);
+  const [orderByFields, setOrderByFields] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [columns, setColumns] = useState([]);
+  const [dataKeys, setDataKeys] = useState([]);
 
-  // Fetch Projects Onload
-  useEffect(() => {
-    fetchProjects();
-  }, []);
+  const fetchReportData = async () => {
+    setLoading(true);
+    try {
+      const postdata = {
+        fields: ['registrationData', 'score'],
+      };
+      const response = await axios.post(
+        `${apiUrl}/Report/GetFilteredData?WhichDatabase=${database}&ProjectId=${projectId}`,
+        postdata,
+      );
 
-  // fetch users and fields on that project
-  useEffect(() => {
-    if (selectedProjectId) {
-      fetchUsersByProject(selectedProjectId);
-      fetchFields(selectedProjectId);
-    }
-  }, [selectedProjectId]);
-
-  useEffect(() => {
-    if (selectedFields.length > 0) {
-      fetchFieldData();
-    }
-  }, [selectedFields]);
-
-  // fetch Project function
-  const fetchProjects = () => {
-    axios
-      .get(`${apiUrl}/Projects/YourProject?WhichDatabase=Local&userId=${userId}`)
-      .then((response) => {
-        const options = response.data.map((project) => ({
-          value: project.projectId,
-          label: project.projectName || 'Unnamed Project',
-        }));
-        setProjectOptions(options);
-      })
-      .catch((error) => {
-        console.error('Error fetching projects:', error);
+      const structuredData = response.data.map((item) => {
+        const omrData = JSON.parse(item.omrData);
+        return {
+          ...item,
+          ...item.registrationData,
+          ...omrData,
+        };
       });
-  };
 
-  // fetch uses by the project Id
-  const fetchUsersByProject = (projectId) => {
-    fetch(`${apiUrl}/Projects/users/${projectId}?WhichDatabase=Local`)
-      .then((response) => response.json())
-      .then((users) => {
-        const options = users.map((user) => ({
-          value: user.userId,
-          label: user.fullName,
-        }));
-        setUsers(options);
-      })
-      .catch((error) => {
-        console.error('Error fetching users:', error);
-      });
-  };
-
-  // Fetch the Fields from Fieldconfig of the Project
-  const fetchFields = (projectId) => {
-    fetch(`${apiUrl}/FieldConfigurations/GetByProjectId/${projectId}?WhichDatabase=Local`)
-      .then((response) => response.json())
-      .then((data) => {
-        const options = data.map((field) => ({
-          value: field.fieldConfigurationId ? field.fieldConfigurationId.toString() : '',
-          label: field.fieldName || 'Unnamed Field',
-        }));
-        options.unshift({ value: 'select_all', label: 'Select All' }); // Add "Select All" option
-        setFieldsOptions(options);
-      })
-      .catch((error) => {
-        console.error('Error fetching fields:', error);
-      });
-  };
-
-  // geting data to be printed on the report as of now it is taking the data of corrected fields
-  // It will chnange as per report requirenment
-  const fetchFieldData = () => {
-    fetch(`${apiUrl}/Correction/GetAllCorrectedOmrData?WhichDatabase=Local`)
-      .then((response) => response.json())
-      .then((data) => {
-        const tableData = data.map((item, index) => {
-          const correctedData = JSON.parse(item.correctedOmrData || '{}');
-          const rowData = {};
-          selectedFields.forEach((field) => {
-            rowData[field.value] = correctedData[field.label] || '';
-          });
-          return { key: index + 1, ...rowData };
-        });
-        setData(tableData);
-      })
-      .catch((error) => {
-        console.error('Error fetching field data:', error);
-      });
-  };
-
-  // handle project change when I select the project
-  const handleProjectChange = (selectedOption) => {
-    setProject(selectedOption.label);
-    setSelectedProjectId(selectedOption.value);
-  };
-
-  // select Change the Field to be print on the screen or Report
-  const handleFieldChange = (selectedOptions) => {
-    if (selectedOptions.some((option) => option.value === 'select_all')) {
-      setSelectedFields(fieldsOptions.filter((option) => option.value !== 'select_all'));
-    } else {
-      setSelectedFields(selectedOptions);
+      setReportData(structuredData);
+      setDataKeys(Object.keys(structuredData[0] || {}));
+    } catch (error) {
+      console.error('Error fetching report data:', error);
     }
+    setLoading(false);
   };
 
-  // Select The option to be perform select download pdf or htmlView or Excel
-  const handleMenuClick = (e) => {
-    switch (e.key) {
-      case 'pdf':
-        setPreviewType('pdf');
-        break;
-      case 'excel':
-        handleExcelAction();
-        break;
-      case 'html':
-        setPreviewType('html');
-        break;
-      default:
-        message.error('Invalid option');
+  const handleShowTable = () => {
+    const dynamicColumns = selectedFields.map((field) => ({
+      title: fieldTitleMapping[field] || field,
+      dataIndex: field,
+      key: field,
+      sorter: (a, b) => {
+        if (typeof a[field] === 'string' && typeof b[field] === 'string') {
+          return a[field].localeCompare(b[field]);
+        } else if (typeof a[field] === 'number' && typeof b[field] === 'number') {
+          return a[field] - b[field];
+        }
+        return 0;
+      },
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder={`Search ${fieldTitleMapping[field] || field}`}
+            value={selectedKeys[0]}
+            onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: 'block' }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              icon="search"
+              size="small"
+              style={{ width: 90 }}
+            >
+              Search
+            </Button>
+            <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: (filtered) => <span style={{ color: filtered ? '#1890ff' : undefined }} />,
+      onFilter: (value, record) =>
+        record[field].toString().toLowerCase().includes(value.toLowerCase()),
+    }));
+
+    setColumns(dynamicColumns);
+  };
+
+  const sortData = (data) => {
+    if (orderByFields.length === 0) return data;
+
+    return [...data].sort((a, b) => {
+      for (const field of orderByFields) {
+        if (a[field] < b[field]) return -1;
+        if (a[field] > b[field]) return 1;
+      }
+      return 0;
+    });
+  };
+
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+
+    const totalPagesExp = '{total_pages_count_string}';
+
+    doc.setFontSize(12);
+    doc.setFont('Helvetica', 'normal');
+
+    const text = `Report For Group ${projectName}`;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const textWidth = doc.getStringUnitWidth(text) * doc.internal.scaleFactor;
+    const xPosition = (pageWidth - textWidth) / 2;
+
+    doc.text(text, xPosition, 20);
+
+    const sortedData = sortData(reportData);
+
+    const tableColumn = ['Serial No.', ...columns.map((col) => col.title)];
+    const tableRows = sortedData.map((data, index) => [
+      index + 1,
+      ...selectedFields.map((field) => data[field]),
+    ]);
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 30,
+      styles: {
+        fontSize: 6,
+        cellPadding: 2,
+        lineColor: [44, 62, 80],
+        lineWidth: 0.2,
+        textColor: [0, 0, 0],
+      },
+      headStyles: {
+        fontSize: 8,
+        fillColor: [22, 160, 133],
+        textColor: [255, 255, 255],
+        lineColor: [44, 62, 80],
+        lineWidth: 0.2,
+        halign: 'center',
+        valign: 'middle',
+      },
+      theme: 'striped',
+      margin: { top: 20 },
+      didDrawPage: (data) => {
+        const pageCount = doc.internal.getNumberOfPages();
+        const pageSize = doc.internal.pageSize;
+        const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+        const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth();
+
+        doc.setFontSize(8);
+        const pageNumberText = `Page ${data.pageNumber} of ${totalPagesExp}`;
+        const textWidth = doc.getStringUnitWidth(pageNumberText) * doc.internal.scaleFactor;
+        const xPosition = pageWidth - textWidth - 10;
+        const yPosition = pageHeight - 10;
+
+        doc.text(pageNumberText, xPosition, yPosition);
+      },
+    });
+
+    if (typeof doc.putTotalPages === 'function') {
+      doc.putTotalPages(totalPagesExp);
     }
+
+    doc.save(`report_${projectName}.pdf`);
   };
 
-  const moveField = (fromIndex, toIndex) => {
-    const updatedFields = [...selectedFields];
-    const [movedField] = updatedFields.splice(fromIndex, 1);
-    updatedFields.splice(toIndex, 0, movedField);
-    setSelectedFields(updatedFields);
-  };
+  const downloadExcel = () => {
+    const sortedData = sortData(reportData);
 
-  const handleExcelAction = () => {
-    const worksheet = XLSX.utils.json_to_sheet(
-      data.map((item) => ({
-        ...item,
-        key: item.key,
-      })),
-    );
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-    XLSX.writeFile(workbook, 'report.xlsx');
-  };
+    const filteredData = sortedData.map((data) => {
+      const rowData = {};
+      selectedFields.forEach((field) => {
+        rowData[fieldTitleMapping[field] || field] = data[field];
+      });
+      return rowData;
+    });
 
-  const handleSave = (row) => {
-    // Save logic
-  };
-
-  const handleFieldSelect = (fieldValue) => {
-    setSelectedField((prevSelectedField) => (prevSelectedField === fieldValue ? null : fieldValue));
+    const ws = XLSX.utils.json_to_sheet(filteredData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Report');
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), `report_${projectName}.xlsx`);
   };
 
   return (
-    <Card title="Generate Report" style={{ width: '100%' }}>
-      <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col span={8}>
-          <Select
-            options={projectOptions}
-            onChange={handleProjectChange}
-            placeholder="Select Project"
-            style={{ width: '100%' }}
-          />
-        </Col>
-        <Col span={16}>
-          <Select
-            options={fieldsOptions}
-            onChange={handleFieldChange}
-            isMulti
-            placeholder="Select Fields"
-            value={selectedFields}
-            style={{ width: '100%' }}
-          />
-        </Col>
-        
-      </Row>
-      <Row>
-       
-      </Row>
-      <Row gutter={16} style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
-        <Col>
-          <Dropdown
-            overlay={
-              <Menu onClick={handleMenuClick}>
-                <Menu.Item key="pdf">Generate PDF</Menu.Item>
-                <Menu.Item key="excel">Download Excel</Menu.Item>
-                <Menu.Item key="html">Download Html</Menu.Item>
-              </Menu>
-            }
-          >
-            <Button type="primary" size="large">
-              Export
-            </Button>
-          </Dropdown>
-        </Col>
-      </Row>
-      {previewType === 'pdf' && (
-        <PDFViewer width="100%" height="600">
-          <PDFReport
-            project={project}
-            selectedFields={selectedFields}
-            data={data}
-            workedBy={workedBy}
-          />
-        </PDFViewer>
-      )}
-      {previewType === 'html' && (
-        <div style={{ marginTop: 16, padding: '20px', background: '#f9f9f9', borderRadius: '8px' }}>
-          <Title level={4}>HTML View</Title>
-          <DndProvider backend={HTML5Backend}>
-            <div
-              className="d-flex"
-              style={{ marginBottom: 16, padding: '10px', borderRadius: '8px', width: '100%' }}
+    <div>
+      <Button onClick={fetchReportData} type="primary" style={{ marginBottom: '20px' }}>
+        Fetch Data
+      </Button>
+
+      {reportData.length > 0 && (
+        <div style={{ marginBottom: '20px', overflowX: 'auto' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+            <Select
+              mode="multiple"
+              style={{ flex: '1 1 300px', minWidth: '300px' }}
+              placeholder="Select fields to show"
+              onChange={setSelectedFields}
             >
-              <List
-                bordered
-                dataSource={selectedFields}
-                renderItem={(item, index) => (
-                  <DraggableField
-                    key={item.value}
-                    field={item}
-                    index={index}
-                    moveField={moveField}
-                    isSelected={item.value === selectedField}
-                    onSelect={handleFieldSelect}
-                  />
-                )}
-                style={{ background: '#fff', borderRadius: '8px', width: '25%' }}
-              />
+              {dataKeys.map((key) => (
+                <Option key={key} value={key}>
+                  {fieldTitleMapping[key] || key}
+                </Option>
+              ))}
+            </Select>
+            <Select
+              mode="multiple"
+              style={{ flex: '1 1 300px', minWidth: '300px' }}
+              placeholder="Select fields to order by"
+              onChange={setOrderByFields}
+            >
+              {dataKeys.map((key) => (
+                <Option key={key} value={key}>
+                  {fieldTitleMapping[key] || key}
+                </Option>
+              ))}
+            </Select>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+              <Button onClick={handleShowTable} type="primary">
+                Show Table
+              </Button>
+              <Button onClick={downloadPDF} type="primary">
+                Download PDF
+              </Button>
+              <Button onClick={downloadExcel} type="primary">
+                Download Excel
+              </Button>
             </div>
-            <Table
-              dataSource={data}
-              columns={[
-                { title: 'S.No.', dataIndex: 'key', key: 'key', editable: false },
-                ...selectedFields.map((field) => ({
-                  title: field.label,
-                  dataIndex: field.value,
-                  key: field.value,
-                  editable: true,
-                })),
-              ]}
-              components={{
-                body: {
-                  cell: EditableCell,
-                },
-              }}
-              rowClassName="editable-row"
-              pagination={false}
-              bordered
-              style={{ background: '#fff', borderRadius: '8px' }}
-              onCell={(record, rowIndex) => ({
-                record,
-                editable: true,
-                handleSave: handleSave,
-              })}
-            />
-          </DndProvider>
+          </div>
         </div>
       )}
-    </Card>
+
+      {loading ? (
+        <Spin size="large" style={{ marginTop: '20px' }} />
+      ) : (
+        columns.length > 0 && (
+          <Table
+            dataSource={sortData(reportData)}
+            columns={columns}
+            rowKey="id"
+            style={{ marginTop: '20px' }}
+          />
+        )
+      )}
+    </div>
   );
 };
 

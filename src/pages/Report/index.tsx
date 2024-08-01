@@ -1,1 +1,1 @@
-export {default} from "./flagreport";
+export {default} from "./Report";

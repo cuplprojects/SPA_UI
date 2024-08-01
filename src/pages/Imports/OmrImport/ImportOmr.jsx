@@ -209,6 +209,32 @@ const ImportOmr = () => {
     setLoading(false);
   };
 
+
+  const handleDeleteImages = async (projectId) => {
+    try {
+      const response = await axios.delete(`${apiurl}/OMRData/Images?WhichDatabase=${database}&ProjectId=${ProjectId}`, {
+
+      });
+      notification.success({
+        message: 'Images data deleted',
+        duartion: 3,
+      })
+      // Handle the response here
+      console.log('Deletion successful:', response.data);
+    } catch (error) {
+      notification.error({
+        message: 'Error in deleting Images',
+        duartion: 3,
+      })
+      // Handle errors here
+      notification.error({
+        message: 'Error in deleting Images',
+        duartion: 3,
+      })
+      console.error('Error deleting Images :', error.response ? error.response.data : error.message);
+    }
+  };
+
   return (
     <>
     <div className='d-flex align-items-center justify-content-between'>

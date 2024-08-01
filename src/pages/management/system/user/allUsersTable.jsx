@@ -7,6 +7,7 @@ import { Icon } from '@iconify/react';
 import editOutlined from '@iconify/icons-ant-design/edit-outlined';
 import deleteOutlined from '@iconify/icons-ant-design/delete-outlined';
 import { handleEncrypt } from '@/Security/Security';
+import { useDatabase } from '@/store/DatabaseStore';
 
 const apiurl = import.meta.env.VITE_API_URL;
 
@@ -26,6 +27,7 @@ export default function GeneralTab() {
   const [editingUserId, setEditingUserId] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [userIdToDelete, setUserIdToDelete] = useState(null);
+  const database = useDatabase()
 
   useEffect(() => {
     const fetchUsersAndRoles = async () => {
@@ -40,7 +42,7 @@ export default function GeneralTab() {
           return acc;
         }, {});
 
-        const usersWithRoleNames = usersRes.data.map(user => ({
+        const usersWithRoleNames = usersRes.data.map((user) => ({
           ...user,
           roleName: roleMap[user.roleId],
           isActive: user.isActive,
@@ -62,13 +64,13 @@ export default function GeneralTab() {
   };
 
   const handleRoleChange = (value) => {
-    const selectedRole = roles.find(role => role.roleId === value);
+    const selectedRole = roles.find((role) => role.roleId === value);
     setUserData((prev) => ({ ...prev, roleId: value, roleName: selectedRole?.roleName }));
   };
 
   const handleStatusChange = async (checked, userId) => {
     try {
-      const user = userList.find(user => user.userId === userId);
+      const user = userList.find((user) => user.userId === userId);
 
       if (!user) {
         throw new Error('User not found');
@@ -77,13 +79,13 @@ export default function GeneralTab() {
       const updatedUser = { ...user, isActive: checked };
 
       const datatobesentencrypted = {
-        cyphertextt: handleEncrypt(JSON.stringify(updatedUser))
-      }
+        cyphertextt: handleEncrypt(JSON.stringify(updatedUser)),
+      };
 
       await axios.put(`${apiurl}/Users/${userId}?WhichDatabase=${database}`, datatobesentencrypted);
-      
+
       setUserList((prev) =>
-        prev.map((user) => (user.userId === userId ? { ...user, isActive: checked } : user))
+        prev.map((user) => (user.userId === userId ? { ...user, isActive: checked } : user)),
       );
 
       notification.success({
@@ -103,9 +105,8 @@ export default function GeneralTab() {
   const handleSave = async (userId) => {
     try {
       const datatobesend = {
-        cyphertextt: handleEncrypt(JSON.stringify(userData))
-      }
-      console.log(datatobesend)
+        cyphertextt: handleEncrypt(JSON.stringify(userData)),
+      };
       await axios.put(`${apiurl}/Users/${userId}?WhichDatabase=${database}`, datatobesend);
       setEditingUserId(null);
       setUserData({
@@ -167,11 +168,13 @@ export default function GeneralTab() {
     <Row>
       <Col span={24}>
         <Col span={24} style={{ marginBottom: '1rem', textAlign: 'right' }}>
-          <Button type="primary" onClick={() => push('/management/user/AddUser')}>Add User</Button>
+          <Button type="primary" onClick={() => push('/management/user/AddUser')}>
+            Add User
+          </Button>
         </Col>
         <div className="card">
           <div className="card-body">
-            <table className="table table-striped">
+            <table className="table-striped table">
               <thead>
                 <tr>
                   <th scope="col">SN.</th>
@@ -189,7 +192,11 @@ export default function GeneralTab() {
                     <th scope="row">{index + 1}</th>
                     <td>
                       {editingUserId === user.userId ? (
-                        <Input name="firstName" value={userData.firstName} onChange={handleChange} />
+                        <Input
+                          name="firstName"
+                          value={userData.firstName}
+                          onChange={handleChange}
+                        />
                       ) : (
                         user.firstName
                       )}
@@ -234,19 +241,33 @@ export default function GeneralTab() {
                     <td>
                       {editingUserId === user.userId ? (
                         <>
-                          <Button type="primary" onClick={() => handleSave(user.userId)} style={{ marginRight: 8 }}>Save</Button>
+                          <Button
+                            type="primary"
+                            onClick={() => handleSave(user.userId)}
+                            style={{ marginRight: 8 }}
+                          >
+                            Save
+                          </Button>
                           <Button onClick={handleCancel}>Cancel</Button>
                         </>
                       ) : (
                         <>
-                          <Button type="primary" icon={<Icon icon={editOutlined} />} onClick={() => handleEdit(user)} />
+                          <Button
+                            type="primary"
+                            icon={<Icon icon={editOutlined} />}
+                            onClick={() => handleEdit(user)}
+                          />
                           <Popconfirm
                             title="Are you sure you want to delete this user?"
                             onConfirm={() => showDeleteConfirm(user.userId)}
                             okText="Yes"
                             cancelText="No"
                           >
-                            <Button danger icon={<Icon icon={deleteOutlined} />} style={{ marginLeft: 8 }} />
+                            <Button
+                              danger
+                              icon={<Icon icon={deleteOutlined} />}
+                              style={{ marginLeft: 8 }}
+                            />
                           </Popconfirm>
                         </>
                       )}

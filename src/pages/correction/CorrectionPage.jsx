@@ -6,26 +6,25 @@
 // import FullImageView from './FullImageView';
 // import { useProjectActions, useProjectId } from '@/store/ProjectState';
 // import { CloseCircleOutlined, DeleteOutlined } from '@ant-design/icons';
-// import { CircleLoading } from '@/components/loading';
-// import { useSelectedField, useSelectedFieldActions } from '@/store/SelectedFiieldState';
+// import { handleDecrypt, handleEncrypt } from '@/Security/Security';
+// import { convertLegacyProps } from 'antd/es/button';
+// import { useDatabase } from '@/store/DatabaseStore';
 // import useFlags from '@/CustomHooks/useFlag';
+// import AllotFlag from '../AuditPage/AllotFlags';
 
 // const apiurl = import.meta.env.VITE_API_URL;
 // const { Option } = Select;
 
 // const CorrectionPage = () => {
-//   const projectId = useProjectId();
 //   const [loading, setLoading] = useState(true);
 //   const [data, setData] = useState([]);
 //   const [currentIndex, setCurrentIndex] = useState(0);
 //   const [allDataCorrected, setAllDataCorrected] = useState(false);
 //   const [expandMode, setExpandMode] = useState(false);
+//   const projectId = useProjectId();
 //   const { setProjectId } = useProjectActions();
-//   const { flags, remaining, getFlags } = useFlags(projectId);
-//   const fieldCounts = flags;
-//   // const [remaining, setRemaining] = useState(0);
-//   const selectedField = useSelectedField();
-//   const { setSelectedField, clearSelectedField } = useSelectedFieldActions();
+//   const { flags, corrected, remaining, getFlags } = useFlags(projectId);
+//   const [selectedField, setSelectedField] = useState('all');
 //   const [unchangedata, setUnchangeData] = useState('');
 //   const [noChangeRequired, setNoChangeRequired] = useState(false);
 //   const [isViewRegData, setIsViewRegData] = useState(false);
@@ -33,6 +32,8 @@
 //   const [availableOptions, setAvailableOptions] = useState([]);
 //   const [regData, setRegData] = useState([]);
 //   const [currentRegIndex, setCurrentRegIndex] = useState(0);
+//   const database = useDatabase();
+//   const [flagData, setFlagData] = useState([]);
 
 //   // expand mode from Localstororage if refress the page
 //   useEffect(() => {
@@ -52,132 +53,132 @@
 //   }, [currentIndex, data]);
 
 //   useEffect(() => {
-//     // fetchFieldCounts();
+//     getFlags();
 //     fetchFlagData();
-//   }, [projectId, selectedField]);
+//   }, [projectId, selectedField, flagData]);
+
+//   useEffect(() => {
+//     const selectedfield = localStorage.getItem('selectedField');
+//     if (selectedfield) {
+//       setSelectedField(selectedfield);
+//     }
+//   }, []);
 
 //   const handleFieldChange = (value) => {
 //     setSelectedField(value);
+//     localStorage.setItem('selectedField', value); // Save selected field to localStorage
 //   };
 
 //   // Get Reg Filte Keys
 //   const GetRegFilterKeys = async () => {
 //     try {
 //       const response = await axios.get(
-//         `${apiurl}/Registration/GetKeys?whichDatabase=Local&ProjectId=${projectId}`,
+//         `${apiurl}/Registration/GetKeys?whichDatabase=${database}&ProjectId=${projectId}`,
 //       );
 //       setAvailableOptions(response.data.keys);
-//       console.log(response.data.keys);
 //     } catch (error) {
 //       console.error('Error fetching data:', error);
 //     }
 //   };
 
-//   // const fetchFieldCounts = async () => {
-//   //   try {
-//   //     const response = await axios.get(`${apiurl}/Flags/counts`);
-//   //     setFieldCounts(response.data.countsByFieldname);
-//   //     // setRemaining(response.data.remaining);
-//   //   } catch (error) {
-//   //     console.error('Error fetching field counts:', error);
-//   //   }
-//   // };
-
 //   const fetchFlagData = async () => {
 //     setCurrentIndex(0);
 //     setLoading(true);
-  
 //     try {
-//       // Fetch field configurations
-//       const fieldConfigResponse = await axios.get(
-//         `${apiurl}/FieldConfigurations/GetByProjectId/${projectId}?WhichDatabase=Local`,
-//       );
-//       const fieldConfigurations = fieldConfigResponse.data;
-  
-//       // Create a map for quick lookup of field configurations by field name
-//       const fieldConfigMap = fieldConfigurations.reduce((map, config) => {
-//         map[config.fieldName] = config;
-//         return map;
-//       }, {});
-  
-//       // Fetch flags by category
-//       const flagsResponse = await axios.get(
-//         `${apiurl}/Correction/GetFlagsByCategory?WhichDatabase=Local&ProjectID=${projectId}&FieldName=${selectedField}`,
-//       );
-//       const flagsResult = flagsResponse.data;
-  
-//       const mergedData = await Promise.all(
-//         flagsResult.map(async (flag) => {
-//           const imageConfigResponse = await axios.get(
-//             `${apiurl}/ImageConfigs/ByProjectId/${projectId}?WhichDatabase=Local`,
-//             {
-//               headers: { accept: 'text/plain' },
-//             },
-//           );
-//           const imageConfigResult = imageConfigResponse.data[0];
-//           const parsedAnnotations = JSON.parse(imageConfigResult.annotationsJson).map(
-//             (annotation) => ({
-//               FieldName: annotation.FieldName,
-//               coordinates: JSON.parse(annotation.Coordinates.replace(/'/g, '"')),
-//               fieldNameValue: '',
-//               imageUrl: '',
-//             }),
-//           );
-  
-//           let imageUrl = '';
-//           try {
-//             const omrImageResponse = await axios.get(
-//               `${apiurl}/OMRData/OMRImagebyName?WhichDatabase=Local&ProjectId=${projectId}&Name=${flag.barCode}`,
+//       if (flagData) {
+//         const fieldConfigResponse = await axios.get(
+//           `${apiurl}/FieldConfigurations/GetByProjectId/${projectId}?WhichDatabase=${database}`,
+//         );
+//         const decryptedfieldConfigResponse = JSON.parse(handleDecrypt(fieldConfigResponse.data));
+//         const fieldConfigurations = decryptedfieldConfigResponse;
+//         // Create a map for quick lookup of field configurations by field name
+//         const fieldConfigMap = fieldConfigurations.reduce((map, config) => {
+//           map[config.FieldName] = config;
+//           return map;
+//         }, {});
+
+//         // // Fetch flags by category
+//         // const flagsResponse = await axios.get(
+//         //   `${apiurl}/Correction/GetFlagsByCategory?WhichDatabase=${database}&ProjectID=${projectId}&FieldName=${selectedField}`,
+//         // );
+//         // console.log(flagsResponse.data);
+//         // const decryptedFlagsResponse = JSON.parse(handleDecrypt(flagsResponse.data));
+//         const flagsResult = flagData;
+
+//         const mergedData = await Promise.all(
+//           flagsResult.map(async (flag) => {
+//             const imageConfigResponse = await axios.get(
+//               `${apiurl}/ImageConfigs/ByProjectId/${projectId}?WhichDatabase=${database}`,
 //               {
-//                 params: { WhichDatabase: 'Local' },
 //                 headers: { accept: 'text/plain' },
 //               },
 //             );
-//             imageUrl = 'data:image/png;base64,' + omrImageResponse.data.filePath;
-//           } catch (error) {
-//             if (error.response && error.response.status === 404) {
-//               // If the image is not found (404), set the placeholder image URL
-//               imageUrl = 'https://placehold.co/600x400?text=No+OMR+Image+Found';
-//             } else {
-//               console.error('Error fetching OMR image:', error);
-//               // For other errors, you can also set a placeholder image or handle it differently
-//               imageUrl = 'https://placehold.co/600x400?text=No+OMR+Found';
+//             const imageresponse = JSON.parse(handleDecrypt(imageConfigResponse.data));
+//             const imageConfigResult = imageresponse[0];
+//             const parsedAnnotations = JSON.parse(imageConfigResult.AnnotationsJson).map(
+//               (annotation) => ({
+//                 FieldName: annotation.FieldName,
+//                 coordinates: JSON.parse(annotation.Coordinates.replace(/'/g, '"')),
+//                 fieldNameValue: '',
+//                 imageUrl: '',
+//               }),
+//             );
+
+//             let imageUrl = '';
+//             try {
+//               const omrImageResponse = await axios.get(
+//                 `${apiurl}/OMRData/OMRImagebyName?WhichDatabase=${database}&ProjectId=${projectId}&Name=${flag.barCode}`,
+//                 {
+//                   params: { WhichDatabase: database },
+//                   headers: { accept: 'text/plain' },
+//                 },
+//               );
+//               imageUrl = 'data:image/png;base64,' + omrImageResponse.data.filePath;
+//             } catch (error) {
+//               if (error.response && error.response.status === 404) {
+//                 // If the image is not found (404), set the placeholder image URL
+//                 imageUrl = 'https://placehold.co/600x400?text=No+OMR+Image+Found';
+//               } else {
+//                 console.error('Error fetching OMR image:', error);
+//                 // For other errors, you can also set a placeholder image or handle it differently
+//                 imageUrl = 'https://placehold.co/600x400?text=No+OMR+Found';
+//               }
 //             }
-//           }
-  
-//           // Find the annotation for the current flag's field name
-//           const annotation = parsedAnnotations.find(
-//             (annotation) => annotation.FieldName === flag.field,
-//           );
-  
-//           // Get the field configuration for the current flag's field name
-//           const fieldConfig = fieldConfigMap[flag.field] || {};
-  
-//           return {
-//             ...annotation,
-//             flagId: flag.flagId,
-//             remarks: flag.remarks,
-//             fieldNameValue: flag.fieldNameValue || '',
-//             FieldName: flag.field,
-//             barCode: flag.barCode,
-//             projectId: projectId,
-//             isCorrected: true,
-//             imageUrl,
-//             noChangeRequired: false,
-//             fieldConfig, // Adding the field configuration to the flag data
-//           };
-//         }),
-//       );
-  
-//       setData(mergedData);
-//       console.log(mergedData);
+
+//             // Find the annotation for the current flag's field name
+//             const annotation = parsedAnnotations.find(
+//               (annotation) => annotation.FieldName === flag.field,
+//             );
+
+//             // Get the field configuration for the current flag's field name
+//             const fieldConfig = fieldConfigMap[flag.field] || {};
+
+//             return {
+//               ...annotation,
+//               flagId: flag.flagId,
+//               remarks: flag.remarks,
+//               fieldNameValue: flag.fieldNameValue || '',
+//               FieldName: flag.field,
+//               barCode: flag.barCode,
+//               projectId: projectId,
+//               isCorrected: true,
+//               imageUrl,
+//               noChangeRequired: false,
+//               fieldConfig, // Adding the field configuration to the flag data
+//             };
+//           }),
+//         );
+
+//         setData(mergedData);
+//       }
+//       // Fetch field configurations
 //     } catch (error) {
 //       console.error('Error fetching data:', error);
 //     } finally {
 //       setLoading(false);
 //     }
 //   };
-  
+
 //   const handleUpdate = (index, newValue) => {
 //     const updatedData = [...data];
 //     updatedData[index].fieldNameValue = newValue;
@@ -197,11 +198,14 @@
 //         value: currentData.fieldNameValue,
 //       };
 
+//       const payloadtobesend = {
+//         cyphertextt: handleEncrypt(JSON.stringify(payload)),
+//       };
 //       const response = await axios.post(
-//         `${apiurl}/Correction/SubmitCorrection?WhichDatabase=Local&status=${
+//         `${apiurl}/Correction/SubmitCorrection?WhichDatabase=${database}&status=${
 //           noChangeRequired ? 2 : 3
 //         }&ProjectId=${projectId}`,
-//         payload,
+//         payloadtobesend,
 //         { headers: { 'Content-Type': 'application/json' } },
 //       );
 //       setNoChangeRequired(false);
@@ -228,9 +232,9 @@
 //       return;
 //     } else {
 //       await sendPostRequest(currentData);
+
 //       if (currentIndex < fieldData.length - 1) {
 //         setCurrentIndex(currentIndex + 1);
-//         // fetchFieldCounts();
 //         getFlags();
 //         setUnchangeData(data[currentIndex + 1]?.fieldNameValue);
 //       } else {
@@ -267,13 +271,15 @@
 //   }, [currentIndex, data, allDataCorrected]);
 
 //   if (loading) {
-//     return <CircleLoading />;
+//     return <p>Loading...</p>;
 //   }
 
 //   const handleFilterChange = (index, field, value) => {
 //     const updatedFilters = [...filters];
 //     updatedFilters[index][field] = value;
 //     setFilters(updatedFilters);
+
+//     // Remove selected fieldName from availableOptions
 //   };
 
 //   // removing filter items
@@ -294,7 +300,7 @@
 
 //       console.log('Data to send:', dataToSend);
 //       const response = await axios.post(
-//         `${apiurl}/Registration/ByFilters?WhichDatabase=Local&projectId=${projectId}`,
+//         `${apiurl}/Registration/ByFilters?WhichDatabase=${database}&ProjectId=${projectId}`,
 //         dataToSend,
 //       );
 //       setRegData(response.data);
@@ -306,6 +312,57 @@
 
 //   const addFilter = () => {
 //     setFilters([...filters, { fieldName: '', fieldValue: '' }]);
+//   };
+
+//   // Handle bYpass
+//   const handleByPass = async (data) => {
+//     if (!data || !data.flagId) {
+//       notification.error({
+//         message: 'Error',
+//         description: 'Invalid data',
+//         duration: 2,
+//       });
+//       return;
+//     }
+
+//     const url = `${apiurl}/Flags/${data.flagId}`;
+//     const requestData = {
+//       field: data.FieldName,
+//       fieldNameValue: data.fieldNameValue,
+//       flagId: data.flagId,
+//       remarks: data.remarks,
+//       projectId: data.projectId,
+//       isCorrected: true,
+//     };
+
+//     try {
+//       const response = await fetch(url, {
+//         method: 'PUT',
+//         headers: {
+//           'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify(requestData),
+//       });
+
+//       if (response.ok) {
+//         notification.success({
+//           message: 'Flag bypassed successfully',
+//           duretion: 2,
+//         });
+//         setCurrentIndex(currentIndex + 1);
+//         getFlags();
+//       } else {
+//         const errorData = await response.json();
+//         notification.error({
+//           message: errorData.message,
+//           duretion: 2,
+//         });
+//       }
+//     } catch (error) {
+//       notification.error({
+//         message: 'Error bypassing flag',
+//       });
+//     }
 //   };
 
 //   // handle click show reg data btn
@@ -346,12 +403,13 @@
 //           onChange={handleFieldChange} // Corrected onChange handler
 //         >
 //           <Option value="all">All</Option>
-//           {fieldCounts.map((field, index) => (
+//           {flags.map((field, index) => (
 //             <Option key={index} value={field.fieldName}>
 //               {field.fieldName}
 //             </Option>
 //           ))}
 //         </Select>
+//         <AllotFlag fieldName={selectedField} setFlagData={setFlagData} />
 //         <Button type="primary" onClick={toggleExpandMode}>
 //           {expandMode ? 'Zoomed View' : 'Expand OMR'}
 //         </Button>
@@ -387,13 +445,7 @@
 //       </div>
 //       <div className="h-75 d-flex">
 //         {isViewRegData ? (
-//           <form
-//             className="w-50 me-2 border p-2"
-//             onSubmit={(e) => {
-//               e.preventDefault(); // Prevent default form submission
-//               handleSubmitFilter(); // Call your submit function
-//             }}
-//           >
+//           <div className="w-50 me-2 border p-2">
 //             <div className="c-pointer text-end">
 //               <span onClick={() => setIsViewRegData(false)}>
 //                 <CloseCircleOutlined style={{ fontSize: '24px', color: 'red' }} />
@@ -431,7 +483,6 @@
 //                         <div className="text-end">
 //                           <button
 //                             className="btn btn-danger btn-sm"
-//                             type="button" // Button to remove filter
 //                             onClick={() => handleRemoveFilter(index)}
 //                           >
 //                             X
@@ -445,10 +496,7 @@
 //                     <span className="c-pointer text-primary" onClick={addFilter}>
 //                       Add Filter
 //                     </span>
-//                     <button
-//                       className="btn btn-sm btn-primary"
-//                       type="submit" // Submit button to trigger form submission
-//                     >
+//                     <button className="btn btn-sm btn-primary" onClick={handleSubmitFilter}>
 //                       Search
 //                     </button>
 //                   </div>
@@ -460,7 +508,7 @@
 //               <div>
 //                 {parsedData ? (
 //                   <>
-//                     <p className="text-danger m-2 text-center">{regData.length} Results Found</p>
+//                     <p className="text-danger m-2 text-center">{regData.length} Resultes Found</p>
 //                     <table className="table-bordered table-striped mr-0 table">
 //                       <thead>
 //                         <tr>
@@ -502,7 +550,7 @@
 //                 )}
 //               </div>
 //             </div>
-//           </form>
+//           </div>
 //         ) : (
 //           <Button type="primary" onClick={() => handleShowRegDataTableClick()}>
 //             Get Registration data
@@ -535,17 +583,28 @@
 //             )
 //           ) : (
 //             <div className="text-center">
-//               {remaining > 0 ? setSelectedField('all') : <p className="fs-3">All data corrected</p>}
+//               <p className="fs-3">All data corrected</p>
 //             </div>
 //           )}
 //         </div>{' '}
-//         <div className="d-flex justify-content-evenly m-1 gap-2">
-//           <Button type="primary" onClick={handlePrevious} disabled={currentIndex === 0}>
-//             Previous
-//           </Button>
-//           <Button type="primary" onClick={handleNext} disabled={allDataCorrected}>
-//             Next
-//           </Button>
+//         <div className="d-flex flex-column">
+//           <div className="d-flex justify-content-evenly m-1 gap-2">
+//             <Button type="primary" onClick={handlePrevious} disabled={currentIndex === 0}>
+//               Previous
+//             </Button>
+//             <Button type="primary" onClick={handleNext} disabled={allDataCorrected}>
+//               Next
+//             </Button>
+//           </div>
+//           {!data[currentIndex]?.barCode ? (
+//             <div className="text-center">
+//               <Button type="primary" onClick={() => handleByPass(data[currentIndex])}>
+//                 ByPass
+//               </Button>
+//             </div>
+//           ) : (
+//             <></>
+//           )}
 //         </div>
 //       </div>
 //     </>
@@ -553,6 +612,9 @@
 // };
 
 // export default CorrectionPage;
+
+
+
 
 import React, { useState, useEffect } from 'react';
 import { Button, Select, notification, Checkbox, Form, Input } from 'antd';
@@ -565,6 +627,7 @@ import { CloseCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import { handleDecrypt, handleEncrypt } from '@/Security/Security';
 import { convertLegacyProps } from 'antd/es/button';
 import { useDatabase } from '@/store/DatabaseStore';
+import useFlags from '@/CustomHooks/useFlag';
 
 const apiurl = import.meta.env.VITE_API_URL;
 const { Option } = Select;
@@ -577,8 +640,7 @@ const CorrectionPage = () => {
   const [expandMode, setExpandMode] = useState(false);
   const projectId = useProjectId();
   const { setProjectId } = useProjectActions();
-  const [fieldCounts, setFieldCounts] = useState([]);
-  const [remaining, setRemaining] = useState(0);
+  const { flags, corrected, remaining, getFlags } = useFlags(projectId);
   const [selectedField, setSelectedField] = useState('all');
   const [unchangedata, setUnchangeData] = useState('');
   const [noChangeRequired, setNoChangeRequired] = useState(false);
@@ -607,7 +669,7 @@ const CorrectionPage = () => {
   }, [currentIndex, data]);
 
   useEffect(() => {
-    fetchFieldCounts();
+    getFlags();
     fetchFlagData();
   }, [projectId, selectedField]);
   console.log(currentIndex);
@@ -635,93 +697,6 @@ const CorrectionPage = () => {
       console.error('Error fetching data:', error);
     }
   };
-
-  const fetchFieldCounts = async () => {
-    try {
-      const response = await axios.get(`${apiurl}/Flags/counts`);
-      setFieldCounts(response.data.countsByFieldname);
-      setRemaining(response.data.remaining);
-    } catch (error) {
-      console.error('Error fetching field counts:', error);
-    }
-  };
-
-  //   try {
-  //     const flagsResponse = await axios.get(
-  //       `${apiurl}/Correction/GetFlagsByCategory?WhichDatabase=Local&ProjectID=${projectId}&FieldName=${selectedField}`,
-  //     );
-
-  //     const flagsResult = flagsResponse.data;
-  //     const mergedData = await Promise.all(
-  //       flagsResult.map(async (flag) => {
-  //         const imageConfigResponse = await axios.get(`${apiurl}/ImageConfigs/ByProjectId/${projectId}?WhichDatabase=Local`, {
-  //           headers: { accept: 'text/plain' },
-  //         });
-  //         let decryptedData = handleDecrypt(imageConfigResponse.data)
-  //         let dataJson = JSON.parse(decryptedData)
-  //         const imageConfigResult = dataJson[0];
-  //         const parsedAnnotations = JSON.parse(imageConfigResult.AnnotationsJson).map(
-  //           (annotation) => ({
-  //             FieldName: annotation.FieldName,
-  //             coordinates: JSON.parse(annotation.Coordinates.replace(/'/g, '"')),
-  //             fieldNameValue: '',
-  //             imageUrl: '',
-  //           }),
-  //         );
-
-  //         let imageUrl = '';
-  //         try {
-  //           const omrImageResponse = await axios.get(
-  //             `${apiurl}/OMRData/OMRImagebyName?WhichDatabase=Local&ProjectId=${projectId}&Name=${flag.barCode}`,
-  //             {
-  //               params: { WhichDatabase: 'Local' },
-  //               headers: { accept: 'text/plain' },
-  //             },
-  //           );
-  //           imageUrl = 'data:image/png;base64,' + omrImageResponse.data.filePath;
-  //         } catch (error) {
-  //           if (error.response && error.response.status === 404) {
-  //             // If the image is not found (404), set the placeholder image URL
-  //             imageUrl = 'https://placehold.co/600x400?text=No+OMR+Image+Found';
-  //           } else {
-  //             console.error('Error fetching OMR image:', error);
-  //             // For other errors, you can also set a placeholder image or handle it differently
-  //             imageUrl = 'https://placehold.co/600x400?text=No+OMR+Found';
-  //           }
-  //         }
-
-  //         // Find the annotation for the current flag's field name
-  //         const annotation = parsedAnnotations.find(
-  //           (annotation) => annotation.FieldName === flag.field,
-  //         );
-
-  //         // Get the field configuration for the current flag's field name
-  //         const fieldConfig = fieldConfigMap[flag.field] || {};
-
-  //         return {
-  //           ...annotation,
-  //           flagId: flag.flagId,
-  //           remarks: flag.remarks,
-  //           fieldNameValue: flag.fieldNameValue || '',
-  //           FieldName: flag.field,
-  //           barCode: flag.barCode,
-  //           projectId: projectId,
-  //           isCorrected: true,
-  //           imageUrl,
-  //           noChangeRequired: false,
-  //           fieldConfig, // Adding the field configuration to the flag data
-  //         };
-  //       }),
-  //     );
-
-  //     setCurrentIndex(0);
-  //     setData(mergedData);
-  //     setLoading(false);
-  //   } catch (error) {
-  //     console.error('Error fetching data:', error);
-  //     setLoading(false);
-  //   }
-  // };
 
   const fetchFlagData = async () => {
     setCurrentIndex(0);
@@ -878,7 +853,7 @@ const CorrectionPage = () => {
 
       if (currentIndex < fieldData.length - 1) {
         setCurrentIndex(currentIndex + 1);
-        fetchFieldCounts();
+        getFlags();
         setUnchangeData(data[currentIndex + 1]?.fieldNameValue);
       } else {
         fetchFlagData();
@@ -1017,7 +992,7 @@ const CorrectionPage = () => {
           duretion: 2,
         });
         setCurrentIndex(currentIndex + 1);
-        fetchFieldCounts();
+        getFlags();
       } else {
         const errorData = await response.json();
         notification.error({
@@ -1070,7 +1045,7 @@ const CorrectionPage = () => {
           onChange={handleFieldChange} // Corrected onChange handler
         >
           <Option value="all">All</Option>
-          {fieldCounts.map((field, index) => (
+          {flags.map((field, index) => (
             <Option key={index} value={field.fieldName}>
               {field.fieldName}
             </Option>
