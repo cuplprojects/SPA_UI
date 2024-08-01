@@ -27,7 +27,7 @@ const ReportForm = () => {
   const { userId } = useUserInfo();
   const database = useDatabase();
   const projectId = useProjectId();
-  const projectName = useProject(projectId);
+  const { projectName } = useProject(projectId);
   const [reportData, setReportData] = useState([]);
   const [selectedFields, setSelectedFields] = useState([]);
   const [orderByFields, setOrderByFields] = useState([]);
@@ -102,7 +102,8 @@ const ReportForm = () => {
         </div>
       ),
       filterIcon: (filtered) => <span style={{ color: filtered ? '#1890ff' : undefined }} />,
-      onFilter: (value, record) => record[field].toString().toLowerCase().includes(value.toLowerCase()),
+      onFilter: (value, record) =>
+        record[field].toString().toLowerCase().includes(value.toLowerCase()),
     }));
 
     setColumns(dynamicColumns);
@@ -185,7 +186,7 @@ const ReportForm = () => {
       doc.putTotalPages(totalPagesExp);
     }
 
-    doc.save('report.pdf');
+    doc.save(`report_${projectName}.pdf`);
   };
 
   const downloadExcel = () => {
@@ -203,7 +204,7 @@ const ReportForm = () => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Report');
     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), 'report.xlsx');
+    saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), `report_${projectName}.xlsx`);
   };
 
   return (

@@ -39,7 +39,7 @@ const Main = forwardRef<HTMLDivElement, Props>(({ offsetTop = false }, ref) => {
         className={`m-auto h-full w-full flex-grow sm:p-2 ${
           themeStretch ? '' : 'xl:max-w-screen-xl'
         }`}
-      >
+        >
         {multiTab ? <MultiTabs offsetTop={offsetTop} /> : <Outlet />}
       </div>
     </Content>

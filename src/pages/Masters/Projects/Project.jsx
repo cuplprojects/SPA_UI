@@ -97,7 +97,6 @@ function Project() {
     try {
       const response = await fetch(`${apiurl}/Users?WhichDatabase=${database}`);
       const users = await response.json();
-      console.log(users);
       setUsers(users.map(user => ({ value: user.userId, label: user.fullName })));
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -105,7 +104,6 @@ function Project() {
   };
 
   const handleChange = (pagination, filters, sorter) => {
-    console.log('Various parameters', pagination, filters, sorter);
     setSortedInfo({
       order: sorter.order,
       columnKey: sorter.field,

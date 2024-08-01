@@ -6,6 +6,9 @@ import { useProjectId } from '@/store/ProjectState';
 import ViewScore from './ViewScore';
 import axios from 'axios';
 import { useDatabase } from '@/store/DatabaseStore';
+import { useNavigate } from 'react-router-dom';
+import { handleEncrypt } from '@/Security/Security';
+import { e } from '@/Security/ParamSecurity';
 
 const apiurl = import.meta.env.VITE_API_URL;
 
@@ -18,13 +21,14 @@ const GenerateScore = () => {
   const [scores, setScores] = useState(null);
   const [courseCounts, setCourseCounts] = useState({}); // State to store course counts
   const ProjectId = useProjectId();
-  const [modalVisible, setModalVisible] = useState(false);
+  // const [modalVisible, setModalVisible] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [fileInfo, setFileInfo] = useState({});
   const [keycount, setkeycount] = useState([])
   const [updateLoading, setUpdateLoading] = useState({});
   const [updateFile, setUpdateFile] = useState(null); 
   const database = useDatabase();
+  const navigate = useNavigate(); // Initialize useNavigate
 
 
   useEffect(() => {
@@ -141,13 +145,13 @@ const GenerateScore = () => {
 
   const handleClick = (courseName) => {
     setSelectedCourse(courseName); // Set selected course for modal display
-    setModalVisible(true); // Show the modal
+    navigate(`/default/ViewScore/${e(courseName)}`);
   };
 
-  const handleModalClose = () => {
-    setModalVisible(false); // Close the modal
-    setSelectedCourse(''); // Clear selected course
-  };
+  // const handleModalClose = () => {
+  //   // setModalVisible(false); // Close the modal
+  //   setSelectedCourse(''); // Clear selected course
+  // };
 
 
   const handleUpdateClick = async (courseName) => {
@@ -406,7 +410,7 @@ const GenerateScore = () => {
       <div className='gap-5'>
         <Table columns={columns} dataSource={courseNames.map((courseName) => ({ courseName }))} rowKey="courseName" />
       </div>
-      {modalVisible && (
+      {/* {modalVisible && (
 
 
         <Modal
@@ -420,7 +424,7 @@ const GenerateScore = () => {
           {modalVisible && <ViewScore courseName={selectedCourse} />}
         </Modal>
       )
-      }
+      } */}
     </div >
   );
 };

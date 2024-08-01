@@ -25,7 +25,7 @@ const ReportForm = () => {
 
   const fetchProjectDetails = async () => {
     try {
-      const response = await fetch(`${apiUrl}/Projects/1?WhichDatabase=${database}`);
+      const response = await fetch(`${apiUrl}/Projects/${projectId}?WhichDatabase=${database}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -38,7 +38,7 @@ const ReportForm = () => {
 
   const fetchFlagData = async () => {
     try {
-      const response = await fetch(`${apiUrl}/Flags/ByProject/${projectId}`);
+      const response = await fetch(`${apiUrl}/Flags/ByProject/${projectId}?WhichDatabase=${database}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -137,7 +137,7 @@ const ReportForm = () => {
     });
   
     // Save the PDF
-    doc.save('flag_report.pdf');
+    doc.save(`flag_report_${projectName}.pdf`);
   };
   ;
 
@@ -193,7 +193,7 @@ const ReportForm = () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
     
     // Generate the Excel file and trigger a download
-    XLSX.writeFile(workbook, 'flag_report.xlsx');
+    XLSX.writeFile(workbook, `flag_report_${projectName}.xlsx`);
   };
     
 

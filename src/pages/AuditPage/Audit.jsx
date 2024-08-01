@@ -39,9 +39,6 @@ const AuditButton = () => {
       setIsAuditing(true);
       const response = await fetch(`${APIURL}/Audit/audit?WhichDatabase=${database}&ProjectID=${ProjectId}`);
 
-
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
       setIsAuditing(false);
       notification.success({
         message: 'Audit Cycle Complete!',
@@ -124,7 +121,7 @@ const AuditButton = () => {
   return (
     <div>
       <div className="d-flex align-items-center justify-content-between mb-3 mr-3 mt-3 gap-2">
-        <AllotFlag remaining={remaining}/>
+        {/* <AllotFlag remaining={remaining}/> */}
         <div className="d-flex align-items-center justify-content-end mb-3 mr-3 mt-3 gap-2">
           <AuditMissingRollNo getFlags={getFlags} />
           <Button type="primary" onClick={handleClickAudit} disabled={isAuditing}>

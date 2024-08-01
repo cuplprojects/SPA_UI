@@ -33,11 +33,9 @@ const database = useDatabase();
     }
     isSubmitting.current = true; // Set the flag to true
     try {
-      console.log(values);
       const datatobesend = {
         cyphertextt : handleEncrypt(JSON.stringify(values))
       };
-      console.log(datatobesend)
       await axios.post(`${apiurl}/Users?WhichDatabase=${database}`, datatobesend);
       form.resetFields(); // Reset form fields
       notification.success({

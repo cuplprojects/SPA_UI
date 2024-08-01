@@ -23,7 +23,7 @@ import axios from 'axios';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-const ProjectDashboard = () => {
+const ProjectDashboard = () => { 
   // State variables
   const [projectName, setProjectName] = useState('');
   const projectId = useProjectId();
@@ -47,10 +47,10 @@ const ProjectDashboard = () => {
     }
   }, [projectId]); // Empty dependency array to run only once on component mount
 
-  const onClickProjectLogout = () => {
-    setProjectId(0);
-    navigate('/dashboard/workbench');
-  };
+  // const onClickProjectLogout = () => {
+  //   setProjectId(0);
+  //   navigate('/dashboard/workbench');
+  // };
 
   useEffect(() => {
     getFlags();
@@ -136,14 +136,14 @@ const ProjectDashboard = () => {
             </strong>
           </p>
         </div>
-        <div className="text-end">
+        {/* <div className="text-end">
           <Button
             onClick={onClickProjectLogout}
             style={{ backgroundColor: colorPrimary, color: 'white' }}
           >
             Project Logout
           </Button>
-        </div>
+        </div> */}
       </div>
 
       <div className="mt-4">

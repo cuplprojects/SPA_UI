@@ -1,17 +1,16 @@
 import { useDatabase } from '@/store/DatabaseStore';
 import { useState, useEffect } from 'react';
+
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const useProject = (projectId) => {
   const [projectName, setProjectName] = useState('');
   const database = useDatabase();
 
-  useEffect(() => {
-    const fetchProjectName = async () => {
+  const fetchProjectName = async () => {
+    if (projectId > 0) {
       try {
-        const response = await fetch(
-          `${apiUrl}/Projects/${projectId}?WhichDatabase=${database}`,
-        );
+        const response = await fetch(`${apiUrl}/Projects/${projectId}?WhichDatabase=${database}`);
         if (response.ok) {
           const data = await response.json();
           setProjectName(data.projectName);
@@ -21,12 +20,14 @@ const useProject = (projectId) => {
       } catch (error) {
         console.error('Error fetching project data:', error);
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchProjectName();
-  }, [projectId]);
+  }, [projectId, database]); // Include `database` as a dependency
 
-  return projectName;
+  return { projectName, fetchProjectName }; // Return both projectName and fetchProjectName
 };
 
 export default useProject;

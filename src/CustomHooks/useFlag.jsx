@@ -17,7 +17,6 @@ const useFlags = (projectId) => {
     try {
       const response = await axios.get(`${apiUrl}/Flags/counts/projectId?projectId=${projectId}&WhichDatabase=${database}`);
       const result = response.data;
-      console.log(response.data)
       setFlags(result.countsByFieldname);
       setRemarksCounts(result.remarksCounts);
       setCorrected(result.corrected);
