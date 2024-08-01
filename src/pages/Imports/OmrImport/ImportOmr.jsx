@@ -122,30 +122,6 @@ const ImportOmr = () => {
     }
   };
 
-  const handleDeleteImages = async (projectId) => {
-    try {
-      const response = await axios.delete(`${apiurl}/OMRData?WhichDatabase=${database}&ProjectId=${ProjectId}`, {
-
-      });
-      notification.success({
-        message: 'Images data deleted',
-        duartion: 3,
-      })
-      // Handle the response here
-      console.log('Deletion successful:', response.data);
-    } catch (error) {
-      notification.error({
-        message: 'Error in deleting Images',
-        duartion: 3,
-      })
-      // Handle errors here
-      notification.error({
-        message: 'Error in deleting Images',
-        duartion: 3,
-      })
-      console.error('Error deleting Images :', error.response ? error.response.data : error.message);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -220,32 +196,6 @@ const ImportOmr = () => {
     setShowReplaceAllBtn(false);
    
     setLoading(false);
-  };
-
-
-  const handleDeleteImages = async (projectId) => {
-    try {
-      const response = await axios.delete(`${apiurl}/OMRData/Images?WhichDatabase=${database}&ProjectId=${ProjectId}`, {
-
-      });
-      notification.success({
-        message: 'Images data deleted',
-        duartion: 3,
-      })
-      // Handle the response here
-      console.log('Deletion successful:', response.data);
-    } catch (error) {
-      notification.error({
-        message: 'Error in deleting Images',
-        duartion: 3,
-      })
-      // Handle errors here
-      notification.error({
-        message: 'Error in deleting Images',
-        duartion: 3,
-      })
-      console.error('Error deleting Images :', error.response ? error.response.data : error.message);
-    }
   };
 
   return (
