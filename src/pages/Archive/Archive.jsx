@@ -26,9 +26,10 @@ function Archive() {
         `${apiurl}/Projects/ArchivedByUser?userId=${userId}&WhichDatabase=${database}`,
       );
       const data = await response.json();
-      const processedData = data.map((item) => ({
+      const processedData = data.map((item, index) => ({
         ...item,
         key: item.projectId.toString(),
+        serialNo: index + 1,
       }));
       setData(processedData);
       setFilteredData(processedData);
@@ -103,10 +104,10 @@ function Archive() {
   const columns = [
     {
       title: 'Serial No',
-      dataIndex: 'projectId',
+      dataIndex: 'serialNo',
       width: '10%',
-      sorter: (a, b) => a.projectId - b.projectId,
-      sortOrder: sortedInfo.columnKey === 'projectId' && sortedInfo.order,
+      sorter: (a, b) => a.serialNo - b.serialNo,
+      sortOrder: sortedInfo.columnKey === 'serialNo' && sortedInfo.order,
       render: (text) => <span>{text}</span>,
     },
     {

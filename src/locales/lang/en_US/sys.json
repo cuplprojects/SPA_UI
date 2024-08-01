@@ -76,6 +76,10 @@
       "closeRight": "Close Right"
     },
     "menu": {
+      "superadmin": {
+        "superadmin": "Super Admin",
+        "AlertPage": "Alert Page"
+      },
       "dashboard": "Dashboard",
       "workbench": "Workbench",
       "analysis": "Analysis",
@@ -110,16 +114,22 @@
       "functions": "Functions",
       "clipboard": "Clipboard",
       "Masters": "Masters",
-      "projects":"Projects",
-      "fields":"Fields",
-      "ProjectConfig":  "Project Configuration",
-      "FieldConfiguration":"FieldConfig",
+      "projects": "Projects",
+      "fields": "Fields",
+      "ProjectConfig": "Project Configuration",
+      "FieldConfiguration": "FieldConfig",
       "Audit": "Audit",
       "imageannotation": "Image Annotation",
-      "Imports" : "Imports",
-      "AllImports" : "All Imports",
-      "GenerateScore" : "Generate Score",
-      "Archive" : "Archive",
+      "Imports": "Imports",
+      "AllImports": "All Imports",
+      "GenerateScore": "Generate Score",
+      "Archive": "Archive",
+      "ProjectDashboard": "Project Dashboard",
+      "Report": "Report",
+      "default": "default",
+      "Profile": "Profile",
+      "ViewScore": "View Score",
+
 
       "menulevel": {
         "index": "Menu Level",

@@ -1,18 +1,24 @@
+import { d, e } from '@/Security/ParamSecurity';
+import { useStore } from 'zustand';
 import { create } from 'zustand';
 
-// Define the storage key as a constant
-const PROJECT_ID_KEY = 'projectId';
+const projectIdKey = '2dde77c1728a1b036P';
 
+const getItem = (key) => localStorage.getItem(key);
+const setItem = (key, value) => localStorage.setItem(key, value);
+const removeItem = (key) => localStorage.removeItem(key);
+
+// Define the store with Zustan
 const useProjectStore = create((set) => ({
-  projectId: localStorage.getItem(PROJECT_ID_KEY) || '',
+  projectId: d(getItem(projectIdKey)) || 0,
   actions: {
     setProjectId: (projectId) => {
       set({ projectId });
-      localStorage.setItem(PROJECT_ID_KEY, projectId);
+      setItem(projectIdKey, e(projectId));
     },
     clearProjectId: () => {
       set({ projectId: '' });
-      localStorage.removeItem(PROJECT_ID_KEY);
+      removeItem(projectIdKey);
     },
   },
 }));

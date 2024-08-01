@@ -3,6 +3,7 @@ import { Button, Table, Modal, Form, Input, Select, Tag, Popconfirm, Row, Col } 
 import axios from 'axios';
 import { useMessage } from './../../../utils/alerts/MessageContext'; // Adjust the path based on your setup
 
+
 const { TextArea } = Input;
 const { Option } = Select;
 
@@ -14,6 +15,7 @@ const MessagePage = () => {
   const [form] = Form.useForm();
   const [currentMessage, setCurrentMessage] = useState(null);
   const [filters, setFilters] = useState({ module: '', operation: '', status: '' });
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     fetchMessages();
@@ -25,7 +27,7 @@ const MessagePage = () => {
 
   const fetchMessages = async () => {
     try {
-      const response = await axios.get('https://localhost:7290/api/Messages');
+      const response = await axios.get(`${apiUrl}/Messages`);
       setMessages(response.data);
       setFilteredMessages(response.data);
     } catch (error) {
@@ -58,10 +60,10 @@ const MessagePage = () => {
     form.validateFields().then(async (values) => {
       try {
         if (currentMessage) {
-          await axios.put(`https://localhost:7290/api/Messages/${values.id}`, values);
+          await axios.put(`${apiUrl}/Messages/${values.id}`, values);
           showMessage('Message', 'update', 'success');
         } else {
-          await axios.post('https://localhost:7290/api/Messages', values);
+          await axios.post(`${apiUrl}/Messages`, values);
           showMessage('Message', 'create', 'success');
         }
         fetchMessages();
@@ -75,7 +77,7 @@ const MessagePage = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`https://localhost:7290/api/Messages/${id}`);
+      await axios.delete(`${apiUrl}/Messages/${id}`);
       fetchMessages();
       showMessage('success', 'Message deleted successfully.');
     } catch (error) {

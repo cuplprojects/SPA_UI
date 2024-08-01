@@ -70,7 +70,7 @@ const Field = () => {
     try {
       const response = await fetch(`${apiurl}/Fields?WhichDatabase=${database}`);
       const data = await response.json();
-      const formattedData = data.map((item, index) => ({ ...item, key: index.toString(), serialNo: index + 1 }));
+     const formattedData = data.map((item, index) => ({ ...item, key: index.toString(), serialNo: index + 1 }));
       setData(formattedData);
       setFilteredData(formattedData);
     } catch (error) {
@@ -279,6 +279,8 @@ const Field = () => {
       },
     }
   ];
+
+
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
     const filtered = data.filter(item =>
@@ -286,6 +288,8 @@ const Field = () => {
     );
     setFilteredData(filtered);
   };
+
+
   const mergedColumns = columns.map((col) => {
     if (!col.editable) {
       return col;

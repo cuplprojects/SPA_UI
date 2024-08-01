@@ -40,8 +40,5 @@ export default function Router() {
   const routes = [LoginRoute, asyncRoutes, ErrorRoutes, PAGE_NOT_FOUND_ROUTE];
   const router = createHashRouter(routes as unknown as RouteObject[]);
 
-  console.log('Permission Routes:', permissionRoutes);
-  console.log('All Routes:', routes);
-
   return <RouterProvider router={router} />;
 }

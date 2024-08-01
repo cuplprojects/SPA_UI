@@ -145,26 +145,8 @@ const styles = StyleSheet.create({
   },
 });
 
-// Define the headers you want to display, excluding the specified ones
-const HEADERS = [
-  'remarks',
-  'fieldNameValue',
-  'field',
-  'barCode',
-  'updatedByUserId'
-];
-
-// Map keys to headers
-const KEY_TO_HEADER = {
-  remarks: 'Remarks',
-  fieldNameValue: 'Field Name Value',
-  field: 'Field',
-  barCode: 'Bar Code',
-  updatedByUserId: 'Updated By User ID'
-};
-
 // Define the PDF document
-const PDFReport = ({ data }) => {
+const PDFReport = ({ data, selectedFields }) => {
   if (!data.length) {
     return (
       <Document>
@@ -181,17 +163,17 @@ const PDFReport = ({ data }) => {
         <Text style={styles.title}>Report</Text>
         <View style={styles.table}>
           <View style={styles.tableRow}>
-            {HEADERS.map((header) => (
-              <View style={styles.tableCol} key={header}>
-                <Text style={styles.tableCell}>{KEY_TO_HEADER[header]}</Text>
+            {selectedFields.map((field) => (
+              <View style={styles.tableCol} key={field.value}>
+                <Text style={styles.tableCell}>{field.label}</Text>
               </View>
             ))}
           </View>
           {data.map((item, index) => (
             <View style={styles.tableRow} key={index}>
-              {HEADERS.map((header) => (
-                <View style={styles.tableCol} key={header}>
-                  <Text style={styles.tableCell}>{item[header]}</Text>
+              {selectedFields.map((field) => (
+                <View style={styles.tableCol} key={field.value}>
+                  <Text style={styles.tableCell}>{item[field.value]}</Text>
                 </View>
               ))}
             </View>
@@ -203,4 +185,5 @@ const PDFReport = ({ data }) => {
 };
 
 export default PDFReport;
+
 

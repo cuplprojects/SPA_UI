@@ -5,7 +5,6 @@ import { IconButton, Iconify } from '@/components/icon';
 import RoleModal from './role-modal';
 import { useDatabase } from '@/store/DatabaseStore';
 
-
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const DEFAULT_ROLE_VALUE = {
@@ -17,7 +16,7 @@ const DEFAULT_ROLE_VALUE = {
 
 const RolePage = () => {
   const [roles, setRoles] = useState([]);
-  const database = useDatabase();
+  const database = useDatabase()
 
   useEffect(() => {
     getRoles();
@@ -48,7 +47,7 @@ const RolePage = () => {
           notification.success({
             message: 'Success',
             description: 'Role updated successfully',
-            duration: 2
+            duration: 2,
           });
         } else {
           // Add new role
@@ -74,7 +73,7 @@ const RolePage = () => {
       setRoleModalProps((prev) => ({ ...prev, show: false }));
     },
   });
-  
+
   const columns = [
     {
       title: 'ID',
@@ -141,7 +140,11 @@ const RolePage = () => {
     try {
       await axios.delete(`${apiUrl}/Roles/${roleId}?WhichDatabase=${database}`);
       setRoles((prevRoles) => prevRoles.filter((role) => role.roleId !== roleId));
-      message.success('Role deleted successfully');
+      notification.success({
+        message: 'Success',
+        description: 'Role deleted successfully',
+        duration: 2,
+      });
     } catch (error) {
       notification.error({
         message: 'Error',

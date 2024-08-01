@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Form, Input, InputNumber, Popconfirm, Table, Typography, message, Select,Modal, notification } from 'antd';
+import { Button, Form, Input, InputNumber, Popconfirm, Table, Typography, message, Select, Modal, notification } from 'antd';
 import './Project.css';
 import { useUserInfo } from '@/store/UserDataStore';
 import axios from 'axios';
@@ -66,7 +66,7 @@ function Project() {
   const [sortedInfo, setSortedInfo] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [users, setUsers] = useState([]);
-  const {userId} = useUserInfo();
+  const { userId } = useUserInfo();
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState('');
   const database = useDatabase();
@@ -77,7 +77,7 @@ function Project() {
     fetchUsers();
   }, []);
 
- 
+
 
   const fetchData = async () => {
     try {
@@ -85,20 +85,20 @@ function Project() {
       const fetchedData = response.data.map((item, index) => ({
         ...item,
         key: item.projectId.toString(),
+        serialNo: index + 1,
       }));
-    
+
       setData(fetchedData);
       setFilteredData(fetchedData);// Update filteredData as well
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
-  
+
   const fetchUsers = async () => {
     try {
       const response = await fetch(`${apiurl}/Users?WhichDatabase=${database}`);
       const users = await response.json();
-      console.log(users);
       setUsers(users.map(user => ({ value: user.userId, label: user.fullName })));
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -106,7 +106,6 @@ function Project() {
   };
 
   const handleChange = (pagination, filters, sorter) => {
-    console.log('Various parameters', pagination, filters, sorter);
     setSortedInfo({
       order: sorter.order,
       columnKey: sorter.field,
@@ -140,7 +139,7 @@ function Project() {
       const row = await form.validateFields();
       const newData = [...data];
       const index = newData.findIndex((item) => key === item.key);
-  
+
       if (index > -1) {
         const isDuplicate = newData.some((item, idx) => idx !== index && item.projectName === row.projectName);
         if (isDuplicate) {
@@ -150,14 +149,14 @@ function Project() {
           });
           return;
         }
-  
+
         const item = newData[index];
         const updatedRow = {
           ...item,
           ...row,
           userAssigned: row.userAssigned.map(userName => users.find(user => user.label === userName)?.value || userName) // Convert user names to IDs
         };
-  
+
         if (item.method === 'POST') {
           await addRow(updatedRow);
         } else {
@@ -177,13 +176,14 @@ function Project() {
           });
           return;
         }
-  
+
         const newRow = {
           ...row,
           userAssigned: row.userAssigned.map(userName => users.find(user => user.label === userName)?.value || userName) // Convert user names to IDs
         };
         await addRow(newRow);
         setData([...newData, newRow]);
+        setFilteredData([...newData, newRow]);
         setEditingKey('');
         setHasUnsavedChanges(false);
       }
@@ -191,8 +191,8 @@ function Project() {
       console.log('Validate Failed:', errInfo);
     }
   };
-  
-  
+
+
 
   const updateRow = async (updatedRow) => {
     try {
@@ -214,7 +214,7 @@ function Project() {
       console.error('Error updating project:', error);
     }
   };
-  
+
 
   const addRow = async (newRow) => {
     try {
@@ -253,12 +253,13 @@ function Project() {
             },
           },
         );
-  
+
         if (response.ok) {
+          fetchData()
           notification.success({
             message: 'Success',
             description: 'Project Archived successfully',
-            duration:2
+            duration: 2
           });
           const newData = data.filter((item) => item.key !== projectToArchive);
           setData(newData);
@@ -278,7 +279,7 @@ function Project() {
       }
     }
   };
-  
+
 
   const handleSearchChange = (e) => {
     const { value } = e.target;
@@ -314,11 +315,12 @@ function Project() {
 
   const columns = [
     {
-      title: 'Project ID', // Changed from 'Serial No' to 'Project ID'
-      dataIndex: 'projectId', // Changed from 'serialNo' to 'projectId'
+      title: 'Serial No',
+      dataIndex: 'serialNo',
       width: '10%',
-      sorter: (a, b) => a.projectId - b.projectId, // Updated sorter
-      sortOrder: sortedInfo.columnKey === 'projectId' && sortedInfo.order, // Updated sortOrder
+      sorter: (a, b) => a.serialNo - b.serialNo,
+      sortOrder: sortedInfo.columnKey === 'serialNo' && sortedInfo.order,
+      render: (text) => <span>{text}</span>,
     },
     {
       title: 'Project Name',
@@ -396,12 +398,12 @@ function Project() {
 
   return (
     <div className="mt-5">
-      <div className="d-flex align-items-center justify-content-between w-100"  style={{ marginBottom: 16 }}>
-      <Button
-        onClick={handleAdd}
-        type="primary"
-        style={{ marginBottom: 16 }}
-        disabled={hasUnsavedChanges}
+      <div className="d-flex align-items-center justify-content-between w-100" style={{ marginBottom: 16 }}>
+        <Button
+          onClick={handleAdd}
+          type="primary"
+          style={{ marginBottom: 16 }}
+          disabled={hasUnsavedChanges}
         >
         Add Project
       </Button>
@@ -414,8 +416,8 @@ function Project() {
           onChange={handleSearchChange}
           style={{ width: 100, marginRight: 8 }}
         />
-      
-        </div>
+
+      </div>
       <Form form={form} component={false}>
         <Table
           components={{

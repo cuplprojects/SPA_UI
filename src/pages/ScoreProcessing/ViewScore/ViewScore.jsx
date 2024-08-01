@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Table, notification, Badge, Button, Popconfirm } from 'antd';
 import { useProjectId } from '@/store/ProjectState';
 import { useDatabase } from '@/store/DatabaseStore';
-import Icon from '../components/icon';
+import Icon from '@ant-design/icons/lib/components/Icon';
 import axios from 'axios';
 import { DeleteOutlined } from '@ant-design/icons';
+import { useParams } from 'react-router-dom';
+import { handleDecrypt } from '@/Security/Security';
+import { d } from '@/Security/ParamSecurity';
 
 const apiurl = import.meta.env.VITE_API_URL;
-
-
 
 const columns = [
   {
@@ -55,10 +56,8 @@ const expandedRowRender = (record) => {
       title: 'Total Score Sub',
       dataIndex: 'totalScoreSub',
       key: 'totalScoreSub',
-
     },
   ];
-
 
   const nestedData = record.sectionResult.map((section, index) => ({
     key: index, // Assuming 'key' is unique within section results
@@ -67,31 +66,41 @@ const expandedRowRender = (record) => {
     totalWrongAnswers: section.totalWrongAnswers,
     totalScoreSub: section.totalScoreSub,
   }));
-  return <Table columns={nestedColumns} dataSource={nestedData} pagination={false} />
-}
+  return <Table columns={nestedColumns} dataSource={nestedData} pagination={false} />;
+};
 
-
-const ViewScore = ({ courseName }) => {
+const ViewScore = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const ProjectId = useProjectId();
   const database = useDatabase();
-
+  const { course } = useParams();
+  const [courseName, setCourseName] = useState();
 
   useEffect(() => {
+    if (course) {
+      const decryptCourse = d(course);
+      setCourseName(decryptCourse);
+    }
+  }, [course]);
 
+  useEffect(() => {
     fetchData();
-  }, []);
+  }, [courseName]);
 
   const fetchData = async () => {
     try {
-      const response = await fetch(`${apiurl}/Score?WhichDatabase=${database}&ProjectId=${ProjectId}&courseName=${encodeURIComponent(courseName)}`);
+      const response = await fetch(
+        `${apiurl}/Score?WhichDatabase=${database}&ProjectId=${ProjectId}&courseName=${encodeURIComponent(
+          courseName,
+        )}`,
+      );
 
       if (!response.ok) {
         throw new Error('Failed to fetch data');
       }
       const result = await response.json();
-      const transformedData = result.map(item => ({
+      const transformedData = result.map((item) => ({
         roll: item.rollNumber,
         course: item.courseName,
         correctScore: item.scoreData,
@@ -110,30 +119,33 @@ const ViewScore = ({ courseName }) => {
     }
   };
 
-
   const handleDeleteScore = async (courseName) => {
     try {
-      const response = await axios.delete(`${apiurl}/Score?WhichDatabase=${database}&ProjectId=${ProjectId}&CourseName=${courseName}`, {
-
-      });
-      fetchData()
+      const response = await axios.delete(
+        `${apiurl}/Score?WhichDatabase=${database}&ProjectId=${ProjectId}&CourseName=${courseName}`,
+        {},
+      );
+      fetchData();
       notification.success({
         message: 'Score data deleted',
         duartion: 3,
-      })
+      });
       // Handle the response here
       console.log('Deletion successful:', response.data);
     } catch (error) {
       notification.error({
         message: 'Error in deleting Score',
         duartion: 3,
-      })
+      });
       // Handle errors here
       notification.error({
         message: 'Error in deleting Score',
         duartion: 3,
-      })
-      console.error('Error deleting score data:', error.response ? error.response.data : error.message);
+      });
+      console.error(
+        'Error deleting score data:',
+        error.response ? error.response.data : error.message,
+      );
     }
   };
 
@@ -143,7 +155,7 @@ const ViewScore = ({ courseName }) => {
 
   return (
     <>
-      <div className='text-end mb-2'>
+      <div className="mb-2 text-end">
         <Popconfirm
           title="Are you sure you want to delete all scores?"
           okText="Yes"
@@ -157,7 +169,6 @@ const ViewScore = ({ courseName }) => {
             Delete Score
           </Button>
         </Popconfirm>
-
       </div>
       <Table
         columns={columns}
@@ -170,7 +181,6 @@ const ViewScore = ({ courseName }) => {
         rowKey="roll"
       />
     </>
-
   );
 };
 
