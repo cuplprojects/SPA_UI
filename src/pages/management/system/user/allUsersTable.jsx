@@ -7,6 +7,7 @@ import { Icon } from '@iconify/react';
 import editOutlined from '@iconify/icons-ant-design/edit-outlined';
 import deleteOutlined from '@iconify/icons-ant-design/delete-outlined';
 import { handleEncrypt } from '@/Security/Security';
+import { useDatabase } from '@/store/DatabaseStore';
 
 const apiurl = import.meta.env.VITE_API_URL;
 
@@ -26,6 +27,7 @@ export default function GeneralTab() {
   const [editingUserId, setEditingUserId] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [userIdToDelete, setUserIdToDelete] = useState(null);
+  const database = useDatabase();
 
   useEffect(() => {
     const fetchUsersAndRoles = async () => {

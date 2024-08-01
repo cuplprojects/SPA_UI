@@ -4,6 +4,7 @@ import './Project.css';
 import { useUserInfo } from '@/store/UserDataStore';
 import axios from 'axios';
 import { useDatabase } from '@/store/DatabaseStore';
+import ImportProject from './ImportProject';
 
 const apiurl = import.meta.env.VITE_API_URL;
 
@@ -69,6 +70,7 @@ function Project() {
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState('');
   const database = useDatabase();
+  const [filteredData, setFilteredData] = useState([]);
 
   useEffect(() => {
     fetchData();
@@ -86,7 +88,7 @@ function Project() {
       }));
     
       setData(fetchedData);
-      // setFilteredData(fetchedData); // Update filteredData as well
+      setFilteredData(fetchedData);// Update filteredData as well
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -128,6 +130,7 @@ function Project() {
       const newData = [...data];
       newData.pop();
       setData(newData);
+      setFilteredData(newData);
       setHasUnsavedChanges(false);
     }
   };
@@ -162,6 +165,7 @@ function Project() {
           await updateRow(updatedRow);
         }
         setData(newData);
+        setFilteredData(newData);
         setEditingKey('');
         setHasUnsavedChanges(false);
       } else {
@@ -256,7 +260,9 @@ function Project() {
             description: 'Project Archived successfully',
             duration:2
           });
-          setData(data.filter((item) => item.key !== projectToArchive));
+          const newData = data.filter((item) => item.key !== projectToArchive);
+          setData(newData);
+          setFilteredData(newData);
         } else {
           notification.error({
             message: 'Error',
@@ -275,14 +281,19 @@ function Project() {
   
 
   const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    const filteredData = data.filter(item =>
-      item.projectName.toLowerCase().includes(e.target.value.toLowerCase())
-    );
-    setData(filteredData);
+    const { value } = e.target;
+    setSearchTerm(value);
+    if (value) {
+      const filteredData = data.filter(item =>
+        item.projectName.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredData(filteredData);
+    } else {
+      setFilteredData(data); // Reset to full data when search term is cleared
+    }
   };
-
   const handleAdd = () => {
+    console.log("Start")
     const newRowKey = data.length + 1;
     const newData = {
       key: newRowKey.toString(),
@@ -292,9 +303,14 @@ function Project() {
       method: 'POST',
     };
     setData([...data, newData]);
+    setFilteredData([...data, newData]);
     setEditingKey(newRowKey.toString());
     setHasUnsavedChanges(true);
   };
+
+  // const handleImport = () => {
+
+  // }
 
   const columns = [
     {
@@ -389,6 +405,9 @@ function Project() {
         >
         Add Project
       </Button>
+      <Button>
+          <ImportProject />
+        </Button>
         <Input
           placeholder="Search Project"
           value={searchTerm}
@@ -405,7 +424,7 @@ function Project() {
             },
           }}
           bordered
-          dataSource={data}
+          dataSource={filteredData}
           columns={mergedColumns}
           rowClassName="editable-row"
           pagination={{ onChange: cancel }}

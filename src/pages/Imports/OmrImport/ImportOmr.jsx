@@ -41,12 +41,8 @@ const ImportOmr = () => {
   const handleFileChange = (e) => {
     const selectedFiles = [...e.target.files];
     setFiles(selectedFiles);
-    setUploadStatus((prev) => ({
-      ...prev,
-      selected: selectedFiles.length,
-      pending: selectedFiles.length,
-    }));
   };
+
 
   const readFileAsBase64 = (file) => {
     return new Promise((resolve, reject) => {
@@ -55,6 +51,31 @@ const ImportOmr = () => {
       reader.onerror = (error) => reject(error);
       reader.readAsDataURL(file);
     });
+  };
+
+  const handleDeleteImages = async (projectId) => {
+    try {
+      const response = await axios.delete(`${apiurl}/OMRData/Images?WhichDatabase=${database}&ProjectId=${ProjectId}`, {
+
+      });
+      notification.success({
+        message: 'Images deleted',
+        duartion: 3,
+      })
+      // Handle the response here
+      console.log('Deletion successful:', response.data);
+    } catch (error) {
+      notification.error({
+        message: 'Error in deleting Images',
+        duartion: 3,
+      })
+      // Handle errors here
+      notification.error({
+        message: 'Error in deleting Images',
+        duartion: 3,
+      })
+      console.error('Error deleting Images :', error.response ? error.response.data : error.message);
+    }
   };
 
   const uploadFile = async (file, replace = false) => {
@@ -138,10 +159,6 @@ const ImportOmr = () => {
   const resolveConflict = async (file, action) => {
     if (action === 'skip') {
       setFiles(files.filter((f) => f.name !== file.name));
-      setUploadStatus((prev) => ({
-        ...prev,
-        pending: prev.pending - 1,
-      }));
     } else if (action === 'replace') {
       await uploadFile(file, true);
     }
@@ -165,10 +182,6 @@ const ImportOmr = () => {
 
     if (action === 'skip') {
       setFiles(files.filter((file) => !conflictingFiles.includes(file)));
-      setUploadStatus((prev) => ({
-        ...prev,
-        pending: prev.pending - conflictingFiles.length,
-      }));
     } else if (action === 'replace') {
       for (const file of conflictingFiles) {
         await uploadFile(file, true);
@@ -189,6 +202,7 @@ const ImportOmr = () => {
     <div className='d-flex align-items-center justify-content-between'>
     
      <h3 className="head fs-3 text-center">Upload OMR Images</h3>
+
       <form onSubmit={handleSubmit}>
         <input
           type="file"
@@ -201,6 +215,7 @@ const ImportOmr = () => {
         <Button type="primary" htmlType="submit" loading={loading} disabled={files.length === 0}>
           Upload Files
         </Button>
+        <Button danger onClick={handleDeleteImages}>Delete</Button>
       </form>
   
       <div className="d-flex gap-4">

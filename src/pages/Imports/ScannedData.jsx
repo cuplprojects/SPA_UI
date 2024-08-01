@@ -1,10 +1,11 @@
+import { Button } from 'antd';
 import React, { useState, useEffect } from 'react';
 
 const Scanned = ({
   handleFileUpload,
   handleScannedUpload,
   selectedFile,
-  
+  handleDeleteScanned,
   loading,
   headers,
   fieldMappings,
@@ -34,6 +35,10 @@ const Scanned = ({
           <p>
             <input type="file" onChange={handleFileUpload} accept=".csv,.dat,.xlsx" />
           </p>
+          <Button danger
+            onClick={handleDeleteScanned}>
+            Delete
+          </Button>
         </div>
         {headers.length > 0 && (
           <div className="d-flex justify-content-center mt-4">

@@ -1,9 +1,11 @@
+import { Button } from 'antd';
 import React, { useEffect, useState } from 'react';
 
 const Registration = ({
   handleFileUpload,
   handleRegistrationUpload,
   selectedFile,
+  handleDeleteRegistration,
   headers,
   registrationMapping,
   handleRegistrationMappingChange,
@@ -26,6 +28,9 @@ const Registration = ({
         <h3 className="head fs-3 text-center">Upload Registration Data</h3>
         <div className="d-flex justify-content-center align-items-center">
           <input type="file" onChange={handleFileUpload} accept=".xlsx" />
+        <Button danger onClick={handleDeleteRegistration}>
+             Delete
+          </Button>
         </div>
         {headers.length > 0 && (
           <div className="d-flex justify-content-center mt-4">

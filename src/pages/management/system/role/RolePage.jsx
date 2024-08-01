@@ -3,6 +3,8 @@ import { Button, Card, Table, Popconfirm, notification } from 'antd';
 import axios from 'axios';
 import { IconButton, Iconify } from '@/components/icon';
 import RoleModal from './role-modal';
+import { useDatabase } from '@/store/DatabaseStore';
+
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -15,6 +17,7 @@ const DEFAULT_ROLE_VALUE = {
 
 const RolePage = () => {
   const [roles, setRoles] = useState([]);
+  const database = useDatabase();
 
   useEffect(() => {
     getRoles();

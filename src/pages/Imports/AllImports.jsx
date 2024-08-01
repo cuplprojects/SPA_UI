@@ -135,7 +135,7 @@ const Import = () => {
               'Content-Type': 'application/json',
             },
             params: {
-              WhichDatabase: {database},
+              WhichDatabase: database,
               ProjectId: ProjectId,
             },
           });
@@ -155,6 +155,7 @@ const Import = () => {
       };
 
       reader.readAsArrayBuffer(selectedFile);
+      setSelectedFile(null);
     } else {
       console.error('No file selected.');
       notification.error({
@@ -171,9 +172,7 @@ const Import = () => {
 
   const handleDeleteAbsentee = async (projectId) => {
     try {
-      const response = await axios.delete(`${apiurl}/OMRData/Scanned?WhichDatabase=${database}&ProjectId=${ProjectId}`, {
-
-      });
+      const response = await axios.delete(`${apiurl}/Absentee?WhichDatabase=${database}&ProjectId=${ProjectId}`);
       notification.success({
         message: 'Absentee data deleted',
         duartion: 3,
@@ -244,9 +243,7 @@ const Import = () => {
 
   const handleDeleteScanned = async (projectId) => {
     try {
-      const response = await axios.delete(`${apiurl}/OMRData/Scanned?WhichDatabase=${database}&ProjectId=${ProjectId}`, {
-
-      });
+      const response = await axios.delete(`${apiurl}/OMRData/Scanned?WhichDatabase=${database}&ProjectId=${ProjectId}`);
       notification.success({
         message: 'Scanned data deleted',
         duartion: 3,
@@ -383,7 +380,7 @@ const Import = () => {
               'Content-Type': 'application/json',
             },
             params: {
-              WhichDatabase: {database},
+              WhichDatabase: database,
               ProjectId: ProjectId,
             },
           });
@@ -436,9 +433,7 @@ const Import = () => {
 
   const handleDeleteRegistration = async (projectId) => {
     try {
-      const response = await axios.delete(`${apiurl}/OMRData/Scanned?WhichDatabase=${database}&ProjectId=${ProjectId}`, {
-
-      });
+      const response = await axios.delete(`${apiurl}/Registration?WhichDatabase=${database}&ProjectId=${ProjectId}`);
       notification.success({
         message: 'Registration data deleted',
         duartion: 3,
@@ -536,7 +531,7 @@ const Import = () => {
             'Content-Type': 'application/json',
           },
           params: {
-            WhichDatabase: {database},
+            WhichDatabase: database,
             ProjectId: ProjectId,
           },
         });
@@ -656,7 +651,7 @@ const Import = () => {
                     handleFileUpload={handleFileUpload}
                     handleScannedUpload={handleScannedUpload}
                     selectedFile={selectedFile}
-                  
+                    handleDeleteScanned = {handleDeleteScanned}
                     loading={loading}
                     headers={headers}
                     fieldMappings={fieldMappings}
@@ -668,7 +663,7 @@ const Import = () => {
                     handleFileUpload={handleFileUpload}
                     handleRegistrationUpload={handleRegistrationUpload}
                     selectedFile={selectedFile}
-                 
+                    handleDeleteRegistration = {handleDeleteRegistration}
                     headers={headers}
                     registrationMapping={registrationMapping}
                     handleRegistrationMappingChange={handleRegistrationMappingChange}
@@ -680,7 +675,7 @@ const Import = () => {
                     handleFileUpload={handleFileUpload}
                     handleAbsenteeUpload={handleAbsenteeUpload}
                     selectedFile={selectedFile}
-                   
+                    handleDeleteAbsentee = {handleDeleteAbsentee}
                     headers={headers}
                     mapping={mapping}
                     handleMappingChange={handleMappingChange}

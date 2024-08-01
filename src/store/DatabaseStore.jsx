@@ -4,7 +4,7 @@ import { create } from 'zustand';
 const DATABASE_ID_KEY = 'database';
 
 const useDatabaseStore = create((set) => ({
-  database: localStorage.getItem(DATABASE_ID_KEY) || '',
+  database: localStorage.getItem(DATABASE_ID_KEY) || 'Local',
   actions: {
     setDatabase: (database) => {
       set({ database });

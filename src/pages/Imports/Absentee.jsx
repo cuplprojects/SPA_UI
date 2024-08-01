@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import './style.css';
+import { Button } from 'antd';
 
 const Absentee = ({
   handleFileUpload,
   handleAbsenteeUpload,
   selectedFile,
+  handleDeleteAbsentee,
   headers,
   mapping,
   handleMappingChange,
@@ -30,6 +32,9 @@ const Absentee = ({
           <p>
             <input type="file" onChange={handleFileUpload} accept=".xlsx" />
           </p>
+          <Button danger onClick={handleDeleteAbsentee}>
+             Delete
+          </Button>
         </div>
         {headers.length > 0 && (
           <div className="d-flex justify-content-center mt-4">

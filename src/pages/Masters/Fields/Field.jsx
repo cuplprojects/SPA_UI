@@ -44,6 +44,7 @@ const EditableCell = ({
 const Field = () => {
   const [form] = Form.useForm();
   const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [editingKey, setEditingKey] = useState('');
   const [open, setOpen] = useState(false);
   const [sortedInfo, setSortedInfo] = useState({});
@@ -69,11 +70,14 @@ const Field = () => {
     try {
       const response = await fetch(`${apiurl}/Fields?WhichDatabase=${database}`);
       const data = await response.json();
-      setData(data.map((item, index) => ({ ...item, key: index.toString(), serialNo: index + 1 })));
+      const formattedData = data.map((item, index) => ({ ...item, key: index.toString(), serialNo: index + 1 }));
+      setData(formattedData);
+      setFilteredData(formattedData);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
+  console.log(data);
 
   const edit = (record) => {
     form.setFieldsValue({
@@ -84,11 +88,12 @@ const Field = () => {
 
   const cancel = () => {
     const lastRow = data[data.length - 1];
-    if (lastRow && lastRow.projectName.trim() === '') {
+    if (lastRow && lastRow.projectName?.trim() === '') {
       // Remove the last row if Project Name is blank
       const newData = [...data];
       newData.pop();
       setData(newData);
+      setFilteredData(newData)
       setHasUnsavedChanges(false);
     }
     setEditingKey('');
@@ -128,6 +133,7 @@ const Field = () => {
       }
   
       setData(newData); // Update state with new data
+      setFilteredData(newData)
       setEditingKey('');
       setHasUnsavedChanges(false);
     } catch (errInfo) {
@@ -189,6 +195,7 @@ const Field = () => {
 
       await addRow(newRow);
       setData([...data, newRow]);
+      setFilteredData([...data, newRow])
       setOpen(false);
       form.resetFields();
     } catch (errInfo) {
@@ -274,11 +281,10 @@ const Field = () => {
   ];
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    // Filter data based on projectName containing searchTerm
-    const filteredData = data.filter(item =>
+    const filtered = data.filter(item =>
       item.fieldName.toLowerCase().includes(e.target.value.toLowerCase())
     );
-    setData(filteredData);
+    setFilteredData(filtered);
   };
   const mergedColumns = columns.map((col) => {
     if (!col.editable) {
@@ -318,7 +324,7 @@ const Field = () => {
             },
           }}
           bordered
-          dataSource={data}
+          dataSource={filteredData}
           columns={mergedColumns}
           rowClassName="editable-row"
           pagination={{
