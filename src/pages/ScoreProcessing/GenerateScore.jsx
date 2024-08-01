@@ -397,7 +397,7 @@ const GenerateScore = () => {
     <div>
       <div>
         <div className='d-flex align-items-center justify-content-between mb-4' >
-          <a href="/template.xlsx">
+          <a href="/keytemplate.xlsx">
             <Button
               type="primary"
               disabled={loading}
