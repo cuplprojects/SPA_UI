@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, message } from 'antd';
+import { Button, message, notification } from 'antd';
 import axios from 'axios';
 // import { Iconify } from '@/components/icon';
 const apiurl = import.meta.env.VITE_API_URL
@@ -12,10 +12,17 @@ const Sync = () => {
     setLoading(true);
     try {
       const response = await axios.post(`${apiurl}/Sync/SyncLogs`);
-      message.success('Data synced successfully!');
+      notification.success({
+        message: 'Success',
+        description: 'Sync Success',
+        duration:2
+      })
     } catch (error) {
       console.error('Error syncing data:', error);
-      message.error('Failed to sync data. Please try again.');
+      notification.error({
+        message: 'Alert',
+        description: 'Sync Failed',
+        });
     } finally {
       setLoading(false);
     }
