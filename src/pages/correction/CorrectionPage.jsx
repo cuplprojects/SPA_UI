@@ -11,6 +11,7 @@
 // import { useDatabase } from '@/store/DatabaseStore';
 // import useFlags from '@/CustomHooks/useFlag';
 // import AllotFlag from '../AuditPage/AllotFlags';
+// import { useFlagData } from '@/store/useFlagStore';
 
 // const apiurl = import.meta.env.VITE_API_URL;
 // const { Option } = Select;
@@ -33,7 +34,8 @@
 //   const [regData, setRegData] = useState([]);
 //   const [currentRegIndex, setCurrentRegIndex] = useState(0);
 //   const database = useDatabase();
-//   const [flagData, setFlagData] = useState([]);
+//   // const [flagData, setFlagData] = useState([]);
+//   const flagData = useFlagData();
 
 //   // expand mode from Localstororage if refress the page
 //   useEffect(() => {
@@ -56,6 +58,15 @@
 //     getFlags();
 //     fetchFlagData();
 //   }, [projectId, selectedField, flagData]);
+
+//   // useEffect(() => {
+//   //  if (flagData[currentIndex].isCorrected) {
+//   //   console.log(flagData[currentIndex])
+//   //   setCurrentIndex(currentIndex+1)
+//   //  }
+//   // }, [currentIndex]);
+
+
 
 //   useEffect(() => {
 //     const selectedfield = localStorage.getItem('selectedField');
@@ -106,7 +117,7 @@
 //         const flagsResult = flagData;
 
 //         const mergedData = await Promise.all(
-//           flagsResult.map(async (flag) => {
+//           flagsResult?.map(async (flag) => {
 //             const imageConfigResponse = await axios.get(
 //               `${apiurl}/ImageConfigs/ByProjectId/${projectId}?WhichDatabase=${database}`,
 //               {
@@ -396,7 +407,7 @@
 //   return (
 //     <>
 //       <div className="d-flex align-items-center justify-content-between">
-//         <Select
+//         {/* <Select
 //           placeholder="All Fields"
 //           style={{ width: 200 }}
 //           value={selectedField}
@@ -408,8 +419,8 @@
 //               {field.fieldName}
 //             </Option>
 //           ))}
-//         </Select>
-//         <AllotFlag fieldName={selectedField} setFlagData={setFlagData} />
+//         </Select> */}
+//         <AllotFlag fieldNames={flags} />
 //         <Button type="primary" onClick={toggleExpandMode}>
 //           {expandMode ? 'Zoomed View' : 'Expand OMR'}
 //         </Button>

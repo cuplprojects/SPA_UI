@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useDatabase } from '@/store/DatabaseStore';
+import { useUserToken } from '@/store/UserDataStore';
 
 const apiUrl = import.meta.env.VITE_API_URL;
-
 
 const useFlags = (projectId) => {
   const [flags, setFlags] = useState([]);
@@ -11,11 +11,19 @@ const useFlags = (projectId) => {
   const [corrected, setCorrected] = useState(0);
   const [remaining, setRemaining] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
-  const database = useDatabase()
+  const database = useDatabase();
+  const token = useUserToken();
 
   const getFlags = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/Flags/counts/projectId?projectId=${projectId}&WhichDatabase=${database}`);
+      const response = await axios.get(
+        `${apiUrl}/Flags/counts/projectId?projectId=${projectId}&WhichDatabase=${database}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
       const result = response.data;
       setFlags(result.countsByFieldname);
       setRemarksCounts(result.remarksCounts);
