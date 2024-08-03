@@ -17,7 +17,7 @@ import { worker } from './_mock';
 import './locales/i18n';
 // tailwind css
 import './theme/index.css';
-import { FileUploadProvider } from './pages/Imports/Importfile';
+// import { FileUploadProvider } from './pages/Imports/Importfile';
 import { MessageProvider } from './utils/alerts/MessageContext';
 
 // Create a client

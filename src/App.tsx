@@ -9,7 +9,7 @@ import 'boxicons/css/boxicons.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 import { MotionLazy } from './components/animate/motion-lazy';
-import { FileUploadProvider } from './pages/Imports/Importfile';
+// import { FileUploadProvider } from './pages/Imports/Importfile';
 import { PreferredResponseProvider } from './utils/PreferredResponse/PreferredResponseContext';
 
 function App() {
