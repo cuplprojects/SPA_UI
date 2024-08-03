@@ -8,7 +8,7 @@ import useFlags from '@/CustomHooks/useFlag';
 import AuditMissingRollNo from './AuditMissingRollNo';
 import { useSelectedFieldActions } from '@/store/SelectedFiieldState';
 import { useNavigate } from 'react-router-dom';
-import AllotFlag from './AllotFlags';
+import AllotFlag from '../correction/AllotFlags';
 import { useDatabase } from '@/store/DatabaseStore';
 import { useUserToken } from '@/store/UserDataStore';
 

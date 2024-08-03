@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import axios from 'axios'; // Import axios for making API requests
 import { useProjectId } from '@/store/ProjectState';
 import { useDatabase } from '@/store/DatabaseStore';
-import { useUserInfo } from '@/store/UserDataStore';
+import { useUserInfo, useUserToken } from '@/store/UserDataStore';
 import { useFlagData, useFlagActions } from '@/store/useFlagStore'; // Import Zustand store for flags
 const apiUrl = import.meta.env.VITE_API_URL;
 const { Option } = Select;
@@ -16,25 +16,25 @@ const AllotFlag = ({ fieldNames }) => {
   const { userId } = useUserInfo();
   const flagData = useFlagData();
   const { setFlagData } = useFlagActions();
+  const token = useUserToken();
 
   const fetchFlags = async (values) => {
     try {
-      const response = await axios.get(
-        `${apiUrl}/Correction/GetFlagsByCategoryChosingParameters`,
-        {
-          params: {
-            WhichDatabase: database,
-            ProjectID: projectId,
-            FieldName: values.FieldName,
-            rangeStart: values.rangeStart,
-            rangeEnd: values.rangeEnd,
-            userId: userId,
-          },
+      const response = await axios.get(`${apiUrl}/Correction/GetFlagsByCategoryChosingParameters`, {
+        params: {
+          WhichDatabase: database,
+          ProjectID: projectId,
+          FieldName: values.FieldName,
+          rangeStart: values.rangeStart,
+          rangeEnd: values.rangeEnd,
+          userId: userId,
         },
-      );
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setFlagData(response.data); // Assuming API returns { flags: [], remainingFlags: number }
-      setShowAllotModal(false)
-
+      setShowAllotModal(false);
     } catch (error) {
       console.error('Error fetching flags:', error);
     }
@@ -67,15 +67,15 @@ const AllotFlag = ({ fieldNames }) => {
         <Form form={form} onFinish={handleSubmit}>
           <Form.Item
             name="FieldName"
-            label="Field Name"
+            label="Field Category"
             rules={[{ required: true, message: 'Please select a Field Name' }]}
           >
-            <Select placeholder="Select Field Name">
-            {fieldNames.map((field, index) => (
-            <Option key={index} value={field.fieldName}>
-              {field.fieldName}
-            </Option>
-          ))}
+            <Select placeholder="Select Field Category">
+              {fieldNames.map((field, index) => (
+                <Option key={index} value={field.fieldName}>
+                  {field.fieldName}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
           <Form.Item
@@ -92,12 +92,12 @@ const AllotFlag = ({ fieldNames }) => {
           >
             <Input type="number" />
           </Form.Item>
-          <Form.Item>
+          <Form.Item className='text-end'>
+            <Button type="default" onClick={handleCloseModal} style={{ marginRight: '8px' }}>
+              Cancel
+            </Button>
             <Button type="primary" htmlType="submit">
               Fetch Flags
-            </Button>
-            <Button type="default" onClick={handleCloseModal} style={{ marginLeft: '8px' }}>
-              Cancel
             </Button>
           </Form.Item>
         </Form>
