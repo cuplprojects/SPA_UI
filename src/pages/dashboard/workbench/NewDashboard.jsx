@@ -7,7 +7,7 @@ import { useProjectActions } from '@/store/ProjectState';
 import { useThemeToken } from '@/theme/hooks';
 import Color from 'color';
 import ProjectCard from './ProjectCard'; // Adjust the import path as needed
-import { useUserInfo } from '@/store/UserDataStore';
+import { useUserInfo, useUserToken } from '@/store/UserDataStore';
 import { useDatabase } from '@/store/DatabaseStore';
 
 const apiurl = import.meta.env.VITE_API_URL;
@@ -19,6 +19,7 @@ const NewDashboard = () => {
   const { setProjectId } = useProjectActions();
   const {userId} = useUserInfo();
   const database = useDatabase();
+  const token = useUserToken();
 
   // Define background gradient using the theme tokens
   const bg = `linear-gradient(135deg, ${Color(themeToken.colorPrimaryHover).alpha(0.2)}, ${Color(
@@ -32,7 +33,10 @@ const NewDashboard = () => {
   const fetchProjects = async () => {
     try {
       // Fetch projects from API
-      const response = await axios.get(`${apiurl}/Projects/ByUser/${userId}?WhichDatabase=${database}`);
+      const response = await axios.get(`${apiurl}/Projects/ByUser/${userId}?WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
       setProjects(response.data); // Update projects state with fetched data
     } catch (error) {
       console.error('Error fetching projects:', error);

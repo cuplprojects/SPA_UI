@@ -8,6 +8,7 @@ import axios from 'axios';
 import { useProjectId } from '@/store/ProjectState';
 import { handleEncrypt, handleDecrypt } from '@/Security/Security';
 import { useDatabase } from '@/store/DatabaseStore';
+import { useUserToken } from '@/store/UserDataStore';
 
 //const apiurl = import.meta.env.VITE_API_URL_PROD;
 const apiurl = import.meta.env.VITE_API_URL;
@@ -32,11 +33,15 @@ const AnnotationPage = () => {
   const [open, setOpen] = useState(false);
   const [annotationId, setAnnotationId] = useState(0);
   const database = useDatabase();
+  const token = useUserToken();
 
   useEffect(() => {
     // Fetch input fields from API
     axios
-      .get(`${apiurl}/Fields?WhichDatabase=${database}`)
+      .get(`${apiurl}/Fields?WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }})
       .then((response) => {
         const fieldNames = response.data.map((field) => field.fieldName); // Extract field names
         setInputFields(fieldNames);
@@ -50,7 +55,10 @@ const AnnotationPage = () => {
   useEffect(() => {
     // Fetch annotations by project ID
     axios
-      .get(`${apiurl}/ImageConfigs/ByProjectId/${projectId}?WhichDatabase=${database}`)
+      .get(`${apiurl}/ImageConfigs/ByProjectId/${projectId}?WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }})
       .then((response) => {
         let decryptresponse = handleDecrypt(response.data);
         let destrigifieddata = JSON.parse(decryptresponse)
@@ -252,6 +260,7 @@ const AnnotationPage = () => {
           {
             headers: {
               'Content-Type': 'application/json',
+              Authorization : `Bearer ${token}`,
             },
           },
         );
@@ -276,6 +285,7 @@ const AnnotationPage = () => {
           {
             headers: {
               'Content-Type': 'application/json',
+              Authorization : `Bearer ${token}`,
             },
           },
         );

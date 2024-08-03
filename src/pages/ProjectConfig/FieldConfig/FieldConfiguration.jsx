@@ -9,6 +9,7 @@ import { useProjectId } from '@/store/ProjectState';
 import { usePreferredResponse } from '@/utils/PreferredResponse/PreferredResponseContext';
 import { handleDecrypt, handleEncrypt } from '@/Security/Security';
 import { useDatabase } from '@/store/DatabaseStore';
+import { useUserToken } from '@/store/UserDataStore';
 
 const APIURL = import.meta.env.VITE_API_URL;
 const { Option } = Select;
@@ -40,6 +41,7 @@ const FieldConfiguration = () => {
   const [rangeError, setRangeError] = useState(false);
   const ProjectId = useProjectId();
   const database = useDatabase();
+  const token = useUserToken();
   
 
   useEffect(() => {
@@ -52,7 +54,10 @@ const FieldConfiguration = () => {
 
   const getFieldConfig = async() =>{
     axios
-    .get(`${APIURL}/FieldConfigurations/GetByProjectId/${ProjectId}?WhichDatabase=${database}`)
+    .get(`${APIURL}/FieldConfigurations/GetByProjectId/${ProjectId}?WhichDatabase=${database}`,{
+      headers:{
+      Authorization : `Bearer ${token}`
+    }})
     .then((response) => {
       console.log(response.data)
       let decryptedData = handleDecrypt(response.data)
@@ -70,7 +75,10 @@ const FieldConfiguration = () => {
   console.log(savedData)
   const getFields = () => {
     axios
-      .get(`${APIURL}/Fields?WhichDatabase=${database}`)
+      .get(`${APIURL}/Fields?WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }})
       .then((response) => {
         setFields(response.data);
       })
@@ -168,9 +176,12 @@ const FieldConfiguration = () => {
     if (selectedFieldIndex !== -1) {
       axios
         .put(
-          `${APIURL}/FieldConfigurations/${newConfig.FieldConfigurationId}?WhichDatabase=${database}`,
-          encrypteddatatosend,
-        )
+          `${APIURL}/FieldConfigurations/${newConfig.FieldConfigurationId}?WhichDatabase=${database}`, encrypteddatatosend,
+          {
+            headers:{
+            Authorization : `Bearer ${token}`
+          },
+    })
         .then((response) => {
           getFieldConfig()
           // updatedData[selectedFieldIndex] = { ...updatedData[selectedFieldIndex], ...newConfig };
@@ -190,7 +201,10 @@ const FieldConfiguration = () => {
         });
     } else {
       axios
-        .post(`${APIURL}/FieldConfigurations?WhichDatabase=${database}`, encrypteddatatosend)
+        .post(`${APIURL}/FieldConfigurations?WhichDatabase=${database}`, encrypteddatatosend,{
+          headers:{
+          Authorization : `Bearer ${token}`
+        }})
         .then((response) => {
           const newFieldConfig = response.data;
           getFieldConfig()
@@ -232,7 +246,10 @@ const FieldConfiguration = () => {
 
   const handleDelete = (FieldConfigurationId) => {
     axios
-      .delete(`${APIURL}/FieldConfigurations/${FieldConfigurationId}?WhichDatabase=${database}`)
+      .delete(`${APIURL}/FieldConfigurations/${FieldConfigurationId}?WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }})
       .then(() => {
         setSavedData(
           savedData.filter((item) => item.FieldConfigurationId !== FieldConfigurationId),

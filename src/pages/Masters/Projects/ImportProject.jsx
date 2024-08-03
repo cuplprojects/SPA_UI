@@ -3,6 +3,7 @@ import { Button, Modal, Select, Checkbox, notification } from 'antd';
 import axios from 'axios';
 import { useDatabase } from '@/store/DatabaseStore';
 import { handleDecrypt, handleEncrypt } from '@/Security/Security';
+import { useUserToken } from '@/store/UserDataStore';
 
 const { Option } = Select;
 const apiurl = import.meta.env.VITE_API_URL;
@@ -17,6 +18,7 @@ const ImportProject = () => {
   const [importResponseConfigsState, setImportResponseConfigsState] = useState(false);
   const [projects, setProjects] = useState([]);
   const database = useDatabase();
+  const token = useUserToken();
 
   useEffect(() => {
     fetchProjects();
@@ -92,8 +94,11 @@ const ImportProject = () => {
   const importImageConfigs = async (projectIdFrom, projectIdTo) => {
     try {
       const res = await axios.get(
-        `${apiurl}/ImageConfigs/ByProjectId/${projectIdFrom}?WhichDatabase=${database}`,
-      );
+        `${apiurl}/ImageConfigs/ByProjectId/${projectIdFrom}?WhichDatabase=${database}`,{
+          headers:{
+          Authorization : `Bearer ${token}`
+        }
+    });
       const decryptedData = JSON.parse(handleDecrypt(res.data))[0];
       console.log(decryptedData);
       decryptedData.ProjectId = projectIdTo;
@@ -119,7 +124,10 @@ const ImportProject = () => {
   const importFieldConfigs = async (projectIdFrom, projectIdTo) => {
     try {
       const res = await axios.get(
-        `${apiurl}/FieldConfigurations/GetByProjectId/${projectIdFrom}?WhichDatabase=${database}`,
+        `${apiurl}/FieldConfigurations/GetByProjectId/${projectIdFrom}?WhichDatabase=${database}`,{
+          headers:{
+          Authorization : `Bearer ${token}`
+        }}
       );
       const decryptedData = JSON.parse(handleDecrypt(res.data));
       console.log(decryptedData);
@@ -133,9 +141,12 @@ const ImportProject = () => {
               cyphertextt: handleEncrypt(JSON.stringify(decryptedData[i])),
             }
             const postRes = await axios.post(
-              `${apiurl}/FieldConfigurations/?WhichDatabase=${database}`,
+              `${apiurl}/FieldConfigurations/?WhichDatabase=${database}`,{
+                headers:{
+                Authorization : `Bearer ${token}`
+              },
               encryptedDatatobesent,
-            )
+          })
           }
           catch(error)
           {
@@ -155,7 +166,10 @@ const ImportProject = () => {
   const importResponseConfigs = async (projectIdFrom, projectIdTo) => {
     try {
       const res = await axios.get(
-        `${apiurl}/ResponseConfigs/byproject/${projectIdFrom}?WhichDatabase=${database}`,
+        `${apiurl}/ResponseConfigs/byproject/${projectIdFrom}?WhichDatabase=${database}`,{
+          headers:{
+          Authorization : `Bearer ${token}`
+        }}
       );
       console.log(res.data)
       

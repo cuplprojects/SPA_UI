@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Form, Input, InputNumber, Popconfirm, Table, Typography, message, Select, Modal, notification } from 'antd';
 import './Project.css';
-import { useUserInfo } from '@/store/UserDataStore';
+import { useUserInfo, useUserToken } from '@/store/UserDataStore';
 import axios from 'axios';
 import { useDatabase } from '@/store/DatabaseStore';
 import ImportProject from './ImportProject';
@@ -71,6 +71,7 @@ function Project() {
   const [alertType, setAlertType] = useState('');
   const database = useDatabase();
   const [filteredData, setFilteredData] = useState([]);
+  const token = useUserToken();
 
   useEffect(() => {
     fetchData();
@@ -81,7 +82,10 @@ function Project() {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get(`${apiurl}/Projects/YourProject?WhichDatabase=${database}&userId=${userId}`);
+      const response = await axios.get(`${apiurl}/Projects/YourProject?WhichDatabase=${database}&userId=${userId}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
       const fetchedData = response.data.map((item, index) => ({
         ...item,
         key: item.projectId.toString(),
@@ -97,7 +101,10 @@ function Project() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch(`${apiurl}/Users?WhichDatabase=${database}`);
+      const response = await fetch(`${apiurl}/Users?WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
       const users = await response.json();
       setUsers(users.map(user => ({ value: user.userId, label: user.fullName })));
     } catch (error) {
@@ -202,6 +209,7 @@ function Project() {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
+              Authorization : `Bearer ${token}`,
           },
           body: JSON.stringify(updatedRow),
         },
@@ -222,6 +230,7 @@ function Project() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization : `Bearer ${token}`,
         },
         body: JSON.stringify(newRow),
       });
@@ -250,6 +259,7 @@ function Project() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              Authorization : `Bearer ${token}`,
             },
           },
         );
