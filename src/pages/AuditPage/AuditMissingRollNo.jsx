@@ -3,6 +3,7 @@ import { Button, notification } from 'antd';
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useDatabase } from '@/store/DatabaseStore';
+import { useUserToken } from '@/store/UserDataStore';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -10,11 +11,15 @@ const AuditMissingRollNo = ({ getFlags }) => {
   const projectId = useProjectId();
   const [loading, setLoading] = useState(false);
   const database = useDatabase();
+  const token = useUserToken();
 
   const AuditMissingRoll = async () => {
     setLoading(true); // Start loading
     try {
-      const res = await axios.get(`${apiUrl}/Audit/MissingRollNumbers?WhichDatabase=${database}&ProjectId=${projectId}`);
+      const res = await axios.get(`${apiUrl}/Audit/MissingRollNumbers?WhichDatabase=${database}&ProjectId=${projectId}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
       console.log(res.data);
       notification.success({
         message: 'Success',

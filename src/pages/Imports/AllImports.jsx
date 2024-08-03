@@ -12,6 +12,7 @@ import ImportOmr from './OmrImport/ImportOmr';
 import { useProjectId } from '@/store/ProjectState';
 import { handleDecrypt, handleEncrypt } from '@/Security/Security';
 import { useDatabase } from '@/store/DatabaseStore';
+import { useUserToken } from '@/store/UserDataStore';
 
 //const apiurl = import.meta.env.VITE_API_URL_PROD;
 const apiurl = import.meta.env.VITE_API_URL;
@@ -29,6 +30,7 @@ const Import = () => {
   const [lastUploadedFile, setLastUploadedFile] = useState('');
   const ProjectId = useProjectId();
   const database = useDatabase();
+  const token = useUserToken();
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -71,7 +73,11 @@ const Import = () => {
     const fetchMappingFields = async () => {
       try {
         const response = await fetch(
-          `${apiurl}/Absentee/absentee/mapping-fields?WhichDatabase=${database}`,
+          `${apiurl}/Absentee/absentee/mapping-fields?WhichDatabase=${database}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
         );
         const data = await response.json();
 
@@ -133,6 +139,8 @@ const Import = () => {
           const response = await axios.post(`${apiurl}/Absentee/upload`, encrypteddatatosend, {
             headers: {
               'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+
             },
             params: {
               WhichDatabase: database,
@@ -172,7 +180,11 @@ const Import = () => {
 
   const handleDeleteAbsentee = async (projectId) => {
     try {
-      const response = await axios.delete(`${apiurl}/Absentee?WhichDatabase=${database}&ProjectId=${ProjectId}`);
+      const response = await axios.delete(`${apiurl}/Absentee?WhichDatabase=${database}&ProjectId=${ProjectId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       notification.success({
         message: 'Absentee data deleted',
         duartion: 3,
@@ -214,8 +226,11 @@ const Import = () => {
     const fetchFieldMappings = async () => {
       try {
         const response = await axios.get(
-          `${apiurl}/FieldConfigurations/GetByProjectId/${ProjectId}?WhichDatabase=${database}`,
-        );
+          `${apiurl}/FieldConfigurations/GetByProjectId/${ProjectId}?WhichDatabase=${database}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
         if (response.data.length == 0) {
           throw new Error('Failed to fetch field mappings');
         }
@@ -243,7 +258,11 @@ const Import = () => {
 
   const handleDeleteScanned = async (projectId) => {
     try {
-      const response = await axios.delete(`${apiurl}/OMRData/Scanned?WhichDatabase=${database}&ProjectId=${ProjectId}`);
+      const response = await axios.delete(`${apiurl}/OMRData/Scanned?WhichDatabase=${database}&ProjectId=${ProjectId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       notification.success({
         message: 'Scanned data deleted',
         duartion: 3,
@@ -269,8 +288,11 @@ const Import = () => {
     const fetchRegistrationMappings = async () => {
       try {
         const response = await axios.get(
-          `${apiurl}/FieldConfigurations/GetByProjectId/${ProjectId}?WhichDatabase=${database}`,
-        );
+          `${apiurl}/FieldConfigurations/GetByProjectId/${ProjectId}?WhichDatabase=${database}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
         if (response.data.length == 0) {
           throw new Error('Failed to fetch field mappings');
         }
@@ -378,6 +400,7 @@ const Import = () => {
           const response = await axios.post(`${apiurl}/OMRData/uploadcsv`, encryptedscanneddatatosend, {
             headers: {
               'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
             },
             params: {
               WhichDatabase: database,
@@ -429,11 +452,14 @@ const Import = () => {
     }));
   };
 
-  useEffect(() => {}, [registrationMapping]);
+  useEffect(() => { }, [registrationMapping]);
 
   const handleDeleteRegistration = async (projectId) => {
     try {
-      const response = await axios.delete(`${apiurl}/Registration?WhichDatabase=${database}&ProjectId=${ProjectId}`);
+      const response = await axios.delete(`${apiurl}/Registration?WhichDatabase=${database}&ProjectId=${ProjectId}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
       notification.success({
         message: 'Registration data deleted',
         duartion: 3,
@@ -460,7 +486,7 @@ const Import = () => {
 
     if (!selectedFile) {
       console.error('No file selected.');
-       notification.warning({
+      notification.warning({
         message: 'No file selected!',
         duration: 3
       })
@@ -529,6 +555,9 @@ const Import = () => {
         const response = await axios.post(`${apiurl}/Registration?`, encryptedregdatatosend, {
           headers: {
             'Content-Type': 'application/json',
+            
+              Authorization : `Bearer ${token}`,
+           
           },
           params: {
             WhichDatabase: database,
@@ -595,7 +624,7 @@ const Import = () => {
                     onClick={() => {
                       setActivetab('scanned');
                       setSelectedFile(null);
-                      
+
                       setHeaders([]);
                     }}
                   >
@@ -614,7 +643,7 @@ const Import = () => {
                       setActivetab('registration');
                       setSelectedFile(null);
                       setHeaders([]);
-                   
+
                     }}
                   >
                     <a data-toggle="tab" title="Registration Data">
@@ -632,7 +661,7 @@ const Import = () => {
                       setActivetab('absentee');
                       setSelectedFile(null);
                       setHeaders([]);
-                     
+
                     }}
                   >
                     <a data-toggle="tab" title="Absentee Data">
@@ -644,14 +673,14 @@ const Import = () => {
                 </ul>
               </div>
               <div className="tab-content-pq">
-                {fieldNamesArray.map((item) => {})}
+                {fieldNamesArray.map((item) => { })}
                 {activetab === 'OMRImages' && <ImportOmr />}
                 {activetab === 'scanned' && (
                   <Scanned
                     handleFileUpload={handleFileUpload}
                     handleScannedUpload={handleScannedUpload}
                     selectedFile={selectedFile}
-                    handleDeleteScanned = {handleDeleteScanned}
+                    handleDeleteScanned={handleDeleteScanned}
                     loading={loading}
                     headers={headers}
                     fieldMappings={fieldMappings}
@@ -663,7 +692,7 @@ const Import = () => {
                     handleFileUpload={handleFileUpload}
                     handleRegistrationUpload={handleRegistrationUpload}
                     selectedFile={selectedFile}
-                    handleDeleteRegistration = {handleDeleteRegistration}
+                    handleDeleteRegistration={handleDeleteRegistration}
                     headers={headers}
                     registrationMapping={registrationMapping}
                     handleRegistrationMappingChange={handleRegistrationMappingChange}
@@ -675,7 +704,7 @@ const Import = () => {
                     handleFileUpload={handleFileUpload}
                     handleAbsenteeUpload={handleAbsenteeUpload}
                     selectedFile={selectedFile}
-                    handleDeleteAbsentee = {handleDeleteAbsentee}
+                    handleDeleteAbsentee={handleDeleteAbsentee}
                     headers={headers}
                     mapping={mapping}
                     handleMappingChange={handleMappingChange}

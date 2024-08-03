@@ -4,6 +4,7 @@ import { Button, Progress, notification } from 'antd';
 import { useProjectId } from '@/store/ProjectState';
 import { handleEncrypt } from '@/Security/Security';
 import { useDatabase } from '@/store/DatabaseStore';
+import { useUserToken } from '@/store/UserDataStore';
 
 const apiurl = import.meta.env.VITE_API_URL;
 
@@ -19,7 +20,7 @@ const ImportOmr = () => {
   const [lastUploadedFile, setLastUploadedFile] = useState('');
 
   const [progress, setProgress] = useState(0);
-
+  const token = useUserToken();
   const ProjectId = useProjectId();
   const database = useDatabase();
 
@@ -30,8 +31,11 @@ const ImportOmr = () => {
   const fetchLastOmrImageName = async (ProjectId) => {
     try {
       const response = await axios.get(
-        `${apiurl}/OMRData/omrdata/${ProjectId}/last-image-name?WhichDatabase=${database}`,
-      );
+        `${apiurl}/OMRData/omrdata/${ProjectId}/last-image-name?WhichDatabase=${database}`,{
+          headers:{
+          Authorization : `Bearer ${token}`
+        }
+    });
       setLastUploadedFile(response.data);
     } catch (error) {
       console.error('Error fetching the last OMR image name:', error);
@@ -56,7 +60,9 @@ const ImportOmr = () => {
   const handleDeleteImages = async (projectId) => {
     try {
       const response = await axios.delete(`${apiurl}/OMRData/Images?WhichDatabase=${database}&ProjectId=${ProjectId}`, {
-
+          headers:{
+          Authorization : `Bearer ${token}`
+        }
       });
       notification.success({
         message: 'Images deleted',
@@ -102,6 +108,7 @@ const ImportOmr = () => {
         {
           headers: {
             'Content-Type': 'application/json',
+              Authorization : `Bearer ${token}`,
           },
           onUploadProgress: (progressEvent) => {
             if (progressEvent.lengthComputable) {

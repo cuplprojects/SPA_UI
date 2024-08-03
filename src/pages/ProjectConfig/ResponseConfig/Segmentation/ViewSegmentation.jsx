@@ -4,6 +4,7 @@ import { useProjectId } from '@/store/ProjectState';
 import { useDatabase } from '@/store/DatabaseStore';
 import axios from 'axios';
 import { DeleteOutlined } from '@ant-design/icons';
+import { useUserToken } from '@/store/UserDataStore';
 
 const apiurl = import.meta.env.VITE_API_URL;
 
@@ -71,37 +72,9 @@ const ViewSegmentation = ({ courseName,data , fetchData }) => {
   const [expandedRowKeys, setExpandedRowKeys] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [showCheckboxes, setShowCheckboxes] = useState(false); // Use boolean for toggle
-
+  const token = useUserToken();
   const ProjectId = useProjectId();
   const database = useDatabase();
-
- 
-
-
-  // const fetchData = async () => {
-  //   try {
-  //     const response = await fetch(`${apiurl}/ResponseConfigs/byproject/${ProjectId}?WhichDatabase=${database}`);
-
-  //     if (!response.ok) {
-  //       throw new Error('Failed to fetch data');
-  //     }
-  //     const result = await response.json();
-  //     const transformedData = result.map((item) => ({
-  //       key: item.responseId, // Use responseId as the unique key
-  //       courseName: item.courseName || 'No Section Defined',
-  //       sections: item.sections,
-  //     }));
-
-  //     setData(transformedData);
-  //     setLoading(false);
-  //   } catch (error) {
-  //     notification.error({
-  //       message: 'Failed to fetch data!',
-  //       duration: 3,
-  //     });
-  //     setLoading(false);
-  //   }
-  // };
 
   const columns = [
     {
@@ -136,7 +109,10 @@ const ViewSegmentation = ({ courseName,data , fetchData }) => {
   const handleDeleteResponse = async () => {
     try {
       const deleteRequests = selectedRowKeys.map((key) => {
-        return axios.delete(`${apiurl}/ResponseConfigs/${key}?WhichDatabase=${database}`);
+        return axios.delete(`${apiurl}/ResponseConfigs/${key}?WhichDatabase=${database}`,{
+          headers:{
+          Authorization : `Bearer ${token}`
+        }});
       });
 
       await Promise.all(deleteRequests);
