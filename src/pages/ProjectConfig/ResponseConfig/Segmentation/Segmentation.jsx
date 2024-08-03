@@ -306,7 +306,7 @@ const Segmentation = () => {
         </div>
 
         <Row>
-          <Col>
+          {/* <Col>
             <Form.Item label="Select Course">
               <Select
                 placeholder="Select a course"
@@ -320,7 +320,30 @@ const Segmentation = () => {
                 ))}
               </Select>
             </Form.Item>
-          </Col>
+          </Col> */}
+          <Col>
+          <Form.Item label="Select Course">
+            {courseOptions && courseOptions.length > 0 ? (
+              <Select
+                placeholder="Select a course"
+                onChange={handleCourseChange}
+                value={selectedCourse}
+              >
+                {filteredCourseOptions.map((course, index) => (
+                  <Option key={index} value={course}>
+                    {course}
+                  </Option>
+                ))}
+              </Select>
+            ) : (
+              <Input
+                placeholder="Enter Course"
+                value={selectedCourse}
+                onChange={(e) => setSelectedCourse(e.target.value)}
+              />
+            )}
+          </Form.Item>
+        </Col>
           <Col>
             {selectedCourse && (
               <Form.Item>

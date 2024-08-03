@@ -23,7 +23,7 @@ function Login() {
   const { colorBgElevated } = useThemeToken();
 
   // Determine whether the user has permissions
-  if (token.accessToken) {
+  if (token) {
     //If authorized, jump to the homepage
     return <Navigate to={HOMEPAGE} replace />;
   }

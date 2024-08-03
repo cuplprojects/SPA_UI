@@ -8,6 +8,7 @@ import editOutlined from '@iconify/icons-ant-design/edit-outlined';
 import deleteOutlined from '@iconify/icons-ant-design/delete-outlined';
 import { handleEncrypt } from '@/Security/Security';
 import { useDatabase } from '@/store/DatabaseStore';
+import useToken from 'antd/es/theme/useToken';
 
 const apiurl = import.meta.env.VITE_API_URL;
 
@@ -27,14 +28,21 @@ export default function GeneralTab() {
   const [editingUserId, setEditingUserId] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [userIdToDelete, setUserIdToDelete] = useState(null);
-  const database = useDatabase()
+  const database = useDatabase();
+  const token = useToken();
 
   useEffect(() => {
     const fetchUsersAndRoles = async () => {
       try {
         const [usersRes, rolesRes] = await Promise.all([
-          axios.get(`${apiurl}/Users?WhichDatabase=${database}`),
-          axios.get(`${apiurl}/Roles?WhichDatabase=${database}`),
+          axios.get(`${apiurl}/Users?WhichDatabase=${database}`,{
+            headers:{
+            Authorization : `Bearer ${token}`
+          }}),
+          axios.get(`${apiurl}/Roles?WhichDatabase=${database}`,{
+            headers:{
+            Authorization : `Bearer ${token}`
+          }}),
         ]);
 
         const roleMap = rolesRes.data.reduce((acc, role) => {
@@ -82,7 +90,10 @@ export default function GeneralTab() {
         cyphertextt: handleEncrypt(JSON.stringify(updatedUser)),
       };
 
-      await axios.put(`${apiurl}/Users/${userId}?WhichDatabase=${database}`, datatobesentencrypted);
+      await axios.put(`${apiurl}/Users/${userId}?WhichDatabase=${database}`, datatobesentencrypted,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
 
       setUserList((prev) =>
         prev.map((user) => (user.userId === userId ? { ...user, isActive: checked } : user)),
@@ -107,7 +118,10 @@ export default function GeneralTab() {
       const datatobesend = {
         cyphertextt: handleEncrypt(JSON.stringify(userData)),
       };
-      await axios.put(`${apiurl}/Users/${userId}?WhichDatabase=${database}`, datatobesend);
+      await axios.put(`${apiurl}/Users/${userId}?WhichDatabase=${database}`, datatobesend,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
       setEditingUserId(null);
       setUserData({
         firstName: '',
@@ -121,7 +135,10 @@ export default function GeneralTab() {
         message: 'User updated successfully!',
         duration: 3,
       });
-      const res = await axios.get(`${apiurl}/Users?WhichDatabase=${database}`);
+      const res = await axios.get(`${apiurl}/Users?WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
       setUserList(res.data);
     } catch (error) {
       console.error('Error updating user:', error.message);
@@ -147,12 +164,18 @@ export default function GeneralTab() {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${apiurl}/Users/${userIdToDelete}?WhichDatabase=${database}`);
+      await axios.delete(`${apiurl}/Users/${userIdToDelete}?WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
       notification.success({
         message: 'User deleted successfully!',
         duration: 3,
       });
-      const res = await axios.get(`${apiurl}/Users?WhichDatabase=${database}`);
+      const res = await axios.get(`${apiurl}/Users?WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
       setUserList(res.data);
       setDeleteModalVisible(false);
     } catch (error) {

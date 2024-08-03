@@ -208,7 +208,6 @@ const ImportOmr = () => {
   return (
     <>
     <div className='d-flex align-items-center justify-content-between'>
-    <Button danger onClick={handleDeleteImages}>Delete</Button>
      <h3 className="head fs-3 text-center">Upload OMR Images</h3>
 
       <form onSubmit={handleSubmit}>

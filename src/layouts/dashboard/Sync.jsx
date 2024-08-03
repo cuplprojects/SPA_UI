@@ -1,17 +1,24 @@
 import React, { useState } from 'react';
 import { Button, message, notification } from 'antd';
 import axios from 'axios';
+import { useUserToken } from '@/store/UserDataStore';
 // import { Iconify } from '@/components/icon';
 const apiurl = import.meta.env.VITE_API_URL
 
 
 const Sync = () => {
   const [loading, setLoading] = useState(false);
+  const token = useUserToken();
 
   const SyncData = async () => {
     setLoading(true);
     try {
-      const response = await axios.post(`${apiurl}/Sync/SyncLogs`);
+      const response = await axios.post(`${apiurl}/Sync/SyncLogs`,
+        {
+          headers:{
+          Authorization : `Bearer ${token}`
+        }
+      });
       notification.success({
         message: 'Success',
         description: 'Sync Success',

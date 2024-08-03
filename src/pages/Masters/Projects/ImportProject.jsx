@@ -27,7 +27,10 @@ const ImportProject = () => {
   const fetchProjects = async () => {
     try {
       const url = `${apiurl}/Projects?WhichDatabase=${database}`;
-      const response = await axios.get(url);
+      const response = await axios.get(url,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
       setProjects(response.data);
     } catch (error) {
       console.error('Error fetching projects:', error);
