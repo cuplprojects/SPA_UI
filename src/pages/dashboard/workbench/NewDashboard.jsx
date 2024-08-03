@@ -31,6 +31,7 @@ const NewDashboard = () => {
   }, []);
 
   const fetchProjects = async () => {
+    console.log(token)
     try {
       // Fetch projects from API
       const response = await axios.get(`${apiurl}/Projects/ByUser/${userId}?WhichDatabase=${database}`,{

@@ -55,7 +55,7 @@ const userTokenKey = 'f1c86227d4abb0a3fbd36T';
 
 const userDataStore = create((set) => ({
   userInfo: userInfoKey && getItem(userInfoKey) ? JSON.parse(handleDecrypt(getItem(userInfoKey))) : {},
-  userToken: userTokenKey && getItem(userTokenKey) ? JSON.parse(handleDecrypt(getItem(userTokenKey))) : '',
+  userToken: userTokenKey && getItem(userTokenKey) ? JSON.parse(handleDecrypt(getItem(userTokenKey))).token : '',
   actions: {
     setUserInfo: (userInfo) => {
       set({ userInfo });
@@ -107,7 +107,7 @@ export const useSignIn = () => {
         };
 
         const accessToken = {
-          accessToken: token,
+          token: token,
         };
         // Setting user token and info in Zustand store
         setUserToken(accessToken);
