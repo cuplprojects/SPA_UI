@@ -19,6 +19,7 @@ import useFlags from '@/CustomHooks/useFlag';
 import { handleDecrypt } from '@/Security/Security';
 import { useDatabase } from '@/store/DatabaseStore';
 import axios from 'axios';
+import { useUserToken } from '@/store/UserDataStore';
 
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -37,6 +38,7 @@ const ProjectDashboard = () => {
   const [recName, setRECName] = useState('');
   const [imcName, setIMCName] = useState('');
   const database = useDatabase();
+  const token = useUserToken();
 
   useEffect(() => {
     // Fetch project details if projectId exists
@@ -59,7 +61,10 @@ const ProjectDashboard = () => {
   // Function to fetch project details from an API
   const fetchProjectDetails = async (projectId) => {
     try {
-      const response = await fetch(`${apiUrl}/Projects/${projectId}?WhichDatabase=${database}`);
+      const response = await fetch(`${apiUrl}/Projects/${projectId}?WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -73,11 +78,26 @@ const ProjectDashboard = () => {
   // Function to fetch counts
   const fetchCounts = async (projectId) => {
     try {
-      const omrImagesCount = await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=Images&WhichDatabase=${database}`);
-      const omrDataCount = await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=Scanned&WhichDatabase=${database}`);
-      const absenteeCount = await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=Absentees&WhichDatabase=${database}`);
-      const keyCount = await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=Keys&WhichDatabase=${database}`);
-      const RegCount = await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=Registration&WhichDatabase=${database}`);
+      const omrImagesCount = await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=Images&WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
+      const omrDataCount = await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=Scanned&WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
+      const absenteeCount = await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=Absentees&WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
+      const keyCount = await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=Keys&WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
+      const RegCount = await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=Registration&WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
       
       setDataCounts([
         { name: 'OMR Images', count: omrImagesCount.data },
@@ -108,9 +128,18 @@ const ProjectDashboard = () => {
   const checkApiCompletion = async (projectId) => {
     try {
       // Fetch data from all three APIs concurrently
-      const fieldConfigcount = (await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=FieldConfig&WhichDatabase=${database}`)).data;
-      const responseConfigcount = (await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=ResponseConfig&WhichDatabase=${database}`)).data;
-      const imageConfigcount = (await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=ImageConfig&WhichDatabase=${database}`)).data;
+      const fieldConfigcount = (await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=FieldConfig&WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }})).data;
+      const responseConfigcount = (await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=ResponseConfig&WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }})).data;
+      const imageConfigcount = (await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=ImageConfig&WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }})).data;
       const completedStep1 =  fieldConfigcount> 0 ? 100 / 3 : 0;
       const completedStep2 = responseConfigcount > 0 ? 100 / 3 : 0;
       const completedStep3 = imageConfigcount > 0 ? 100 / 3 : 0;

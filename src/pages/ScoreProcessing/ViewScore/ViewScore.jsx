@@ -8,6 +8,7 @@ import { DeleteOutlined } from '@ant-design/icons';
 import { useParams } from 'react-router-dom';
 import { handleDecrypt } from '@/Security/Security';
 import { d } from '@/Security/ParamSecurity';
+import { useUserToken } from '@/store/UserDataStore';
 
 const apiurl = import.meta.env.VITE_API_URL;
 
@@ -76,6 +77,7 @@ const ViewScore = () => {
   const database = useDatabase();
   const { course } = useParams();
   const [courseName, setCourseName] = useState();
+  const token = useUserToken();
 
   useEffect(() => {
     if (course) {
@@ -93,8 +95,11 @@ const ViewScore = () => {
       const response = await fetch(
         `${apiurl}/Score?WhichDatabase=${database}&ProjectId=${ProjectId}&courseName=${encodeURIComponent(
           courseName,
-        )}`,
-      );
+        )}`,{
+        headers: {
+          Authorization: `Bearer ${token}`
+      }
+    });
 
       if (!response.ok) {
         throw new Error('Failed to fetch data');
@@ -123,7 +128,9 @@ const ViewScore = () => {
     try {
       const response = await axios.delete(
         `${apiurl}/Score?WhichDatabase=${database}&ProjectId=${ProjectId}&CourseName=${courseName}`,
-        {},
+        { headers: {
+          Authorization: `Bearer ${token}`
+      }},
       );
       fetchData();
       notification.success({

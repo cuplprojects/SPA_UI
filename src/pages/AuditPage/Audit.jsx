@@ -10,6 +10,7 @@ import { useSelectedFieldActions } from '@/store/SelectedFiieldState';
 import { useNavigate } from 'react-router-dom';
 import AllotFlag from './AllotFlags';
 import { useDatabase } from '@/store/DatabaseStore';
+import { useUserToken } from '@/store/UserDataStore';
 
 const APIURL = import.meta.env.VITE_API_URL;
 
@@ -22,6 +23,7 @@ const AuditButton = () => {
   const { setSelectedField } = useSelectedFieldActions();
   const navigate = useNavigate();
   const database = useDatabase();
+  const token = useUserToken();
 
   useEffect(() => {
     getFlags();
@@ -37,7 +39,10 @@ const AuditButton = () => {
   const handleClickAudit = async () => {
     try {
       setIsAuditing(true);
-      const response = await fetch(`${APIURL}/Audit/audit?WhichDatabase=${database}&ProjectID=${ProjectId}`);
+      const response = await fetch(`${APIURL}/Audit/audit?WhichDatabase=${database}&ProjectID=${ProjectId}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
 
       setIsAuditing(false);
       notification.success({

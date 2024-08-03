@@ -4,6 +4,7 @@ import axios from 'axios';
 import { IconButton, Iconify } from '@/components/icon';
 import RoleModal from './role-modal';
 import { useDatabase } from '@/store/DatabaseStore';
+import { useUserToken } from '@/store/UserDataStore';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -16,7 +17,8 @@ const DEFAULT_ROLE_VALUE = {
 
 const RolePage = () => {
   const [roles, setRoles] = useState([]);
-  const database = useDatabase()
+  const database = useDatabase();
+  const token = useUserToken();
 
   useEffect(() => {
     getRoles();
@@ -24,7 +26,10 @@ const RolePage = () => {
 
   const getRoles = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/Roles?WhichDatabase=${database}`);
+      const response = await axios.get(`${apiUrl}/Roles?WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
       setRoles(response.data);
     } catch (error) {
       notification.error({
@@ -43,7 +48,10 @@ const RolePage = () => {
       try {
         if (role.roleId) {
           // Update existing role
-          await axios.put(`${apiUrl}/Roles/${role.roleId}?WhichDatabase=${database}`, role);
+          await axios.put(`${apiUrl}/Roles/${role.roleId}?WhichDatabase=${database}`, role,{
+            headers:{
+            Authorization : `Bearer ${token}`
+          }});
           notification.success({
             message: 'Success',
             description: 'Role updated successfully',
@@ -51,7 +59,10 @@ const RolePage = () => {
           });
         } else {
           // Add new role
-          await axios.post(`${apiUrl}/Roles?WhichDatabase=${database}`, role);
+          await axios.post(`${apiUrl}/Roles?WhichDatabase=${database}`, role,{
+            headers:{
+            Authorization : `Bearer ${token}`
+          }});
           notification.success({
             message: 'Success',
             description: 'Role added successfully',
@@ -138,7 +149,10 @@ const RolePage = () => {
 
   const onDelete = async (roleId) => {
     try {
-      await axios.delete(`${apiUrl}/Roles/${roleId}?WhichDatabase=${database}`);
+      await axios.delete(`${apiUrl}/Roles/${roleId}?WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
       setRoles((prevRoles) => prevRoles.filter((role) => role.roleId !== roleId));
       notification.success({
         message: 'Success',

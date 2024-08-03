@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { handleEncrypt } from '@/Security/Security';
 import { useDatabase } from '@/store/DatabaseStore';
+import { useUserToken } from '@/store/UserDataStore';
 
 const apiurl = import.meta.env.VITE_API_URL;
 
@@ -13,11 +14,15 @@ export default function GeneralTab() {
 const database = useDatabase();
   const [roles, setRoles] = useState([]);
   const isSubmitting = useRef(false); // Ref to track submission state
+  const token = useUserToken();
 
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const res = await axios.get(`${apiurl}/Roles?WhichDatabase=${database}`); // Adjust the API endpoint as needed
+        const res = await axios.get(`${apiurl}/Roles?WhichDatabase=${database}`,{
+          headers:{
+          Authorization : `Bearer ${token}`
+        }}); // Adjust the API endpoint as needed
         setRoles(res.data);
       } catch (error) {
         console.log(error.message);
@@ -36,7 +41,10 @@ const database = useDatabase();
       const datatobesend = {
         cyphertextt : handleEncrypt(JSON.stringify(values))
       };
-      await axios.post(`${apiurl}/Users?WhichDatabase=${database}`, datatobesend);
+      await axios.post(`${apiurl}/Users?WhichDatabase=${database}`, datatobesend,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
       form.resetFields(); // Reset form fields
       notification.success({
         message: 'User added successfully!',

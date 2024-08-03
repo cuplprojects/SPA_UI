@@ -9,6 +9,7 @@ import { useDatabase } from '@/store/DatabaseStore';
 import { useNavigate } from 'react-router-dom';
 import { handleEncrypt } from '@/Security/Security';
 import { e } from '@/Security/ParamSecurity';
+import { useUserToken } from '@/store/UserDataStore';
 
 const apiurl = import.meta.env.VITE_API_URL;
 
@@ -26,9 +27,10 @@ const GenerateScore = () => {
   const [fileInfo, setFileInfo] = useState({});
   const [keycount, setkeycount] = useState([])
   const [updateLoading, setUpdateLoading] = useState({});
-  const [updateFile, setUpdateFile] = useState(null); 
+  const [updateFile, setUpdateFile] = useState(null);
   const database = useDatabase();
   const navigate = useNavigate(); // Initialize useNavigate
+  const token = useUserToken();
 
 
   useEffect(() => {
@@ -42,7 +44,11 @@ const GenerateScore = () => {
   }
   const fetchCourseNames = async () => {
     try {
-      const response = await fetch(`${apiurl}/Registration/GetUniqueValues?whichDatabase=${database}&key=Course%20Name&ProjectId=${ProjectId}`);
+      const response = await fetch(`${apiurl}/Registration/GetUniqueValues?whichDatabase=${database}&key=Course%20Name&ProjectId=${ProjectId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch course names');
       }
@@ -57,7 +63,11 @@ const GenerateScore = () => {
   };
   const fetchKeyCounts = async () => {
     try {
-      const response = await fetch(`${apiurl}/Key/counts?WhichDatabase=${database}&projectId=${ProjectId}`);
+      const response = await fetch(`${apiurl}/Key/counts?WhichDatabase=${database}&projectId=${ProjectId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch key count');
       }
@@ -78,7 +88,11 @@ const GenerateScore = () => {
   // Function to fetch course counts
   const fetchCourseCounts = async () => {
     try {
-      const response = await fetch(`${apiurl}/Score/count?WhichDatabase=${database}&projectId=${ProjectId}`);
+      const response = await fetch(`${apiurl}/Score/count?WhichDatabase=${database}&projectId=${ProjectId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch course counts');
       }
@@ -100,7 +114,11 @@ const GenerateScore = () => {
   const handleProcessScore = async (courseName) => {
     try {
       setProcessing((prev) => ({ ...prev, [courseName]: true }));
-      const response = await fetch(`${apiurl}/Score/omrdata/${ProjectId}/details?courseName=${encodeURIComponent(courseName)}&WhichDatabase=${database}`);
+      const response = await fetch(`${apiurl}/Score/omrdata/${ProjectId}/details?courseName=${encodeURIComponent(courseName)}&WhichDatabase=${database}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       if (!response.ok) {
         throw new Error('Failed to process scores');
       }
@@ -155,7 +173,7 @@ const GenerateScore = () => {
 
 
   const handleUpdateClick = async (courseName) => {
-   
+
     if (!updateFile || updateFile.courseName !== courseName) {
       notification.error({
         message: 'Please select a file for the correct course!',
@@ -169,10 +187,11 @@ const GenerateScore = () => {
     formData.append('courseName', courseName);
 
     try {
-      
+
       const response = await axios.put(`${apiurl}/Key/updatekey?courseName=${courseName}&ProjectId=${ProjectId}&WhichDatabase=${database}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -222,6 +241,9 @@ const GenerateScore = () => {
       const response = await fetch(`${apiurl}/Key/upload?WhichDatabase=${database}&ProjectId=${ProjectId}&courseName=${courseName}`, {
         method: 'POST',
         body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
       });
       const result = await response.json();
 
@@ -284,7 +306,7 @@ const GenerateScore = () => {
             <>
               <Upload
                 showUploadList={false}
-               
+
                 customRequest={({ file }) => handleFileChange(file, record.courseName)}
                 accept='.xlsx'
               >
@@ -366,25 +388,25 @@ const GenerateScore = () => {
             <>
               <Upload
                 showUploadList={false}
-               
+
                 customRequest={({ file }) => handleUpdateFileChange(file, record.courseName)}
                 accept='.xlsx'
               >
                 <Button icon={<UploadOutlined />}>
                   {fileInfo[record.courseName]?.name || 'Click to Update'}
                 </Button>
-                </Upload>
-                <Button
-                  className='ms-2'
-                  type="primary"
-                  onClick={() => handleUpdateClick(record.courseName)}
-                  disabled={updateLoading[record.courseName]}
-                >
-                  {updateLoading[record.courseName]
-                    ? 'Updating...'
-                    : 'Update Key'}
-                </Button>
-              
+              </Upload>
+              <Button
+                className='ms-2'
+                type="primary"
+                onClick={() => handleUpdateClick(record.courseName)}
+                disabled={updateLoading[record.courseName]}
+              >
+                {updateLoading[record.courseName]
+                  ? 'Updating...'
+                  : 'Update Key'}
+              </Button>
+
             </>
           )}
         </div>

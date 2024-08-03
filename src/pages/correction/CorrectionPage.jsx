@@ -11,6 +11,7 @@
 // import { useDatabase } from '@/store/DatabaseStore';
 // import useFlags from '@/CustomHooks/useFlag';
 // import AllotFlag from '../AuditPage/AllotFlags';
+// import { useFlagData } from '@/store/useFlagStore';
 
 // const apiurl = import.meta.env.VITE_API_URL;
 // const { Option } = Select;
@@ -33,7 +34,8 @@
 //   const [regData, setRegData] = useState([]);
 //   const [currentRegIndex, setCurrentRegIndex] = useState(0);
 //   const database = useDatabase();
-//   const [flagData, setFlagData] = useState([]);
+//   // const [flagData, setFlagData] = useState([]);
+//   const flagData = useFlagData();
 
 //   // expand mode from Localstororage if refress the page
 //   useEffect(() => {
@@ -56,6 +58,15 @@
 //     getFlags();
 //     fetchFlagData();
 //   }, [projectId, selectedField, flagData]);
+
+//   // useEffect(() => {
+//   //  if (flagData[currentIndex].isCorrected) {
+//   //   console.log(flagData[currentIndex])
+//   //   setCurrentIndex(currentIndex+1)
+//   //  }
+//   // }, [currentIndex]);
+
+
 
 //   useEffect(() => {
 //     const selectedfield = localStorage.getItem('selectedField');
@@ -106,7 +117,7 @@
 //         const flagsResult = flagData;
 
 //         const mergedData = await Promise.all(
-//           flagsResult.map(async (flag) => {
+//           flagsResult?.map(async (flag) => {
 //             const imageConfigResponse = await axios.get(
 //               `${apiurl}/ImageConfigs/ByProjectId/${projectId}?WhichDatabase=${database}`,
 //               {
@@ -396,7 +407,7 @@
 //   return (
 //     <>
 //       <div className="d-flex align-items-center justify-content-between">
-//         <Select
+//         {/* <Select
 //           placeholder="All Fields"
 //           style={{ width: 200 }}
 //           value={selectedField}
@@ -408,8 +419,8 @@
 //               {field.fieldName}
 //             </Option>
 //           ))}
-//         </Select>
-//         <AllotFlag fieldName={selectedField} setFlagData={setFlagData} />
+//         </Select> */}
+//         <AllotFlag fieldNames={flags} />
 //         <Button type="primary" onClick={toggleExpandMode}>
 //           {expandMode ? 'Zoomed View' : 'Expand OMR'}
 //         </Button>
@@ -628,6 +639,7 @@ import { handleDecrypt, handleEncrypt } from '@/Security/Security';
 import { convertLegacyProps } from 'antd/es/button';
 import { useDatabase } from '@/store/DatabaseStore';
 import useFlags from '@/CustomHooks/useFlag';
+import { useUserToken } from '@/store/UserDataStore';
 
 const apiurl = import.meta.env.VITE_API_URL;
 const { Option } = Select;
@@ -650,6 +662,7 @@ const CorrectionPage = () => {
   const [regData, setRegData] = useState([]);
   const [currentRegIndex, setCurrentRegIndex] = useState(0);
   const database = useDatabase();
+  const token = useUserToken();
 
   // expand mode from Localstororage if refress the page
   useEffect(() => {
@@ -689,7 +702,10 @@ const CorrectionPage = () => {
   const GetRegFilterKeys = async () => {
     try {
       const response = await axios.get(
-        `${apiurl}/Registration/GetKeys?whichDatabase=${database}&ProjectId=${projectId}`,
+        `${apiurl}/Registration/GetKeys?whichDatabase=${database}&ProjectId=${projectId}`,{
+          headers:{
+          Authorization : `Bearer ${token}`
+        }}
       );
       setAvailableOptions(response.data.keys);
       console.log(response.data.keys);
@@ -705,7 +721,10 @@ const CorrectionPage = () => {
     try {
       // Fetch field configurations
       const fieldConfigResponse = await axios.get(
-        `${apiurl}/FieldConfigurations/GetByProjectId/${projectId}?WhichDatabase=${database}`,
+        `${apiurl}/FieldConfigurations/GetByProjectId/${projectId}?WhichDatabase=${database}`,{
+          headers:{
+          Authorization : `Bearer ${token}`
+        }}
       );
       const decryptedfieldConfigResponse = JSON.parse(handleDecrypt(fieldConfigResponse.data));
       const fieldConfigurations = decryptedfieldConfigResponse;
@@ -717,7 +736,10 @@ const CorrectionPage = () => {
   
       // Fetch flags by category
       const flagsResponse = await axios.get(
-        `${apiurl}/Correction/GetFlagsByCategory?WhichDatabase=${database}&ProjectID=${projectId}&FieldName=${selectedField}`,
+        `${apiurl}/Correction/GetFlagsByCategory?WhichDatabase=${database}&ProjectID=${projectId}&FieldName=${selectedField}`,{
+          headers:{
+          Authorization : `Bearer ${token}`
+        }}
       );
       console.log(flagsResponse.data)
       // const decryptedFlagsResponse = JSON.parse(handleDecrypt(flagsResponse.data));
@@ -729,6 +751,7 @@ const CorrectionPage = () => {
             `${apiurl}/ImageConfigs/ByProjectId/${projectId}?WhichDatabase=${database}`,
             {
               headers: { accept: 'text/plain' },
+              Authorization : `Bearer ${token}`,
             },
           );
           const imageresponse = JSON.parse(handleDecrypt(imageConfigResponse.data));
@@ -748,7 +771,10 @@ const CorrectionPage = () => {
               `${apiurl}/OMRData/OMRImagebyName?WhichDatabase=${database}&ProjectId=${projectId}&Name=${flag.barCode}`,
               {
                 params: { WhichDatabase: database },
-                headers: { accept: 'text/plain' },
+                headers: {
+                  accept: 'text/plain',
+                  Authorization: `Bearer ${token}`,
+                },
               },
             );
             imageUrl = 'data:image/png;base64,' + omrImageResponse.data.filePath;
@@ -824,7 +850,7 @@ const CorrectionPage = () => {
           noChangeRequired ? 2 : 3
         }&ProjectId=${projectId}`,
         payloadtobesend,
-        { headers: { 'Content-Type': 'application/json' } },
+        { headers: { 'Content-Type': 'application/json' , Authorization: `Bearer ${token}`,} },
       );
       setNoChangeRequired(false);
       console.log('Data posted successfully:', response.data);
@@ -924,7 +950,10 @@ const CorrectionPage = () => {
       console.log('Data to send:', dataToSend);
       const response = await axios.post(
         `${apiurl}/Registration/ByFilters?WhichDatabase=${database}&ProjectId=${projectId}`,
-        dataToSend,
+        dataToSend,{
+          headers:{
+          Authorization : `Bearer ${token}`
+        }}
       );
       setRegData(response.data);
       console.log('Filtered data:', response.data);
@@ -982,6 +1011,7 @@ const CorrectionPage = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(requestData),
       });

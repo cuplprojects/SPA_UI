@@ -3,6 +3,7 @@ import { Button, Form, Input, InputNumber, Modal, Popconfirm, Table, Typography,
 import Draggable from 'react-draggable';
 import './../Projects/Project.css';
 import { useDatabase } from '@/store/DatabaseStore';
+import { useUserToken } from '@/store/UserDataStore';
 
 
 const apiurl = import.meta.env.VITE_API_URL;
@@ -59,6 +60,7 @@ const Field = () => {
   });
   const draggleRef = useRef(null);
   const database = useDatabase();
+  const token = useUserToken();
 
   const isEditing = (record) => record.key === editingKey;
 
@@ -68,7 +70,10 @@ const Field = () => {
 
   const fetchData = async () => {
     try {
-      const response = await fetch(`${apiurl}/Fields?WhichDatabase=${database}`);
+      const response = await fetch(`${apiurl}/Fields?WhichDatabase=${database}`,{
+        headers:{
+        Authorization : `Bearer ${token}`
+      }});
       const data = await response.json();
      const formattedData = data.map((item, index) => ({ ...item, key: index.toString(), serialNo: index + 1 }));
       setData(formattedData);
@@ -148,6 +153,7 @@ const Field = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          Authorization : `Bearer ${token}`,
         },
         body: JSON.stringify(updatedRow),
       });
@@ -167,6 +173,7 @@ const Field = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization : `Bearer ${token}`,
         },
         body: JSON.stringify(newRow),
       });

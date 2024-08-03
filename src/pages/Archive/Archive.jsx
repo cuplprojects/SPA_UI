@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Typography, Input, Modal, notification } from 'antd';
 import './../Masters/Projects/Project.css';
-import { useUserInfo } from '@/store/UserDataStore';
+import { useUserInfo, useUserToken } from '@/store/UserDataStore';
 import { useDatabase } from '@/store/DatabaseStore';
 
 const apiurl = import.meta.env.VITE_API_URL;
@@ -15,6 +15,7 @@ function Archive() {
   const [projectToUnarchive, setProjectToUnarchive] = useState(null);
   const { userId } = useUserInfo();
   const database = useDatabase();
+  const token = useUserToken();
 
   useEffect(() => {
     fetchData();
@@ -23,7 +24,10 @@ function Archive() {
   const fetchData = async () => {
     try {
       const response = await fetch(
-        `${apiurl}/Projects/ArchivedByUser?userId=${userId}&WhichDatabase=${database}`,
+        `${apiurl}/Projects/ArchivedByUser?userId=${userId}&WhichDatabase=${database}`,{
+          headers:{
+          Authorization : `Bearer ${token}`
+        }}
       );
       const data = await response.json();
       const processedData = data.map((item, index) => ({
@@ -52,6 +56,7 @@ function Archive() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              Authorization : `Bearer ${token}`,
             },
           },
         );

@@ -1,22 +1,26 @@
-import { Button, Modal, Input, Form } from 'antd';
+import { Button, Modal, Input, Form, Select } from 'antd';
 import React, { useState } from 'react';
 import axios from 'axios'; // Import axios for making API requests
 import { useProjectId } from '@/store/ProjectState';
 import { useDatabase } from '@/store/DatabaseStore';
 import { useUserInfo } from '@/store/UserDataStore';
+import { useFlagData, useFlagActions } from '@/store/useFlagStore'; // Import Zustand store for flags
+const apiUrl = import.meta.env.VITE_API_URL;
+const { Option } = Select;
 
-const AllotFlag = ({fieldName, setFlagData}) => {
-  const [showAllotmodal, setShowAllotmodal] = useState(false);
-  const [remaining, setRemaining] = useState(0);
+const AllotFlag = ({ fieldNames }) => {
+  const [showAllotModal, setShowAllotModal] = useState(false);
   const [form] = Form.useForm(); // Form instance for handling form inputs
   const projectId = useProjectId();
   const database = useDatabase();
   const { userId } = useUserInfo();
+  const flagData = useFlagData();
+  const { setFlagData } = useFlagActions();
 
   const fetchFlags = async (values) => {
     try {
       const response = await axios.get(
-        'https://localhost:7290/api/Correction/GetFlagsByCategoryChosingParameters',
+        `${apiUrl}/Correction/GetFlagsByCategoryChosingParameters`,
         {
           params: {
             WhichDatabase: database,
@@ -28,20 +32,20 @@ const AllotFlag = ({fieldName, setFlagData}) => {
           },
         },
       );
-      // Adjust this according to your API response structure
-      setFlagData(response.data)
-      setRemaining(response.data.remainingFlags);
+      setFlagData(response.data); // Assuming API returns { flags: [], remainingFlags: number }
+      setShowAllotModal(false)
+
     } catch (error) {
       console.error('Error fetching flags:', error);
     }
   };
 
   const handleOpenModal = () => {
-    setShowAllotmodal(true);
+    setShowAllotModal(true);
   };
 
   const handleCloseModal = () => {
-    setShowAllotmodal(false);
+    setShowAllotModal(false);
   };
 
   const handleSubmit = (values) => {
@@ -56,7 +60,7 @@ const AllotFlag = ({fieldName, setFlagData}) => {
       </Button>
       <Modal
         title="Allot Modal"
-        open={showAllotmodal}
+        open={showAllotModal}
         onCancel={handleCloseModal}
         footer={null} // Disable default footer buttons
       >
@@ -64,9 +68,15 @@ const AllotFlag = ({fieldName, setFlagData}) => {
           <Form.Item
             name="FieldName"
             label="Field Name"
-            rules={[{ required: true, message: 'Please enter Field Name' }]}
+            rules={[{ required: true, message: 'Please select a Field Name' }]}
           >
-            <Input />
+            <Select placeholder="Select Field Name">
+            {fieldNames.map((field, index) => (
+            <Option key={index} value={field.fieldName}>
+              {field.fieldName}
+            </Option>
+          ))}
+            </Select>
           </Form.Item>
           <Form.Item
             name="rangeStart"
@@ -82,7 +92,6 @@ const AllotFlag = ({fieldName, setFlagData}) => {
           >
             <Input type="number" />
           </Form.Item>
-         
           <Form.Item>
             <Button type="primary" htmlType="submit">
               Fetch Flags
@@ -92,9 +101,6 @@ const AllotFlag = ({fieldName, setFlagData}) => {
             </Button>
           </Form.Item>
         </Form>
-        <p className="text-danger">
-          Total Remaining flags: <span className="fw-bold">{remaining}</span>
-        </p>
       </Modal>
     </div>
   );
