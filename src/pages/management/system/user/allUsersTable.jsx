@@ -9,6 +9,7 @@ import deleteOutlined from '@iconify/icons-ant-design/delete-outlined';
 import { handleEncrypt } from '@/Security/Security';
 import { useDatabase } from '@/store/DatabaseStore';
 import useToken from 'antd/es/theme/useToken';
+import { useUserToken } from '@/store/UserDataStore';
 
 const apiurl = import.meta.env.VITE_API_URL;
 
@@ -29,7 +30,7 @@ export default function GeneralTab() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [userIdToDelete, setUserIdToDelete] = useState(null);
   const database = useDatabase();
-  const token = useToken();
+  const token = useUserToken();
 
   useEffect(() => {
     const fetchUsersAndRoles = async () => {
