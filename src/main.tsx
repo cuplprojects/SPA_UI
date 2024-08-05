@@ -2,7 +2,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 // react
-import { Analytics } from '@vercel/analytics/react';
+// import { Analytics } from '@vercel/analytics/react';
 import { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 // react helmet
@@ -42,7 +42,7 @@ root.render(
       <QueryClientProvider client={queryClient}>
         {/* <ReactQueryDevtools initialIsOpen={true} /> React dev tool */}
         <Suspense>
-          <Analytics />
+          {/* <Analytics /> */}
          
             <App />
           
