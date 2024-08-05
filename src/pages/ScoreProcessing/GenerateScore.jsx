@@ -31,6 +31,7 @@ const GenerateScore = () => {
   const database = useDatabase();
   const navigate = useNavigate(); // Initialize useNavigate
   const token = useUserToken();
+  const [globalFile, setGlobalFile] = useState(null);
 
 
   useEffect(() => {
@@ -107,6 +108,39 @@ const GenerateScore = () => {
         message: 'Failed to fetch course counts!',
         duration: 3,
       });
+    }
+  };
+
+
+  
+  const handleApplyGlobalKey = async () => {
+    if (!globalFile) {
+      notification.error({ message: 'Please select a file to apply for all courses!', duration: 3 });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', globalFile.file);
+
+    try {
+      setLoading(true);
+      const promises = courseNames.map(courseName => {
+        const data = new FormData();
+        data.append('file', globalFile.file);
+        return axios.post(`${apiurl}/Key/upload?WhichDatabase=${database}&ProjectId=${ProjectId}&courseName=${courseName}`, data, {
+          headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}`},
+        });
+      });
+
+      await Promise.all(promises);
+
+      fetchKeyCounts();
+      notification.success({ message: 'File uploaded successfully for all courses!', duration: 3 });
+      setGlobalFile(null);
+    } catch (error) {
+      notification.error({ message: 'Error applying key for all courses!', duration: 3 });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -427,6 +461,27 @@ const GenerateScore = () => {
               Download Key Template
             </Button>
           </a>
+          {courseNames.length > 1 && (
+          <div>
+            <Upload
+              showUploadList={false}
+              customRequest={({ file }) => setGlobalFile({ file })}
+              accept='.xlsx'
+              >
+              <Button icon={<UploadOutlined />}>
+                {globalFile ? globalFile.file.name : 'Select Key for All'}
+              </Button>
+            </Upload>
+            <Button
+              className='ms-2'
+              type="primary"
+              onClick={handleApplyGlobalKey}
+              disabled={loading || !globalFile}
+              >
+              {loading ? 'Uploading...' : 'Apply Key for All Courses'}
+            </Button>
+          </div>
+        )}
         </div>
       </div >
       <div className='gap-5'>
