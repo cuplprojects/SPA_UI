@@ -17,7 +17,7 @@ const NewDashboard = () => {
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]); // State to store fetched projects
   const { setProjectId } = useProjectActions();
-  const {userId} = useUserInfo();
+  const { userId } = useUserInfo();
   const database = useDatabase();
   const token = useUserToken();
 
@@ -36,10 +36,14 @@ const NewDashboard = () => {
   const fetchProjects = async () => {
     try {
       // Fetch projects from API
-      const response = await axios.get(`${apiurl}/Projects/ByUser/${userId}?WhichDatabase=${database}`,{
-        headers:{
-        Authorization : `Bearer ${token}`
-      }});
+      const response = await axios.get(
+        `${apiurl}/Projects/ByUser/${userId}?WhichDatabase=${database}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
       setProjects(response.data); // Update projects state with fetched data
     } catch (error) {
       console.error('Error fetching projects:', error);

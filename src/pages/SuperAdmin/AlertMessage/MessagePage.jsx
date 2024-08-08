@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Table, Modal, Form, Input, Select, Tag, Popconfirm, Row, Col } from 'antd';
 import axios from 'axios';
 import { useMessage } from './../../../utils/alerts/MessageContext'; // Adjust the path based on your setup
+import { useUserToken } from '@/store/UserDataStore';
 
 
 const { TextArea } = Input;
@@ -16,6 +17,7 @@ const MessagePage = () => {
   const [currentMessage, setCurrentMessage] = useState(null);
   const [filters, setFilters] = useState({ module: '', operation: '', status: '' });
   const apiUrl = import.meta.env.VITE_API_URL;
+  const token = useUserToken()
 
   useEffect(() => {
     fetchMessages();
@@ -27,7 +29,11 @@ const MessagePage = () => {
 
   const fetchMessages = async () => {
     try {
-      const response = await axios.get(`${apiUrl}/Messages`);
+      const response = await axios.get(`${apiUrl}/Messages`,{
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       setMessages(response.data);
       setFilteredMessages(response.data);
     } catch (error) {
@@ -60,10 +66,18 @@ const MessagePage = () => {
     form.validateFields().then(async (values) => {
       try {
         if (currentMessage) {
-          await axios.put(`${apiUrl}/Messages/${values.id}`, values);
+          await axios.put(`${apiUrl}/Messages/${values.id}`, values,{
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
           showMessage('Message', 'update', 'success');
         } else {
-          await axios.post(`${apiUrl}/Messages`, values);
+          await axios.post(`${apiUrl}/Messages`, values,{
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
           showMessage('Message', 'create', 'success');
         }
         fetchMessages();
@@ -77,7 +91,11 @@ const MessagePage = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${apiUrl}/Messages/${id}`);
+      await axios.delete(`${apiUrl}/Messages/${id}`,{
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       fetchMessages();
       showMessage('success', 'Message deleted successfully.');
     } catch (error) {
