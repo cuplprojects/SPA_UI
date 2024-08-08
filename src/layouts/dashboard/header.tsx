@@ -1,4 +1,4 @@
-import { Drawer, Select } from 'antd'; // Importing the Drawer and Select components from antd
+import { Drawer } from 'antd'; // Importing the Drawer and Select components from antd
 import Color from 'color'; // Importing the Color library for color manipulations
 import { CSSProperties, useState } from 'react'; // Importing the CSSProperties type and useState hook from React
 // import axios from 'axios'; // Importing Axios for HTTP requests
@@ -19,11 +19,11 @@ import { NAV_COLLAPSED_WIDTH, NAV_WIDTH, HEADER_HEIGHT, OFFSET_HEADER_HEIGHT } f
 import Nav from './nav'; // Importing Nav component
 
 import { ThemeLayout } from '#/enum'; // Importing ThemeLayout enum
-import Sync from './Sync';
+// import Sync from './Sync';
 
-import { useDatabase, useDatabaseActions } from '@/store/DatabaseStore';
+// import { useDatabase, useDatabaseActions } from '@/store/DatabaseStore';
 
-const { Option } = Select;
+// const { Option } = Select;
 
 // Define the Props type for the Header component
 type Props = {
@@ -34,8 +34,8 @@ type Props = {
 // Define the Header component
 export default function Header({ className = '', offsetTop = false }: Props) {
   
-  const database = useDatabase();
-  const {setDatabase} = useDatabaseActions();
+  // const database = useDatabase();
+  // const {setDatabase} = useDatabaseActions();
  
   // State variable to control the drawer open/close state
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -56,9 +56,9 @@ export default function Header({ className = '', offsetTop = false }: Props) {
  
   
 
-  const handleDatabaseChange = (value: string) => {
-    setDatabase(value);
-  };
+  // const handleDatabaseChange = (value: string) => {
+  //   setDatabase(value);
+  // };
 
   // Define header style as a CSSProperties object
   const headerStyle: CSSProperties = {
@@ -109,7 +109,7 @@ export default function Header({ className = '', offsetTop = false }: Props) {
           {/* show current project */}
 
           <div className="align-items-center flex">
-            <Select
+            {/* <Select
               value={database}  
               onChange={handleDatabaseChange}
               style={{ width: 200, marginRight: '1rem' }}
@@ -121,7 +121,7 @@ export default function Header({ className = '', offsetTop = false }: Props) {
                 Online
               </Option>
             </Select>
-            <Sync />
+            <Sync /> */}
             <SearchBar /> {/* Search bar component */}
             <LocalePicker /> {/* Locale picker component */}
             {/* <NoticeButton /> Notifications button */}
