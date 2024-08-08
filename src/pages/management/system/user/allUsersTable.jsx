@@ -35,6 +35,7 @@ export default function GeneralTab() {
   useEffect(() => {
     const fetchUsersAndRoles = async () => {
       try {
+        console.log(token)
         const [usersRes, rolesRes] = await Promise.all([
           axios.get(`${apiurl}/Users?WhichDatabase=${database}`,{
             headers:{

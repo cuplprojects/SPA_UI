@@ -28,6 +28,7 @@ const NewDashboard = () => {
 
   useEffect(() => {
     if (token) {
+      
       fetchProjects(); // Fetch projects when component mounts
     }
   }, [token]);
