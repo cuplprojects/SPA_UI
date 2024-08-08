@@ -113,7 +113,11 @@ const ImportProject = () => {
       if (res.data) {
         const postRes = await axios.post(
           `${apiurl}/ImageConfigs/?WhichDatabase=${database}`,
-          encryptedDatatobesent,
+          encryptedDatatobesent,{
+            headers:{
+            Authorization : `Bearer ${token}`
+          }
+      }
         );
       } else {
         console.log(`No ImageConfigs found for Project ${projectIdFrom}`);
@@ -144,11 +148,11 @@ const ImportProject = () => {
               cyphertextt: handleEncrypt(JSON.stringify(decryptedData[i])),
             }
             const postRes = await axios.post(
-              `${apiurl}/FieldConfigurations/?WhichDatabase=${database}`,{
+              `${apiurl}/FieldConfigurations/?WhichDatabase=${database}`,
+              encryptedDatatobesent,{
                 headers:{
                 Authorization : `Bearer ${token}`
               },
-              encryptedDatatobesent,
           })
           }
           catch(error)
@@ -188,7 +192,11 @@ const ImportProject = () => {
           }
           const postRes = await axios.post(
             `${apiurl}/ResponseConfigs?WhichDatabase=${database}`,
-            encrypteddresponsedata,
+            encrypteddresponsedata,{
+              headers:{
+              Authorization : `Bearer ${token}`
+            }
+        }
           );
           console.log(
             `Successfully imported ResponseConfig with ID ${responseConfig.id} to Project ${projectIdTo}`,

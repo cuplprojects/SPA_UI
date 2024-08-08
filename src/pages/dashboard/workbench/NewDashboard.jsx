@@ -27,8 +27,11 @@ const NewDashboard = () => {
   ).alpha(0.2)})`;
 
   useEffect(() => {
-    fetchProjects(); // Fetch projects when component mounts
-  }, []);
+    if (token) {
+      
+      fetchProjects(); // Fetch projects when component mounts
+    }
+  }, [token]);
 
   const fetchProjects = async () => {
     try {

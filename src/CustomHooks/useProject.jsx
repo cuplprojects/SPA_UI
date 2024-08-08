@@ -12,7 +12,7 @@ const useProject = (projectId) => {
   const fetchProjectName = async () => {
     if (projectId > 0) {
       try {
-        const response = await fetch(`${apiUrl}/Projects/${projectId}?WhichDatabase=${database}`,{
+        const response = await fetch(`${apiUrl}/Projects/${projectId}?WhichDatabase=${database}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -30,8 +30,10 @@ const useProject = (projectId) => {
   };
 
   useEffect(() => {
-    fetchProjectName();
-  }, [projectId, database]); // Include `database` as a dependency
+    if (token) {
+      fetchProjectName();
+    }
+  }, [projectId, database, token]); // Include `database` as a dependency
 
   return { projectName, fetchProjectName }; // Return both projectName and fetchProjectName
 };

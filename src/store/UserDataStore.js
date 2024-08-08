@@ -94,7 +94,7 @@ export const useSignIn = () => {
           password,
         });
 
-        console.log(res.data);
+        
         // Assuming the response structure has token, userId, autogenPass, and role fields
         const { token, userId, autogenPass, role } = res.data;
 
@@ -115,6 +115,7 @@ export const useSignIn = () => {
         setUserInfo(user);
 
         // Redirecting to homepage after successful login
+        
         navigate(HOMEPAGE, { replace: true });
 
         // Showing success notification
