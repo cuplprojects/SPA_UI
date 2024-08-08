@@ -36,7 +36,8 @@ const Segmentation = () => {
   const [marksForCorrectOption, setMarksForCorrectOption] = useState('');
   const [courseOptions, setCourseOptions] = useState([]);
   const projectId = useProjectId();
-  const [responseOption, setResponseOption] = useState('ABC'); // State for selected response option
+  const [responseOption, setResponseOption] = useState('ABC');
+  const [numBlocks, setNumBlocks] = useState(4); // State for selected response option
   const database = useDatabase();
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -196,8 +197,7 @@ const Segmentation = () => {
   const submitData = async () => {
     setLoading(true);
     try {
-      // Ensure numBlocks is defined or set a default value
-      const numBlocks = 0; // Initialize this value as needed
+      // Ensure numBlocks is defined or set a default value // Initialize this value as needed
 
       // Prepare data to match API expected structure
       const dataToSubmit = {
@@ -539,7 +539,7 @@ const Segmentation = () => {
       </div>
 
       <div>
-        <ResponseConfig />
+        <ResponseConfig numBlocks={numBlocks} setNumBlocks={setNumBlocks} responseOption={responseOption} setResponseOption={setResponseOption} />
       </div>
       <div className="mt-3 text-center">
         <Form.Item>

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 
-const ResponseConfig = () => {
-  const [responseOption, setResponseOption] = useState('ABC'); // State for selected response option
-  const [numBlocks, setNumBlocks] = useState(4); // State for number of blocks
+const ResponseConfig = ({numBlocks, setNumBlocks,responseOption, setResponseOption}) => {
+  // const [responseOption, setResponseOption] = useState('ABC'); // State for selected response option
+  // const [numBlocks, setNumBlocks] = useState(4); // State for number of blocks
 
   const handleResponseOptionChange = (e) => {
     setResponseOption(e.target.value);
