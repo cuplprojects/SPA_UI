@@ -45,7 +45,7 @@ const GenerateScore = () => {
   }
   const fetchCourseNames = async () => {
     try {
-      const response = await fetch(`${apiurl}/Registration/GetUniqueValues?whichDatabase=${database}&key=Course%20Name&ProjectId=${ProjectId}`, {
+      const response = await fetch(`${apiurl}/ResponseConfigs/unique?ProjectId=${ProjectId}&WhichDatabase=${database}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
