@@ -42,6 +42,7 @@ const FieldConfiguration = () => {
   const ProjectId = useProjectId();
   const database = useDatabase();
   const token = useUserToken();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     getFields();
@@ -120,6 +121,7 @@ const FieldConfiguration = () => {
   }, [formData.minRange, formData.maxRange]);
 
   const handleSave = (e) => {
+    setLoading(true);
     e.preventDefault();
 
     if (!fieldName || !formData.numberOfBlocks) {
@@ -190,12 +192,14 @@ const FieldConfiguration = () => {
           // updatedData[selectedFieldIndex] = { ...updatedData[selectedFieldIndex], ...newConfig };
           // setSavedData(updatedData);
           // setSelectedFieldIndex(-1);
+          setLoading(false);
           notification.success({
             message: 'Field configuration updated successfully!',
             duration: 3,
           });
         })
         .catch((error) => {
+          setLoading(false);
           console.error('Error updating field configuration:', error);
           notification.error({
             message: 'Error updating field configuration. Please try again later!',
@@ -212,6 +216,7 @@ const FieldConfiguration = () => {
         .then((response) => {
           const newFieldConfig = response.data;
           getFieldConfig();
+          setLoading(false);
           notification.success({
             message: 'Field configuration saved successfully.',
             duration: 3,
@@ -219,6 +224,7 @@ const FieldConfiguration = () => {
           setPagination({ ...pagination, total: savedData.length + 1 });
         })
         .catch((error) => {
+          setLoading(false);
           console.error('Error saving field configuration:', error);
           notification.error({
             message: 'Error saving field configuration. Please try again later.',
@@ -393,7 +399,7 @@ const FieldConfiguration = () => {
         </div>
       )}
       {isFormVisible && (
-        <form onSubmit={handleSave} className="config-form border p-2 mb-2 rounded">
+        <form onSubmit={handleSave} className="config-form mb-2 rounded border p-2">
           <Row>
             <Col xs={12} md={6}>
               <label htmlFor="field">Field:</label>
@@ -480,8 +486,8 @@ const FieldConfiguration = () => {
               </Row>
             </Col>
           </Row>
-          <div className='text-center m-3'>
-            <Button className='px-3' type="primary" htmlType="submit">
+          <div className="m-3 text-center">
+            <Button className="px-3" type="primary" htmlType="submit" disabled={loading}>
               Save
             </Button>
           </div>
