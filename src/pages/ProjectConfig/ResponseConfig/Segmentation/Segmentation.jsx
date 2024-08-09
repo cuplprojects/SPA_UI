@@ -220,7 +220,7 @@ const Segmentation = () => {
           encryptedDatatosubmit,
           {
             headers: {
-              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
             },
           },
         );
@@ -324,8 +324,7 @@ const Segmentation = () => {
     if (!error) {
       setLoading(true);
       try {
-        // Ensure numBlocks is defined or set a default value
-        const numBlocks = 0; // Initialize this value as needed
+        // Ensure numBlocks is defined or set a default value // Initialize this value as needed
 
         // Prepare data to match API expected structure
         const dataToSubmit = {
@@ -705,7 +704,7 @@ const Segmentation = () => {
 
 
         <div>
-          <ResponseConfig />
+          <ResponseConfig numBlocks = {numBlocks} setNumBlocks = {setNumBlocks} responseOption = {responseOption} setResponseOption = {setResponseOption} />
         </div>
         <div className="mt-3 text-center">
           <Form.Item>
