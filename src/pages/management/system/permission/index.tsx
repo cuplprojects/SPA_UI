@@ -140,6 +140,7 @@ export default function PermissionPage() {
         pagination={false}
         columns={columns}
         dataSource={permissions}
+        bordered
       />
 
       <PermissionModal {...permissionModalProps} />

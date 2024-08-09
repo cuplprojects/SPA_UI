@@ -177,7 +177,7 @@ const RolePage = () => {
         </Button>
       }
     >
-      <Table rowKey="roleId" size="small" pagination={false} columns={columns} dataSource={roles} />
+      <Table rowKey="roleId" size="small" pagination={false} columns={columns} dataSource={roles} bordered />
       <RoleModal {...roleModalProps} />
     </Card>
   );

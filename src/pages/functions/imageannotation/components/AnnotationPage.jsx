@@ -34,14 +34,26 @@ const AnnotationPage = () => {
   const [annotationId, setAnnotationId] = useState(0);
   const database = useDatabase();
   const token = useUserToken();
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    clearAnnotation();
+  }, [projectId]);
+
+  const clearAnnotation = () => {
+    if (localStorage.getItem('annotations')) {
+      localStorage.setItem('annotations', []);
+    }
+  };
 
   useEffect(() => {
     // Fetch input fields from API
     axios
-      .get(`${apiurl}/Fields?WhichDatabase=${database}`,{
-        headers:{
-        Authorization : `Bearer ${token}`
-      }})
+      .get(`${apiurl}/Fields?WhichDatabase=${database}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then((response) => {
         const fieldNames = response.data.map((field) => field.fieldName); // Extract field names
         setInputFields(fieldNames);
@@ -55,21 +67,21 @@ const AnnotationPage = () => {
   useEffect(() => {
     // Fetch annotations by project ID
     axios
-      .get(`${apiurl}/ImageConfigs/ByProjectId/${projectId}?WhichDatabase=${database}`,{
-        headers:{
-        Authorization : `Bearer ${token}`
-      }})
+      .get(`${apiurl}/ImageConfigs/ByProjectId/${projectId}?WhichDatabase=${database}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then((response) => {
         let decryptresponse = handleDecrypt(response.data);
-        let destrigifieddata = JSON.parse(decryptresponse)
+        let destrigifieddata = JSON.parse(decryptresponse);
         const resdata = destrigifieddata[0].Annotations;
-        if (resdata.length<=0) {
-          localStorage.removeItem('annotations')
+        if (resdata.length <= 0) {
+          localStorage.removeItem('annotations');
         }
         const fetchedAnnotations = resdata.map((annotation) => {
           // Fixing the coordinates format to be valid JSON
-          const fixedCoordinates = annotation.Coordinates
-            .replace(/'/g, '"') // Replace single quotes with double quotes
+          const fixedCoordinates = annotation.Coordinates.replace(/'/g, '"') // Replace single quotes with double quotes
             .replace(/(\w+):/g, '"$1":'); // Wrap property names with double quotes
 
           return {
@@ -235,6 +247,7 @@ const AnnotationPage = () => {
   };
 
   const submitAnnotation = async () => {
+    setSubmitting(true);
     try {
       const postData = {
         id: annotationId,
@@ -246,12 +259,12 @@ const AnnotationPage = () => {
         })),
       };
 
-      const putdatajson = JSON.stringify(postData)
-          let encrypteddata = handleEncrypt(putdatajson)
+      const putdatajson = JSON.stringify(postData);
+      let encrypteddata = handleEncrypt(putdatajson);
 
-          const encrypteddatatosend = {
-            cyphertextt : encrypteddata
-          }
+      const encrypteddatatosend = {
+        cyphertextt: encrypteddata,
+      };
       if (annotationId > 0) {
         // Annotations exist, use PUT to update
         const putResponse = await axios.put(
@@ -260,10 +273,12 @@ const AnnotationPage = () => {
           {
             headers: {
               'Content-Type': 'application/json',
-              Authorization : `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
             },
           },
         );
+        setSubmitting(false);
+        clearAnnotation();
         notification.success({
           message: 'Annotations updated successfully!',
           duration: 3,
@@ -272,12 +287,12 @@ const AnnotationPage = () => {
         // No annotations exist, use POST to create new annotations
         const { id, ...postDataWithoutId } = postData; // Destructure to remove `id`
 
-        const putdatajson = JSON.stringify(postDataWithoutId)
-          let encrypteddata = handleEncrypt(putdatajson)
+        const putdatajson = JSON.stringify(postDataWithoutId);
+        let encrypteddata = handleEncrypt(putdatajson);
 
-          const encrypteddatatosend = {
-            cyphertextt : encrypteddata
-          }
+        const encrypteddatatosend = {
+          cyphertextt: encrypteddata,
+        };
 
         const postResponse = await axios.post(
           `${apiurl}/ImageConfigs?WhichDatabase=${database}`,
@@ -285,10 +300,11 @@ const AnnotationPage = () => {
           {
             headers: {
               'Content-Type': 'application/json',
-              Authorization : `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
             },
           },
         );
+        setSubmitting(false);
         setAnnotationId(postResponse.data.id);
         notification.success({
           message: 'Annotations submitted successfully!',
@@ -296,6 +312,7 @@ const AnnotationPage = () => {
         });
       }
     } catch (error) {
+      setSubmitting(false);
       notification.error({
         message: 'Failed to add/update Annotations',
         description: error.message,
@@ -348,8 +365,8 @@ const AnnotationPage = () => {
       <div className="d-flex align-items-center justify-content-around m-1">
         <ImageUploader onImageSelect={handleImageSelect} />
         {annotations.length > 0 && imageUrl && (
-          <Button type="primary" onClick={submitAnnotation}>
-            Submit Annotation
+          <Button type="primary" onClick={submitAnnotation} disabled={submitting}>
+            {submitting ? 'Saving...' : 'Submit Annotation'}
           </Button>
         )}
       </div>

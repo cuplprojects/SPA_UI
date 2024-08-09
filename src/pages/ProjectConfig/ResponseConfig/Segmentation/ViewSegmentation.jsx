@@ -64,7 +64,7 @@ const expandedRowRender = (record) => {
     totalMarks: section.totalMarks,
   }));
 
-  return <Table columns={nestedColumns} dataSource={nestedData} pagination={false} />;
+  return <Table columns={nestedColumns} dataSource={nestedData} pagination={false} bordered/>;
 };
 
 const ViewSegmentation = ({ courseName,data , fetchData }) => {
@@ -169,6 +169,7 @@ const ViewSegmentation = ({ courseName,data , fetchData }) => {
           expandedRowRender,
         }}
         rowKey="key"
+        bordered
       />
     </>
   );

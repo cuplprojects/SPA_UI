@@ -118,7 +118,9 @@ const ImportOmr = () => {
           },
         },
       );
+      
       return { success: true, conflict: false };
+      
     } catch (error) {
       if (error.response && error.response.status === 409) {
         return { success: false, conflict: true };

@@ -32,7 +32,7 @@ const Segmentation = () => {
   const [marksPerQuestion, setMarksPerQuestion] = useState('');
   const [sections, setSections] = useState([]);
   const [negativeMarking, setNegativeMarking] = useState('no');
-  const [marksForCorrectOption, setMarksForCorrectOption] = useState('');
+  const [marksForWrongOption, setMarksForWrongOption] = useState('');
   const [courseOptions, setCourseOptions] = useState([]);
   const projectId = useProjectId();
   const [responseOption, setResponseOption] = useState('ABC'); // State for selected response option
@@ -42,6 +42,7 @@ const Segmentation = () => {
   const [existingCourses, setExistingCourses] = useState([]);
   const [data, setData] = useState([]);
   const token = useUserToken();
+  const [error, setError] = useState(null);
 
   const handleCourseChange = (value) => {
     setSelectedCourse(value);
@@ -63,7 +64,7 @@ const Segmentation = () => {
 
   const closeModal = () => {
     setModalVisible(false);
-    getdata();
+    // getdata();
   };
 
   const handleClick = (sectionName) => {
@@ -114,6 +115,23 @@ const Segmentation = () => {
     fetchData();
   }, [projectId, database]);
 
+  const handleNumberChange = (value) => {
+    if (typeof value === 'number' && !isNaN(value)) {
+      if (value > marksPerQuestion) {
+        setError(`Value must be less than or equal to ${marksPerQuestion? marksPerQuestion: 'Marks Per Correct Question'}`);
+      } else {
+        setError(null);
+      }
+      setMarksForWrongOption(value);
+    }
+  };
+
+  const handleKeyPress = (event) => {
+    if (!/[0-9]/.test(event.key)) {
+      event.preventDefault();
+    }
+  };
+
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -144,11 +162,12 @@ const Segmentation = () => {
     try {
       // Step 1: Fetch existing responses for the given project ID
       const response = await fetch(
-        `${apiurl}/ResponseConfigs/byproject/${projectId}?WhichDatabase=${database}`,{
+        `${apiurl}/ResponseConfigs/byproject/${projectId}?WhichDatabase=${database}`,
+        {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
 
       if (!response.ok) {
@@ -227,7 +246,7 @@ const Segmentation = () => {
       setMarksPerQuestion('');
       setSections([]);
       setNegativeMarking('no');
-      setMarksForCorrectOption('');
+      setMarksForWrongOption('');
       setResponseOption('ABC');
       setLoading(false);
       fetchData();
@@ -253,7 +272,7 @@ const Segmentation = () => {
           questionTo,
           marksPerQuestion,
           negativeMarking, // Added field for negative marking
-          marksForWrongAnswer: marksForCorrectOption,
+          marksForWrongAnswer: marksForWrongOption,
         },
       ]);
     }
@@ -263,7 +282,7 @@ const Segmentation = () => {
     questionTo,
     marksPerQuestion,
     negativeMarking,
-    marksForCorrectOption,
+    marksForWrongOption,
   ]);
 
   const fetchData = async () => {
@@ -300,76 +319,82 @@ const Segmentation = () => {
 
   // Function that needs to be async
   const submitData = async () => {
-    setLoading(true);
-    try {
-      // Ensure numBlocks is defined or set a default value
-      const numBlocks = 0; // Initialize this value as needed
+    if (!error) {
+      setLoading(true);
+      try {
+        // Ensure numBlocks is defined or set a default value
+        const numBlocks = 0; // Initialize this value as needed
 
-      // Prepare data to match API expected structure
-      const dataToSubmit = {
-        responseId: 0, // Adjust this as needed
-        sectionsJson: '', // Assuming this is not used; set as needed
-        sections: sections.map((section) => ({
-          name: section.name || '',
-          numQuestions: section.totalQuestions || 0,
-          marksCorrect: section.marksPerQuestion || 0,
-          startQuestion: section.questionFrom || 0,
-          endQuestion: section.questionTo || 0,
-          negativeMarking: section.negativeMarking === 'yes', // Convert to boolean
-          marksWrong: section.negativeMarking === 'yes' ? section.marksForWrongAnswer || 0 : 0,
-          totalMarks: calculateTotalMarks(section.marksPerQuestion, section.totalQuestions),
-        })),
-        responseOption: responseOption || '',
-        numberOfBlocks: numBlocks,
-        projectId: projectId || 0,
-        courseName: selectedCourse || '',
-      };
+        // Prepare data to match API expected structure
+        const dataToSubmit = {
+          responseId: 0, // Adjust this as needed
+          sectionsJson: '', // Assuming this is not used; set as needed
+          sections: sections.map((section) => ({
+            name: section.name || '',
+            numQuestions: section.totalQuestions || 0,
+            marksCorrect: section.marksPerQuestion || 0,
+            startQuestion: section.questionFrom || 0,
+            endQuestion: section.questionTo || 0,
+            negativeMarking: section.negativeMarking === 'yes', // Convert to boolean
+            marksWrong: section.negativeMarking === 'yes' ? section.marksForWrongAnswer || 0 : 0,
+            totalMarks: calculateTotalMarks(section.marksPerQuestion, section.totalQuestions),
+          })),
+          responseOption: responseOption || '',
+          numberOfBlocks: numBlocks,
+          projectId: projectId || 0,
+          courseName: selectedCourse || '',
+        };
 
-      console.log('Data to submit:', JSON.stringify(dataToSubmit));
-      // Log the data to ensure it's formatted correctly
-      const encryptedDatatosubmit = {
-        cyphertextt: handleEncrypt(JSON.stringify(dataToSubmit)),
-      };
+        console.log('Data to submit:', JSON.stringify(dataToSubmit));
+        // Log the data to ensure it's formatted correctly
+        const encryptedDatatosubmit = {
+          cyphertextt: handleEncrypt(JSON.stringify(dataToSubmit)),
+        };
 
-      // Perform the API request
-      const response = await axios.post(
-        `${apiurl}/ResponseConfigs?WhichDatabase=${database}`,
-        encryptedDatatosubmit,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+        // Perform the API request
+        const response = await axios.post(
+          `${apiurl}/ResponseConfigs?WhichDatabase=${database}`,
+          encryptedDatatosubmit,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
           },
-        },
-      );
+        );
 
-      notification.success({
-        message: 'Response submitted successfully',
-        duration: 3,
-      });
-      setSelectedCourse('');
-      setHasSections(false);
-      setTotalQuestions('');
-      setQuestionFrom('');
-      setQuestionTo('');
-      setMarksPerQuestion('');
-      setSections([]);
-      setNegativeMarking('no');
-      setMarksForCorrectOption('');
-      setResponseOption('ABC'); // Reset to default or initial value
+        notification.success({
+          message: 'Response submitted successfully',
+          duration: 3,
+        });
+        setSelectedCourse('');
+        setHasSections(false);
+        setTotalQuestions('');
+        setQuestionFrom('');
+        setQuestionTo('');
+        setMarksPerQuestion('');
+        setSections([]);
+        setNegativeMarking('no');
+        setMarksForWrongOption('');
+        setResponseOption('ABC'); // Reset to default or initial value
 
-      // Set loading to false
-      setLoading(false);
-      fetchData();
-    } catch (error) {
+        // Set loading to false
+        setLoading(false);
+        fetchData();
+      } catch (error) {
+        notification.error({
+          message: 'Error submitting response',
+          description: error.message,
+          duration: 3,
+        });
+
+        // Ensure loading state is reset even if an error occurs
+        setLoading(false);
+      }
+    }else{
       notification.error({
-        message: 'Error submitting response',
-        description: error.message,
-        duration: 3,
-      });
-
-      // Ensure loading state is reset even if an error occurs
-      setLoading(false);
+        message: error
+      })
     }
   };
 
@@ -491,6 +516,7 @@ const Segmentation = () => {
                           value={section.totalQuestions}
                           onChange={(value) => handleSectionChange(index, 'totalQuestions', value)}
                           style={{ width: '100%' }}
+                          onKeyPress={handleKeyPress}
                         />
                       </Form.Item>
                     </Col>
@@ -504,6 +530,7 @@ const Segmentation = () => {
                           onChange={(e) =>
                             handleSectionChange(index, 'questionFrom', e.target.value)
                           }
+                          onKeyPress={handleKeyPress}
                         />
                       </Form.Item>
                     </Col>
@@ -512,6 +539,7 @@ const Segmentation = () => {
                         <Input
                           value={section.questionTo}
                           onChange={(e) => handleSectionChange(index, 'questionTo', e.target.value)}
+                          onKeyPress={handleKeyPress}
                         />
                       </Form.Item>
                     </Col>
@@ -527,6 +555,7 @@ const Segmentation = () => {
                             handleSectionChange(index, 'marksPerQuestion', value)
                           }
                           style={{ width: '100%' }}
+                          onKeyPress={handleKeyPress}
                         />
                       </Form.Item>
                     </Col>
@@ -554,12 +583,13 @@ const Segmentation = () => {
                             section.marksPerQuestion,
                             section.totalQuestions,
                           )}
+                          onKeyPress={handleKeyPress}
                         />
                       </Form.Item>
                     </Col>
                     <Col>
                       {section.negativeMarking === 'yes' && (
-                        <Form.Item label="Marks for Wrong Answer">
+                        <Form.Item label="Marks Deduction  for Wrong Answer">
                           <InputNumber
                             min={0}
                             value={section.marksForWrongAnswer}
@@ -567,6 +597,7 @@ const Segmentation = () => {
                               handleSectionChange(index, 'marksForWrongAnswer', value)
                             }
                             style={{ width: '100%' }}
+                            onKeyPress={handleKeyPress}
                           />
                         </Form.Item>
                       )}
@@ -597,12 +628,13 @@ const Segmentation = () => {
                         min={1}
                         onChange={(value) => setTotalQuestions(value)}
                         style={{ width: '100%' }}
+                        onKeyPress={handleKeyPress}
                       />
                     </Form.Item>
                   </Col>
                   <Col>
                     <Form.Item label="Question From">
-                      <Input onChange={(e) => setQuestionFrom(e.target.value)} />
+                      <Input onChange={(e) => setQuestionFrom(e.target.value)}  onKeyPress={handleKeyPress} />
                     </Form.Item>
                   </Col>
                 </Row>
@@ -610,7 +642,8 @@ const Segmentation = () => {
                 <Row>
                   <Col>
                     <Form.Item label="Question To">
-                      <Input onChange={(e) => setQuestionTo(e.target.value)} />
+                      <Input onChange={(e) => setQuestionTo(e.target.value)} 
+                      onKeyPress={handleKeyPress} />
                     </Form.Item>
                   </Col>
                   <Col>
@@ -619,6 +652,7 @@ const Segmentation = () => {
                         min={0}
                         onChange={(value) => setMarksPerQuestion(value)}
                         style={{ width: '100%' }}
+                        onKeyPress={handleKeyPress}
                       />
                     </Form.Item>
                   </Col>
@@ -641,15 +675,22 @@ const Segmentation = () => {
                       <Input
                         readOnly
                         value={calculateTotalMarks(marksPerQuestion, totalQuestions)}
+                        onKeyPress={handleKeyPress}
                       />
                     </Form.Item>
                   </Col>
                 </Row>
                 {negativeMarking === 'yes' && (
-                  <Form.Item label="Marks for Wrong Answer">
+                  <Form.Item
+                    label="Marks Deduction for Wrong Answer"
+                    status={error ? 'error' : ''}
+                    help={error}
+                  >
                     <InputNumber
-                      min={0}
-                      onChange={(value) => setMarksForCorrectOption(value)}
+                      prefix="-"
+                      value={marksForWrongOption}
+                      onChange={handleNumberChange}
+                      onKeyPress={handleKeyPress}
                       style={{ width: '100%' }}
                     />
                   </Form.Item>

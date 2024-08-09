@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Form, Input, InputNumber, Popconfirm, Table, Typography, message, Select, Modal, notification } from 'antd';
+import {
+  Button,
+  Form,
+  Input,
+  InputNumber,
+  Popconfirm,
+  Table,
+  Typography,
+  message,
+  Select,
+  Modal,
+  notification,
+} from 'antd';
 import './Project.css';
 import { useUserInfo, useUserToken } from '@/store/UserDataStore';
 import axios from 'axios';
@@ -25,7 +37,7 @@ function EditableCell({
   } else if (inputType === 'select') {
     inputNode = (
       <Select mode="multiple" style={{ width: '100%' }}>
-        {options.map(option => (
+        {options.map((option) => (
           <Select.Option key={option.value} value={option.value}>
             {option.label}
           </Select.Option>
@@ -78,14 +90,16 @@ function Project() {
     fetchUsers();
   }, []);
 
-
-
   const fetchData = async () => {
     try {
-      const response = await axios.get(`${apiurl}/Projects/YourProject?WhichDatabase=${database}&userId=${userId}`,{
-        headers:{
-        Authorization : `Bearer ${token}`
-      }});
+      const response = await axios.get(
+        `${apiurl}/Projects/YourProject?WhichDatabase=${database}&userId=${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
       const fetchedData = response.data.map((item, index) => ({
         ...item,
         key: item.projectId.toString(),
@@ -93,7 +107,7 @@ function Project() {
       }));
 
       setData(fetchedData);
-      setFilteredData(fetchedData);// Update filteredData as well
+      setFilteredData(fetchedData); // Update filteredData as well
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -101,12 +115,13 @@ function Project() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch(`${apiurl}/Users?WhichDatabase=${database}`,{
-        headers:{
-        Authorization : `Bearer ${token}`
-      }});
+      const response = await fetch(`${apiurl}/Users?WhichDatabase=${database}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const users = await response.json();
-      setUsers(users.map(user => ({ value: user.userId, label: user.fullName })));
+      setUsers(users.map((user) => ({ value: user.userId, label: user.fullName })));
     } catch (error) {
       console.error('Error fetching users:', error);
     }
@@ -148,7 +163,9 @@ function Project() {
       const index = newData.findIndex((item) => key === item.key);
 
       if (index > -1) {
-        const isDuplicate = newData.some((item, idx) => idx !== index && item.projectName === row.projectName);
+        const isDuplicate = newData.some(
+          (item, idx) => idx !== index && item.projectName === row.projectName,
+        );
         if (isDuplicate) {
           notification.error({
             message: 'Duplicate Project Name',
@@ -161,7 +178,9 @@ function Project() {
         const updatedRow = {
           ...item,
           ...row,
-          userAssigned: row.userAssigned.map(userName => users.find(user => user.label === userName)?.value || userName) // Convert user names to IDs
+          userAssigned: row.userAssigned.map(
+            (userName) => users.find((user) => user.label === userName)?.value || userName,
+          ), // Convert user names to IDs
         };
 
         if (item.method === 'POST') {
@@ -186,7 +205,9 @@ function Project() {
 
         const newRow = {
           ...row,
-          userAssigned: row.userAssigned.map(userName => users.find(user => user.label === userName)?.value || userName) // Convert user names to IDs
+          userAssigned: row.userAssigned.map(
+            (userName) => users.find((user) => user.label === userName)?.value || userName,
+          ), // Convert user names to IDs
         };
         await addRow(newRow);
         setData([...newData, newRow]);
@@ -199,8 +220,6 @@ function Project() {
     }
   };
 
-
-
   const updateRow = async (updatedRow) => {
     try {
       const response = await fetch(
@@ -209,7 +228,7 @@ function Project() {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-              Authorization : `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(updatedRow),
         },
@@ -223,14 +242,13 @@ function Project() {
     }
   };
 
-
   const addRow = async (newRow) => {
     try {
       const response = await fetch(`${apiurl}/Projects?WhichDatabase=${database}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization : `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(newRow),
       });
@@ -246,10 +264,10 @@ function Project() {
   };
 
   const showConfirmModal = (projectKey) => {
-    handleConfirmModalOk(projectKey)
+    handleConfirmModalOk(projectKey);
   };
 
-  // final archive confirm 
+  // final archive confirm
   const handleConfirmModalOk = async (projectToArchive) => {
     if (projectToArchive) {
       try {
@@ -259,17 +277,17 @@ function Project() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization : `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
             },
           },
         );
 
         if (response.ok) {
-          fetchData()
+          fetchData();
           notification.success({
             message: 'Success',
             description: 'Project Archived successfully',
-            duration: 2
+            duration: 2,
           });
           const newData = data.filter((item) => item.key !== projectToArchive);
           setData(newData);
@@ -290,13 +308,12 @@ function Project() {
     }
   };
 
-
   const handleSearchChange = (e) => {
     const { value } = e.target;
     setSearchTerm(value);
     if (value) {
-      const filteredData = data.filter(item =>
-        item.projectName.toLowerCase().includes(value.toLowerCase())
+      const filteredData = data.filter((item) =>
+        item.projectName.toLowerCase().includes(value.toLowerCase()),
       );
       setFilteredData(filteredData);
     } else {
@@ -304,7 +321,7 @@ function Project() {
     }
   };
   const handleAdd = () => {
-    console.log("Start")
+    console.log('Start');
     const newRowKey = data.length + 1;
     const newData = {
       key: newRowKey.toString(),
@@ -337,6 +354,8 @@ function Project() {
       dataIndex: 'projectName',
       width: '50%',
       editable: true,
+      sorter: (a, b) => a.projectName.localeCompare(b.projectName),
+      sortOrder: sortedInfo.columnKey === 'projectName' && sortedInfo.order,
     },
     {
       title: 'User Assigned',
@@ -347,7 +366,9 @@ function Project() {
       sortOrder: sortedInfo.columnKey === 'userAssigned' && sortedInfo.order,
       render: (_, record) => (
         <span>
-          {Array.isArray(record.userAssigned) ? record.userAssigned.join(', ') : record.userAssigned}
+          {Array.isArray(record.userAssigned)
+            ? record.userAssigned.join(', ')
+            : record.userAssigned}
         </span>
       ),
     },
@@ -359,29 +380,23 @@ function Project() {
         const editable = isEditing(record);
         return editable ? (
           <span>
-            <Button
-              onClick={() => save(record.key)}
-              style={{ marginRight: 8 }}
-              type="primary"
-            >
+            <Button onClick={() => save(record.key)} style={{ marginRight: 8 }} type="primary">
               Save
             </Button>
             <Button onClick={cancel}>Cancel</Button>
           </span>
         ) : (
-          <span className='d-flex'>
-            <Button
-              onClick={() => edit(record)}
-              style={{ marginRight: 8 }}
-              type="link"
-            >
+          <span className="d-flex">
+            <Button onClick={() => edit(record)} style={{ marginRight: 8 }} type="link">
               Edit
             </Button>
             <Popconfirm
               title="Are you sure to archive this project?"
               onConfirm={() => showConfirmModal(record.key)}
             >
-              <Button type="link" danger>Archive</Button>
+              <Button type="link" danger>
+                Archive
+              </Button>
             </Popconfirm>
           </span>
         );
@@ -397,7 +412,12 @@ function Project() {
       ...col,
       onCell: (record) => ({
         record,
-        inputType: col.dataIndex === 'serialNo' ? 'number' : col.dataIndex === 'userAssigned' ? 'select' : 'text',
+        inputType:
+          col.dataIndex === 'serialNo'
+            ? 'number'
+            : col.dataIndex === 'userAssigned'
+            ? 'select'
+            : 'text',
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record),
@@ -408,25 +428,27 @@ function Project() {
 
   return (
     <div className="mt-5">
-      <div className="d-flex align-items-center justify-content-between w-100" style={{ marginBottom: 16 }}>
+      <div
+        className="d-flex align-items-center justify-content-between w-100"
+        style={{ marginBottom: 16 }}
+      >
         <Button
           onClick={handleAdd}
           type="primary"
           style={{ marginBottom: 16 }}
           disabled={hasUnsavedChanges}
         >
-        Add Project
-      </Button>
-      <Button>
-          <ImportProject />
+          Add Project
         </Button>
+
+        <ImportProject />
+
         <Input
           placeholder="Search Project"
           value={searchTerm}
           onChange={handleSearchChange}
-          style={{ width: 100, marginRight: 8 }}
+          style={{ width: 150, marginRight: 8 }}
         />
-
       </div>
       <Form form={form} component={false}>
         <Table
@@ -448,5 +470,3 @@ function Project() {
 }
 
 export default Project;
-
-

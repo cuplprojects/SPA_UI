@@ -219,7 +219,7 @@ const MessagePage = () => {
         </Col>
       </Row>
 
-      <Table dataSource={filteredMessages} columns={columns} rowKey="id" />
+      <Table dataSource={filteredMessages} columns={columns} rowKey="id" bordered/>
 
       <Modal
         title={currentMessage ? 'Edit Message' : 'Add New Message'}

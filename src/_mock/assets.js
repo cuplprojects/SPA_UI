@@ -43,7 +43,7 @@ const DASHBOARD_PERMISSION = {
       id: '2.1',
       parentId: '2',
       label: 'sys.menu.workbench',
-      name: 'Workbench',
+      name: 'Dashboard',
       type: PermissionType.MENU,
       route: 'workbench',
       component: '/dashboard/workbench/index.tsx',

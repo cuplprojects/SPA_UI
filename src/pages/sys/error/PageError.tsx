@@ -21,10 +21,10 @@ export default function PageError({ error, resetErrorBoundary }: FallbackProps) 
     resetErrorBoundary();
     replace(HOMEPAGE);
   };
-  return (
+  return (  
     <div>
       <Helmet>
-        <title>Sorry, Page error occurred!</title>
+        <title>SPA ADMIN</title>
       </Helmet>
 
       <div className="m-auto flex h-screen max-w-[400px] items-center justify-center">

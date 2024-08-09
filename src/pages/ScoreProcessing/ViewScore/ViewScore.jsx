@@ -67,7 +67,7 @@ const expandedRowRender = (record) => {
     totalWrongAnswers: section.totalWrongAnswers,
     totalScoreSub: section.totalScoreSub,
   }));
-  return <Table columns={nestedColumns} dataSource={nestedData} pagination={false} />;
+  return <Table columns={nestedColumns} dataSource={nestedData} pagination={false} bordered />;
 };
 
 const ViewScore = () => {
@@ -95,11 +95,13 @@ const ViewScore = () => {
       const response = await fetch(
         `${apiurl}/Score?WhichDatabase=${database}&ProjectId=${ProjectId}&courseName=${encodeURIComponent(
           courseName,
-        )}`,{
-        headers: {
-          Authorization: `Bearer ${token}`
-      }
-    });
+        )}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
       if (!response.ok) {
         throw new Error('Failed to fetch data');
@@ -128,9 +130,11 @@ const ViewScore = () => {
     try {
       const response = await axios.delete(
         `${apiurl}/Score?WhichDatabase=${database}&ProjectId=${ProjectId}&CourseName=${courseName}`,
-        { headers: {
-          Authorization: `Bearer ${token}`
-      }},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
       fetchData();
       notification.success({
@@ -186,6 +190,7 @@ const ViewScore = () => {
           expandedRowRender,
         }}
         rowKey="roll"
+        bordered
       />
     </>
   );
