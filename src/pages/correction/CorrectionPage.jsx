@@ -156,11 +156,13 @@ const CorrectionPage = () => {
             } catch (error) {
               if (error.response && error.response.status === 404) {
                 // If the image is not found (404), set the placeholder image URL
-                imageUrl =noomrimg ;
+
+                imageUrl = noomrimg;
               } else {
                 console.error('Error fetching OMR image:', error);
                 // For other errors, you can also set a placeholder image or handle it differently
-                imageUrl =  noomrimg ;
+                imageUrl = noomrimg;
+
               }
             }
 

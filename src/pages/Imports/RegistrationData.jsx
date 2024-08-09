@@ -28,7 +28,7 @@ const Registration = ({
         <h3 className="head fs-3 text-center">Upload Registration Data</h3>
         <div className="d-flex justify-content-center align-items-center">
           <input type="file" onChange={handleFileUpload} accept=".xlsx" />
-        <Button danger onClick={handleDeleteRegistration}>
+        <Button danger onClick={handleDeleteRegistration} disabled={loading}>
              Delete
           </Button>
         </div>

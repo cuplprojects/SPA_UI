@@ -271,6 +271,7 @@ const ProfileTab = () => {
                   columns={ProjectColumns}
                   dataSource={paginatedProjectData}
                   pagination={false}
+                  bordered
                 />
               </Scrollbar>
 

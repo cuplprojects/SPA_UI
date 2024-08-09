@@ -28,7 +28,7 @@ const useSettingStore = create<SettingStore>((set) => ({
     themeLayout: ThemeLayout.Vertical,
     themeStretch: false,
     breadCrumb: true,
-    multiTab: true,
+    multiTab: false,
   },
   actions: {
     setSettings: (settings) => {

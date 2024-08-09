@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import {
   Select,
@@ -33,7 +32,7 @@ const Segmentation = () => {
   const [marksPerQuestion, setMarksPerQuestion] = useState('');
   const [sections, setSections] = useState([]);
   const [negativeMarking, setNegativeMarking] = useState('no');
-  const [marksForCorrectOption, setMarksForCorrectOption] = useState('');
+  const [marksForWrongOption, setMarksForWrongOption] = useState('');
   const [courseOptions, setCourseOptions] = useState([]);
   const projectId = useProjectId();
   const [responseOption, setResponseOption] = useState('ABC');
@@ -44,6 +43,7 @@ const Segmentation = () => {
   const [existingCourses, setExistingCourses] = useState([]);
   const [data, setData] = useState([]);
   const token = useUserToken();
+  const [error, setError] = useState(null);
 
   const handleCourseChange = (value) => {
     setSelectedCourse(value);
@@ -65,7 +65,7 @@ const Segmentation = () => {
 
   const closeModal = () => {
     setModalVisible(false);
-    getdata();
+    // getdata();
   };
 
   const handleClick = (sectionName) => {
@@ -116,14 +116,33 @@ const Segmentation = () => {
     fetchData();
   }, [projectId, database]);
 
+  const handleNumberChange = (value) => {
+    if (typeof value === 'number' && !isNaN(value)) {
+      if (value > marksPerQuestion) {
+        setError(`Value must be less than or equal to ${marksPerQuestion? marksPerQuestion: 'Marks Per Correct Question'}`);
+      } else {
+        setError(null);
+      }
+      setMarksForWrongOption(value);
+    }
+  };
+
+  const handleKeyPress = (event) => {
+    if (!/[0-9]/.test(event.key)) {
+      event.preventDefault();
+    }
+  };
+
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         const response = await fetch(
-          `${apiurl}/Registration/GetUniqueValues?whichDatabase=${database}&key=Course%20Name&ProjectId=${projectId}`,{
-            headers:{
-            Authorization : `Bearer ${token}`
-          }}
+          `${apiurl}/Registration/GetUniqueValues?whichDatabase=${database}&key=Course%20Name&ProjectId=${projectId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
         );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -139,6 +158,110 @@ const Segmentation = () => {
     fetchCourses();
   }, [projectId]);
 
+  const applyExistingResponseToAllCourses = async () => {
+    setLoading(true);
+    try {
+      // Step 1: Fetch existing responses for the given project ID
+      const response = await fetch(
+        `${apiurl}/ResponseConfigs/byproject/${projectId}?WhichDatabase=${database}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch existing responses');
+      }
+
+      const existingResponses = await response.json();
+
+      // Check if any existing response is available
+      if (existingResponses.length === 0) {
+        notification.warning({
+          message: 'No existing responses found',
+          description:
+            'Please create a response for a course first before applying it to all courses.',
+          duration: 5,
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Allow the user to select an existing response from the available ones
+      const selectedResponse = existingResponses.find((item) => item.courseName === selectedCourse);
+
+      if (!selectedResponse) {
+        notification.warning({
+          message: 'No response found for the selected course',
+          description: 'Please select a course with an existing response or create one first.',
+          duration: 5,
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Step 3: Prepare and submit the data for all courses except the one from which the response was taken
+      const submitForCourse = async (courseName) => {
+        // Clone the selected response and modify as necessary
+        const dataToSubmit = {
+          ...selectedResponse,
+          responseId: 0, // Set this to 0 or omit it if creating a new response
+          courseName: courseName || '',
+        };
+
+        const encryptedDatatosubmit = {
+          cyphertextt: handleEncrypt(JSON.stringify(dataToSubmit)),
+        };
+
+        await axios.post(
+          `${apiurl}/ResponseConfigs?WhichDatabase=${database}`,
+          encryptedDatatosubmit,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          },
+        );
+      };
+
+      // Step 4: Loop through all courses, except the one from which the response was taken
+      for (const course of filteredCourseOptions) {
+        if (course !== selectedCourse) {
+          await submitForCourse(course);
+        }
+      }
+
+      notification.success({
+        message: 'Existing response applied to all courses successfully',
+        duration: 3,
+      });
+
+      // Reset form and loading state
+      setSelectedCourse('');
+      setHasSections(false);
+      setTotalQuestions('');
+      setQuestionFrom('');
+      setQuestionTo('');
+      setMarksPerQuestion('');
+      setSections([]);
+      setNegativeMarking('no');
+      setMarksForWrongOption('');
+      setResponseOption('ABC');
+      setLoading(false);
+      fetchData();
+    } catch (error) {
+      notification.error({
+        message: 'Error applying existing response',
+        description: error.message,
+        duration: 3,
+      });
+
+      setLoading(false);
+    }
+  };
+
   // Function that needs to be async
   useEffect(() => {
     if (!hasSections) {
@@ -150,7 +273,7 @@ const Segmentation = () => {
           questionTo,
           marksPerQuestion,
           negativeMarking, // Added field for negative marking
-          marksForWrongAnswer: marksForCorrectOption,
+          marksForWrongAnswer: marksForWrongOption,
         },
       ]);
     }
@@ -160,16 +283,18 @@ const Segmentation = () => {
     questionTo,
     marksPerQuestion,
     negativeMarking,
-    marksForCorrectOption,
+    marksForWrongOption,
   ]);
 
   const fetchData = async () => {
     try {
       const response = await fetch(
-        `${apiurl}/ResponseConfigs/byproject/${projectId}?WhichDatabase=${database}`,{
-          headers:{
-          Authorization : `Bearer ${token}`
-        }}
+        `${apiurl}/ResponseConfigs/byproject/${projectId}?WhichDatabase=${database}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
 
       if (!response.ok) {
@@ -195,118 +320,135 @@ const Segmentation = () => {
 
   // Function that needs to be async
   const submitData = async () => {
-    setLoading(true);
-    try {
-      // Ensure numBlocks is defined or set a default value // Initialize this value as needed
 
-      // Prepare data to match API expected structure
-      const dataToSubmit = {
-        responseId: 0, // Adjust this as needed
-        sectionsJson: '', // Assuming this is not used; set as needed
-        sections: sections.map((section) => ({
-          name: section.name || '',
-          numQuestions: section.totalQuestions || 0,
-          marksCorrect: section.marksPerQuestion || 0,
-          startQuestion: section.questionFrom || 0,
-          endQuestion: section.questionTo || 0,
-          negativeMarking: section.negativeMarking === 'yes', // Convert to boolean
-          marksWrong: section.negativeMarking === 'yes' ? section.marksForWrongAnswer || 0 : 0,
-          totalMarks: calculateTotalMarks(section.marksPerQuestion, section.totalQuestions),
-        })),
-        responseOption: responseOption || '',
-        numberOfBlocks: numBlocks,
-        projectId: projectId || 0,
-        courseName: selectedCourse || '',
-      };
+    if (!error) {
+      setLoading(true);
+      try {
+        // Ensure numBlocks is defined or set a default value
+        const numBlocks = 0; // Initialize this value as needed
 
-      console.log('Data to submit:', JSON.stringify(dataToSubmit));
-      // Log the data to ensure it's formatted correctly
-      const encryptedDatatosubmit = {
-        cyphertextt: handleEncrypt(JSON.stringify(dataToSubmit)),
-      };
+        // Prepare data to match API expected structure
+        const dataToSubmit = {
+          responseId: 0, // Adjust this as needed
+          sectionsJson: '', // Assuming this is not used; set as needed
+          sections: sections.map((section) => ({
+            name: section.name || '',
+            numQuestions: section.totalQuestions || 0,
+            marksCorrect: section.marksPerQuestion || 0,
+            startQuestion: section.questionFrom || 0,
+            endQuestion: section.questionTo || 0,
+            negativeMarking: section.negativeMarking === 'yes', // Convert to boolean
+            marksWrong: section.negativeMarking === 'yes' ? section.marksForWrongAnswer || 0 : 0,
+            totalMarks: calculateTotalMarks(section.marksPerQuestion, section.totalQuestions),
+          })),
+          responseOption: responseOption || '',
+          numberOfBlocks: numBlocks,
+          projectId: projectId || 0,
+          courseName: selectedCourse || '',
+        };
 
-      // Perform the API request
-      const response = await axios.post(
-        `${apiurl}/ResponseConfigs?WhichDatabase=${database}`,
-        encryptedDatatosubmit,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization : `Bearer ${token}`,
+        console.log('Data to submit:', JSON.stringify(dataToSubmit));
+        // Log the data to ensure it's formatted correctly
+        const encryptedDatatosubmit = {
+          cyphertextt: handleEncrypt(JSON.stringify(dataToSubmit)),
+        };
+
+        // Perform the API request
+        const response = await axios.post(
+          `${apiurl}/ResponseConfigs?WhichDatabase=${database}`,
+          encryptedDatatosubmit,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+
           },
-        },
-      );
+        );
 
-      notification.success({
-        message: 'Response submitted successfully',
-        duration: 3,
-      });
-      setSelectedCourse('');
-      setHasSections(false);
-      setTotalQuestions('');
-      setQuestionFrom('');
-      setQuestionTo('');
-      setMarksPerQuestion('');
-      setSections([]);
-      setNegativeMarking('no');
-      setMarksForCorrectOption('');
-      setResponseOption('ABC'); // Reset to default or initial value
+        notification.success({
+          message: 'Response submitted successfully',
+          duration: 3,
+        });
+        setSelectedCourse('');
+        setHasSections(false);
+        setTotalQuestions('');
+        setQuestionFrom('');
+        setQuestionTo('');
+        setMarksPerQuestion('');
+        setSections([]);
+        setNegativeMarking('no');
+        setMarksForWrongOption('');
+        setResponseOption('ABC'); // Reset to default or initial value
 
-      // Set loading to false
-      setLoading(false);
-      fetchData();
-    } catch (error) {
+        // Set loading to false
+        setLoading(false);
+        fetchData();
+      } catch (error) {
+        notification.error({
+          message: 'Error submitting response',
+          description: error.message,
+          duration: 3,
+        });
+
+        // Ensure loading state is reset even if an error occurs
+        setLoading(false);
+      }
+    }else{
       notification.error({
-        message: 'Error submitting response',
-        description: error.message,
-        duration: 3,
-      });
-
-      // Ensure loading state is reset even if an error occurs
-      setLoading(false);
+        message: error
+      })
     }
   };
 
   return (
-    <Form layout="vertical" onFinish={submitData}>
-      <div>
-        <div className="d-flex justify-content-between align-items-center">
-          <div>
-            <h3>Sections</h3>
-          </div>
+    <>
+      <div className="text-end">
+        <Form.Item>
+          <Button type="primary" onClick={applyExistingResponseToAllCourses} disabled={loading}>
+            {loading ? 'Applying...' : 'Apply Response to All Courses'}
+          </Button>
+        </Form.Item>
+      </div>
+      <Form layout="vertical" onFinish={submitData}>
+        <div>
+          <div className="d-flex justify-content-between align-items-center">
+            <div>
+              <h3>Sections</h3>
+            </div>
 
-          <div>
-            <Button
-              type="primary"
-              style={{ marginTop: 10 }}
-              onClick={() => handleClick(sections.sectionName)}
-            >
-              View Sections
-            </Button>
-            {modalVisible && (
-              <Modal
-                title="View Sections"
-                open={modalVisible}
-                onCancel={closeModal}
-                footer={null}
-                width={1000}
-                style={{ overflowX: 'scroll' }}
+            <div>
+              <Button
+                type="primary"
+                style={{ marginTop: 10 }}
+                onClick={() => handleClick(sections.sectionName)}
               >
-                {modalVisible && (
-                  <ViewSegmentation
-                    courseName={selectedCourse}
-                    onCoursesRetrieved={handleCoursesRetrieved}
-                    data={data}
-                    fetchData={fetchData}
-                  />
-                )}
-              </Modal>
-            )}
+                View Sections
+              </Button>
+              {modalVisible && (
+                <Modal
+                  title="View Sections"
+                  open={modalVisible}
+                  onCancel={closeModal}
+                  footer={null}
+                  width={1000}
+                  style={{ overflowX: 'scroll' }}
+                >
+                  {modalVisible && (
+                    <ViewSegmentation
+                      courseName={selectedCourse}
+                      onCoursesRetrieved={handleCoursesRetrieved}
+                      data={data}
+                      fetchData={fetchData}
+                    />
+                  )}
+                </Modal>
+              )}
+            </div>
           </div>
-        </div>
 
-        <Row>
-          {/* <Col>
+          <Row>
+            {/* <Col>
             <Form.Item label="Select Course">
               <Select
                 placeholder="Select a course"
@@ -321,234 +463,260 @@ const Segmentation = () => {
               </Select>
             </Form.Item>
           </Col> */}
-          <Col>
-          <Form.Item label="Select Course">
-            {courseOptions && courseOptions.length > 0 ? (
-              <Select
-                placeholder="Select a course"
-                onChange={handleCourseChange}
-                value={selectedCourse}
-              >
-                {filteredCourseOptions.map((course, index) => (
-                  <Option key={index} value={course}>
-                    {course}
-                  </Option>
-                ))}
-              </Select>
-            ) : (
-              <Input
-                placeholder="Enter Course"
-                value={selectedCourse}
-                onChange={(e) => setSelectedCourse(e.target.value)}
-              />
-            )}
-          </Form.Item>
-        </Col>
-          <Col>
-            {selectedCourse && (
-              <Form.Item>
-                <Checkbox checked={hasSections} onChange={handleCheckboxChange}>
-                  Does this course have sections?
-                </Checkbox>
+            <Col>
+              <Form.Item label="Select Course">
+                {courseOptions && courseOptions.length > 0 ? (
+                  <Select
+                    placeholder="Select a course"
+                    onChange={handleCourseChange}
+                    value={selectedCourse}
+                  >
+                    {filteredCourseOptions.map((course, index) => (
+                      <Option key={index} value={course}>
+                        {course}
+                      </Option>
+                    ))}
+                  </Select>
+                ) : (
+                  <Input
+                    placeholder="Enter Course"
+                    value={selectedCourse}
+                    onChange={(e) => setSelectedCourse(e.target.value)}
+                  />
+                )}
               </Form.Item>
-            )}
-          </Col>
-        </Row>
+            </Col>
+            <Col>
+              {selectedCourse && (
+                <Form.Item>
+                  <Checkbox checked={hasSections} onChange={handleCheckboxChange}>
+                    Does this course have sections?
+                  </Checkbox>
+                </Form.Item>
+              )}
+            </Col>
+          </Row>
 
-        {hasSections ? (
-          <>
-            {sections.map((section, index) => (
-              <div key={index}>
-                <Divider orientation="left">Section {index + 1}</Divider>
+          {hasSections ? (
+            <>
+              {sections.map((section, index) => (
+                <div key={index}>
+                  <Divider orientation="left">Section {index + 1}</Divider>
 
+                  <Row>
+                    <Col>
+                      <Form.Item label="Section Name">
+                        <Input
+                          value={section.name}
+                          onChange={(e) => handleSectionChange(index, 'name', e.target.value)}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col>
+                      <Form.Item label="Total Questions">
+                        <InputNumber
+                          min={1}
+                          value={section.totalQuestions}
+                          onChange={(value) => handleSectionChange(index, 'totalQuestions', value)}
+                          style={{ width: '100%' }}
+                          onKeyPress={handleKeyPress}
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col>
+                      <Form.Item label="Question From">
+                        <Input
+                          value={section.questionFrom}
+                          onChange={(e) =>
+                            handleSectionChange(index, 'questionFrom', e.target.value)
+                          }
+                          onKeyPress={handleKeyPress}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col>
+                      <Form.Item label="Question To">
+                        <Input
+                          value={section.questionTo}
+                          onChange={(e) => handleSectionChange(index, 'questionTo', e.target.value)}
+                          onKeyPress={handleKeyPress}
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col>
+                      <Form.Item label="Marks Per Correct Question">
+                        <InputNumber
+                          min={0}
+                          value={section.marksPerQuestion}
+                          onChange={(value) =>
+                            handleSectionChange(index, 'marksPerQuestion', value)
+                          }
+                          style={{ width: '100%' }}
+                          onKeyPress={handleKeyPress}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col>
+                      <Form.Item label="Is there negative marking?">
+                        <Radio.Group
+                          onChange={(e) =>
+                            handleSectionChange(index, 'negativeMarking', e.target.value)
+                          }
+                          value={section.negativeMarking}
+                        >
+                          <Radio value="yes">Yes</Radio>
+                          <Radio value="no">No</Radio>
+                        </Radio.Group>
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
+                  <Row>
+                    <Col>
+                      <Form.Item label="Total Marks">
+                        <Input
+                          readOnly
+                          value={calculateTotalMarks(
+                            section.marksPerQuestion,
+                            section.totalQuestions,
+                          )}
+                          onKeyPress={handleKeyPress}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col>
+                      {section.negativeMarking === 'yes' && (
+                        <Form.Item label="Marks Deduction  for Wrong Answer">
+                          <InputNumber
+                            min={0}
+                            value={section.marksForWrongAnswer}
+                            onChange={(value) =>
+                              handleSectionChange(index, 'marksForWrongAnswer', value)
+                            }
+                            style={{ width: '100%' }}
+                            onKeyPress={handleKeyPress}
+                          />
+                        </Form.Item>
+                      )}
+                    </Col>
+                  </Row>
+
+                  <Form.Item>
+                    <Button type="dashed" onClick={() => handleRemoveSection(index)}>
+                      Remove Section
+                    </Button>
+                  </Form.Item>
+                </div>
+              ))}
+              <Form.Item>
+                <Button type="dashed" onClick={handleAddSection}>
+                  Add Section
+                </Button>
+              </Form.Item>
+            </>
+          ) : (
+            !hasSections &&
+            selectedCourse && (
+              <>
                 <Row>
-                  <Col>
-                    <Form.Item label="Section Name">
-                      <Input
-                        value={section.name}
-                        onChange={(e) => handleSectionChange(index, 'name', e.target.value)}
-                      />
-                    </Form.Item>
-                  </Col>
                   <Col>
                     <Form.Item label="Total Questions">
                       <InputNumber
                         min={1}
-                        value={section.totalQuestions}
-                        onChange={(value) => handleSectionChange(index, 'totalQuestions', value)}
+                        onChange={(value) => setTotalQuestions(value)}
                         style={{ width: '100%' }}
+                        onKeyPress={handleKeyPress}
                       />
                     </Form.Item>
                   </Col>
-                </Row>
-
-                <Row>
                   <Col>
                     <Form.Item label="Question From">
-                      <Input
-                        value={section.questionFrom}
-                        onChange={(e) => handleSectionChange(index, 'questionFrom', e.target.value)}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col>
-                    <Form.Item label="Question To">
-                      <Input
-                        value={section.questionTo}
-                        onChange={(e) => handleSectionChange(index, 'questionTo', e.target.value)}
-                      />
+                      <Input onChange={(e) => setQuestionFrom(e.target.value)}  onKeyPress={handleKeyPress} />
                     </Form.Item>
                   </Col>
                 </Row>
 
                 <Row>
+                  <Col>
+                    <Form.Item label="Question To">
+                      <Input onChange={(e) => setQuestionTo(e.target.value)} 
+                      onKeyPress={handleKeyPress} />
+                    </Form.Item>
+                  </Col>
                   <Col>
                     <Form.Item label="Marks Per Correct Question">
                       <InputNumber
                         min={0}
-                        value={section.marksPerQuestion}
-                        onChange={(value) => handleSectionChange(index, 'marksPerQuestion', value)}
+                        onChange={(value) => setMarksPerQuestion(value)}
                         style={{ width: '100%' }}
+                        onKeyPress={handleKeyPress}
                       />
                     </Form.Item>
                   </Col>
+                </Row>
+
+                <Row>
                   <Col>
                     <Form.Item label="Is there negative marking?">
                       <Radio.Group
-                        onChange={(e) =>
-                          handleSectionChange(index, 'negativeMarking', e.target.value)
-                        }
-                        value={section.negativeMarking}
+                        onChange={(e) => setNegativeMarking(e.target.value)}
+                        value={negativeMarking}
                       >
                         <Radio value="yes">Yes</Radio>
                         <Radio value="no">No</Radio>
                       </Radio.Group>
                     </Form.Item>
                   </Col>
-                </Row>
-
-                <Row>
                   <Col>
                     <Form.Item label="Total Marks">
                       <Input
                         readOnly
-                        value={calculateTotalMarks(
-                          section.marksPerQuestion,
-                          section.totalQuestions,
-                        )}
+                        value={calculateTotalMarks(marksPerQuestion, totalQuestions)}
+                        onKeyPress={handleKeyPress}
                       />
                     </Form.Item>
                   </Col>
-                  <Col>
-                    {section.negativeMarking === 'yes' && (
-                      <Form.Item label="Marks for Wrong Answer">
-                        <InputNumber
-                          min={0}
-                          value={section.marksForWrongAnswer}
-                          onChange={(value) =>
-                            handleSectionChange(index, 'marksForWrongAnswer', value)
-                          }
-                          style={{ width: '100%' }}
-                        />
-                      </Form.Item>
-                    )}
-                  </Col>
                 </Row>
-
-                <Form.Item>
-                  <Button type="dashed" onClick={() => handleRemoveSection(index)}>
-                    Remove Section
-                  </Button>
-                </Form.Item>
-              </div>
-            ))}
-            <Form.Item>
-              <Button type="dashed" onClick={handleAddSection}>
-                Add Section
-              </Button>
-            </Form.Item>
-          </>
-        ) : (
-          !hasSections &&
-          selectedCourse && (
-            <>
-              <Row>
-                <Col>
-                  <Form.Item label="Total Questions">
+                {negativeMarking === 'yes' && (
+                  <Form.Item
+                    label="Marks Deduction for Wrong Answer"
+                    status={error ? 'error' : ''}
+                    help={error}
+                  >
                     <InputNumber
-                      min={1}
-                      onChange={(value) => setTotalQuestions(value)}
+                      prefix="-"
+                      value={marksForWrongOption}
+                      onChange={handleNumberChange}
+                      onKeyPress={handleKeyPress}
                       style={{ width: '100%' }}
                     />
                   </Form.Item>
-                </Col>
-                <Col>
-                  <Form.Item label="Question From">
-                    <Input onChange={(e) => setQuestionFrom(e.target.value)} />
-                  </Form.Item>
-                </Col>
-              </Row>
+                )}
+              </>
+            )
+          )}
+        </div>
 
-              <Row>
-                <Col>
-                  <Form.Item label="Question To">
-                    <Input onChange={(e) => setQuestionTo(e.target.value)} />
-                  </Form.Item>
-                </Col>
-                <Col>
-                  <Form.Item label="Marks Per Correct Question">
-                    <InputNumber
-                      min={0}
-                      onChange={(value) => setMarksPerQuestion(value)}
-                      style={{ width: '100%' }}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
 
-              <Row>
-                <Col>
-                  <Form.Item label="Is there negative marking?">
-                    <Radio.Group
-                      onChange={(e) => setNegativeMarking(e.target.value)}
-                      value={negativeMarking}
-                    >
-                      <Radio value="yes">Yes</Radio>
-                      <Radio value="no">No</Radio>
-                    </Radio.Group>
-                  </Form.Item>
-                </Col>
-                <Col>
-                  <Form.Item label="Total Marks">
-                    <Input readOnly value={calculateTotalMarks(marksPerQuestion, totalQuestions)} />
-                  </Form.Item>
-                </Col>
-              </Row>
-              {negativeMarking === 'yes' && (
-                <Form.Item label="Marks for Wrong Answer">
-                  <InputNumber
-                    min={0}
-                    onChange={(value) => setMarksForCorrectOption(value)}
-                    style={{ width: '100%' }}
-                  />
-                </Form.Item>
-              )}
-            </>
-          )
-        )}
-      </div>
+        <div>
+          <ResponseConfig />
+        </div>
+        <div className="mt-3 text-center">
+          <Form.Item>
+            <Button type="primary" htmlType="submit" disabled={loading}>
+              {loading ? 'Submitting...' : 'Submit'}
+            </Button>
+          </Form.Item>
+        </div>
+      </Form>
+    </>
 
-      <div>
-        <ResponseConfig numBlocks={numBlocks} setNumBlocks={setNumBlocks} responseOption={responseOption} setResponseOption={setResponseOption} />
-      </div>
-      <div className="mt-3 text-center">
-        <Form.Item>
-          <Button type="primary" htmlType="submit" disabled={loading}>
-            {loading ? 'Submitting...' : 'Submit'}
-          </Button>
-        </Form.Item>
-      </div>
-    </Form>
   );
 };
 

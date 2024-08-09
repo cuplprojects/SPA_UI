@@ -42,43 +42,45 @@ const FieldConfiguration = () => {
   const ProjectId = useProjectId();
   const database = useDatabase();
   const token = useUserToken();
-  
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     getFields();
   }, []);
 
   useEffect(() => {
-    getFieldConfig()
+    getFieldConfig();
   }, []);
 
-  const getFieldConfig = async() =>{
+  const getFieldConfig = async () => {
     axios
-    .get(`${APIURL}/FieldConfigurations/GetByProjectId/${ProjectId}?WhichDatabase=${database}`,{
-      headers:{
-      Authorization : `Bearer ${token}`
-    }})
-    .then((response) => {
-      console.log(response.data)
-      let decryptedData = handleDecrypt(response.data)
-      console.log(decryptedData)
-      let Jsondata = JSON.parse(decryptedData)
-      console.log(Jsondata)
-      setSavedData(Jsondata);
-      setPagination({ ...pagination, total: Jsondata.length });
-    })
-    .catch((error) => {
-      console.error('Error fetching field configurations:', error);
-    });
-  }
+      .get(`${APIURL}/FieldConfigurations/GetByProjectId/${ProjectId}?WhichDatabase=${database}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        console.log(response.data);
+        let decryptedData = handleDecrypt(response.data);
+        console.log(decryptedData);
+        let Jsondata = JSON.parse(decryptedData);
+        console.log(Jsondata);
+        setSavedData(Jsondata);
+        setPagination({ ...pagination, total: Jsondata.length });
+      })
+      .catch((error) => {
+        console.error('Error fetching field configurations:', error);
+      });
+  };
 
-  console.log(savedData)
+  console.log(savedData);
   const getFields = () => {
     axios
-      .get(`${APIURL}/Fields?WhichDatabase=${database}`,{
-        headers:{
-        Authorization : `Bearer ${token}`
-      }})
+      .get(`${APIURL}/Fields?WhichDatabase=${database}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then((response) => {
         setFields(response.data);
       })
@@ -119,21 +121,22 @@ const FieldConfiguration = () => {
   }, [formData.minRange, formData.maxRange]);
 
   const handleSave = (e) => {
+    setLoading(true);
     e.preventDefault();
 
     if (!fieldName || !formData.numberOfBlocks) {
       notification.error({
         message: 'Please fill in all fields!',
-        duration:3
-       })
+        duration: 3,
+      });
       return;
     }
 
     if (parseInt(formData.minRange) > parseInt(formData.maxRange)) {
       notification.error({
         message: 'Maximum range cannot be less than minimum range!',
-        duration:3
-       })
+        duration: 3,
+      });
       return;
     }
 
@@ -141,8 +144,8 @@ const FieldConfiguration = () => {
       if (formData.numberOfBlocks !== formData.maxRange.toString().length.toString()) {
         notification.error({
           message: 'Number of blocks must match the length of the max range!',
-          duration:3
-         })
+          duration: 3,
+        });
         return;
       }
     }
@@ -166,60 +169,67 @@ const FieldConfiguration = () => {
 
     console.log('Payload to be sent:', JSON.stringify(newConfig, null, 2));
 
-    let newConfigJson = JSON.stringify(newConfig)
-    let encrypteddata = handleEncrypt(newConfigJson)
+    let newConfigJson = JSON.stringify(newConfig);
+    let encrypteddata = handleEncrypt(newConfigJson);
 
     const encrypteddatatosend = {
-      cyphertextt : encrypteddata
-    }
+      cyphertextt: encrypteddata,
+    };
 
     if (selectedFieldIndex !== -1) {
       axios
         .put(
-          `${APIURL}/FieldConfigurations/${newConfig.FieldConfigurationId}?WhichDatabase=${database}`, encrypteddatatosend,
+          `${APIURL}/FieldConfigurations/${newConfig.FieldConfigurationId}?WhichDatabase=${database}`,
+          encrypteddatatosend,
           {
-            headers:{
-            Authorization : `Bearer ${token}`
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-    })
+        )
         .then((response) => {
-          getFieldConfig()
+          getFieldConfig();
           // updatedData[selectedFieldIndex] = { ...updatedData[selectedFieldIndex], ...newConfig };
           // setSavedData(updatedData);
           // setSelectedFieldIndex(-1);
+          setLoading(false);
           notification.success({
             message: 'Field configuration updated successfully!',
-            duration:3
-           })
+            duration: 3,
+          });
         })
         .catch((error) => {
+          setLoading(false);
           console.error('Error updating field configuration:', error);
           notification.error({
             message: 'Error updating field configuration. Please try again later!',
-            duration:3
-           })
+            duration: 3,
+          });
         });
     } else {
       axios
-        .post(`${APIURL}/FieldConfigurations?WhichDatabase=${database}`, encrypteddatatosend,{
-          headers:{
-          Authorization : `Bearer ${token}`
-        }})
+        .post(`${APIURL}/FieldConfigurations?WhichDatabase=${database}`, encrypteddatatosend, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
         .then((response) => {
           const newFieldConfig = response.data;
-          getFieldConfig()
+          getFieldConfig();
+          setLoading(false);
           notification.success({
-            message:'Field configuration saved successfully.',
-            duration:3,
-          })
+            message: 'Field configuration saved successfully.',
+            duration: 3,
+          });
           setPagination({ ...pagination, total: savedData.length + 1 });
         })
         .catch((error) => {
+          setLoading(false);
           console.error('Error saving field configuration:', error);
           notification.error({
-            message:'Error saving field configuration. Please try again later.',
-            duration:3,
-          })
+            message: 'Error saving field configuration. Please try again later.',
+            duration: 3,
+          });
           if (error.response) {
             console.error('Response data:', error.response.data);
           }
@@ -246,25 +256,25 @@ const FieldConfiguration = () => {
 
   const handleDelete = (FieldConfigurationId) => {
     axios
-      .delete(`${APIURL}/FieldConfigurations/${FieldConfigurationId}?WhichDatabase=${database}`,{
-        headers:{
-        Authorization : `Bearer ${token}`
-      }})
+      .delete(`${APIURL}/FieldConfigurations/${FieldConfigurationId}?WhichDatabase=${database}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       .then(() => {
         setSavedData(
           savedData.filter((item) => item.FieldConfigurationId !== FieldConfigurationId),
         );
         notification.success({
-          message:'Field configuration deleted successfully.',
-          duration:3,
-        })
-        
+          message: 'Field configuration deleted successfully.',
+          duration: 3,
+        });
       })
       .catch((error) => {
         console.error('Error deleting field configuration:', error);
         notification.success({
-          message:'Error deleting field configuration. Please try again later.',
-          duration:3,
+          message: 'Error deleting field configuration. Please try again later.',
+          duration: 3,
         });
       });
   };
@@ -289,8 +299,7 @@ const FieldConfiguration = () => {
         ...prevData,
         responses: preferredResponse || '',
       }));
-    }
-    else{
+    } else {
       setFormData((prevData) => ({
         ...prevData,
         responses: '',
@@ -311,38 +320,46 @@ const FieldConfiguration = () => {
   const columns = [
     {
       title: 'Field',
-      dataIndex: 'FieldName', // Use fieldName directly
+      dataIndex: 'FieldName',
       key: 'fieldName',
-      sorter: (a, b) => a.fieldName.localeCompare(b.fieldName),
+      sorter: (a, b) => a.FieldName.localeCompare(b.FieldName),
     },
     {
       title: 'Min Range',
       dataIndex: ['FieldAttributes', 0, 'MinRange'],
       key: 'minRange',
-      sorter: (a, b) =>
-        parseInt(a.fieldAttributes[0].minRange) - parseInt(b.fieldAttributes[0].minRange),
+      sorter: (a, b) => {
+        const minRangeA = parseInt(a.FieldAttributes[0].MinRange, 10);
+        const minRangeB = parseInt(b.FieldAttributes[0].MinRange, 10);
+        return minRangeA - minRangeB;
+      },
     },
     {
       title: 'Max Range',
       dataIndex: ['FieldAttributes', 0, 'MaxRange'],
       key: 'maxRange',
-      sorter: (a, b) =>
-        parseInt(a.fieldAttributes[0].maxRange) - parseInt(b.fieldAttributes[0].maxRange),
+      sorter: (a, b) => {
+        const maxRangeA = parseInt(a.FieldAttributes[0].MaxRange, 10);
+        const maxRangeB = parseInt(b.FieldAttributes[0].MaxRange, 10);
+        return maxRangeA - maxRangeB;
+      },
     },
     {
       title: 'Preferred Responses',
       dataIndex: ['FieldAttributes', 0, 'Responses'],
       key: 'responses',
       sorter: (a, b) =>
-        a.fieldAttributes[0].responses.localeCompare(b.fieldAttributes[0].responses),
+        a.FieldAttributes[0].Responses.localeCompare(b.FieldAttributes[0].Responses),
     },
     {
       title: 'Number of Blocks',
       dataIndex: ['FieldAttributes', 0, 'NumberOfBlocks'],
       key: 'numberOfBlocks',
-      sorter: (a, b) =>
-        parseInt(a.fieldAttributes[0].numberOfBlocks) -
-        parseInt(b.fieldAttributes[0].numberOfBlocks),
+      sorter: (a, b) => {
+        const blocksA = parseInt(a.FieldAttributes[0].NumberOfBlocks, 10);
+        const blocksB = parseInt(b.FieldAttributes[0].NumberOfBlocks, 10);
+        return blocksA - blocksB;
+      },
     },
     {
       title: 'Actions',
@@ -382,9 +399,9 @@ const FieldConfiguration = () => {
         </div>
       )}
       {isFormVisible && (
-        <form onSubmit={handleSave} className="config-form">
+        <form onSubmit={handleSave} className="config-form mb-2 rounded border p-2">
           <Row>
-            <Col>
+            <Col xs={12} md={6}>
               <label htmlFor="field">Field:</label>
               <Select
                 id="field"
@@ -399,7 +416,7 @@ const FieldConfiguration = () => {
                 ))}
               </Select>
             </Col>
-            <Col>
+            <Col xs={12} md={6}>
               <label htmlFor="minRange">Min Range:</label>
               <Input
                 type="number"
@@ -410,7 +427,7 @@ const FieldConfiguration = () => {
             </Col>
           </Row>
           <Row>
-            <Col>
+            <Col xs={12} md={6}>
               <label htmlFor="maxRange">Max Range:</label>
               <Input
                 type="number"
@@ -419,7 +436,7 @@ const FieldConfiguration = () => {
                 onChange={handleInputChange}
               />
             </Col>
-            <Col>
+            <Col xs={12} md={6}>
               <label htmlFor="responses">Preferred Responses:</label>
               <Input
                 id="responses"
@@ -435,32 +452,49 @@ const FieldConfiguration = () => {
               />
             </Col>
           </Row>
-          <Row>
-            <Col>
+          <Row className="align-items-center">
+            <Col xs={12} md={6}>
               <label htmlFor="numberOfBlocks">Number of Blocks:</label>
               <Input
                 type="number"
                 id="numberOfBlocks"
                 value={formData.numberOfBlocks}
                 onChange={handleInputChange}
+                style={{ width: '100%' }}
               />
             </Col>
-            <Col>
-              <label htmlFor="canBlank">Can Be Blank:</label>
-              <Input
-                type="checkbox"
-                id="canBlank"
-                checked={formData.canBlank}
-                onChange={handleInputChange}
-              />
+            <Col xs={12} md={6}>
+              <Row>
+                <Col xs={12} md={6}>
+                  <label
+                    htmlFor="canBlank"
+                    className="d-inline-block mb-0 me-2"
+                    style={{ verticalAlign: 'middle' }}
+                  >
+                    Can Be Blank:
+                  </label>
+                </Col>
+                <Col xs={12} md={6} className="text-start">
+                  <Input
+                    type="checkbox"
+                    id="canBlank"
+                    checked={formData.canBlank}
+                    onChange={handleInputChange}
+                    style={{ marginLeft: '8px' }}
+                  />
+                </Col>
+              </Row>
             </Col>
           </Row>
-          <Button type="primary" htmlType="submit">
-            Save
-          </Button>
+          <div className="m-3 text-center">
+            <Button className="px-3" type="primary" htmlType="submit" disabled={loading}>
+              Save
+            </Button>
+          </div>
         </form>
       )}
       <Table
+        bordered
         columns={columns}
         dataSource={savedData}
         rowKey="fieldConfigurationId"

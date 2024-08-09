@@ -1,4 +1,4 @@
-import { App, Button, Col, Form, Input, Row, Space, Switch, Select,notification } from 'antd';
+import { App, Button, Col, Form, Input, Row, Select, notification } from 'antd';
 import Card from '@/components/card';
 import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
@@ -8,52 +8,63 @@ import { useUserToken } from '@/store/UserDataStore';
 
 const apiurl = import.meta.env.VITE_API_URL;
 
-export default function GeneralTab() {
+const validateName = (_, value) => {
+  if (!value || /^[a-zA-Z. ]*$/.test(value)) {
+    return Promise.resolve();
+  }
+  return Promise.reject('Please enter valid name.');
+};
 
+const validateEmail = (_, value) => {
+  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!value || emailPattern.test(value)) {
+    return Promise.resolve();
+  }
+  return Promise.reject('Please enter a valid email address!');
+};
+
+export default function GeneralTab() {
   const [form] = Form.useForm(); // Create form instance
-const database = useDatabase();
   const [roles, setRoles] = useState([]);
-  const isSubmitting = useRef(false); // Ref to track submission state
+  const [isSubmitting, setIsSubmitting] = useState(false); // State for submit button loading
+  const database = useDatabase();
   const token = useUserToken();
 
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const res = await axios.get(`${apiurl}/Roles?WhichDatabase=${database}`,{
-          headers:{
-          Authorization : `Bearer ${token}`
-        }}); // Adjust the API endpoint as needed
-        setRoles(res.data);
+        const { data } = await axios.get(`${apiurl}/Roles?WhichDatabase=${database}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setRoles(data);
       } catch (error) {
-        console.log(error.message);
+        console.error('Error fetching roles:', error.message);
       }
     };
 
     fetchRoles();
-  }, []);
+  }, [database, token]);
 
   const handleSubmit = async (values) => {
-    if (isSubmitting.current) {
-      return; // Ignore subsequent submissions
-    }
-    isSubmitting.current = true; // Set the flag to true
+    if (isSubmitting) return; // Prevent duplicate submissions
+    setIsSubmitting(true); // Show loading state
+
     try {
       const datatobesend = {
-        cyphertextt : handleEncrypt(JSON.stringify(values))
+        cyphertextt: handleEncrypt(JSON.stringify({ ...values, isActive: true })), // Set isActive to true
       };
-      await axios.post(`${apiurl}/Users?WhichDatabase=${database}`, datatobesend,{
-        headers:{
-        Authorization : `Bearer ${token}`
-      }});
+      await axios.post(`${apiurl}/Users?WhichDatabase=${database}`, datatobesend, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       form.resetFields(); // Reset form fields
       notification.success({
         message: 'User added successfully!',
         duration: 3,
       });
     } catch (error) {
-      console.log(error.message);
+      console.error('Error adding user:', error.message);
     } finally {
-      isSubmitting.current = false; // Reset the flag
+      setIsSubmitting(false); // Hide loading state
     }
   };
 
@@ -69,8 +80,8 @@ const database = useDatabase();
               lastName: '',
               email: '',
               roleId: '',
-              isActive: true
-            }} // Set initialValues to populate the form
+              isActive: true, // Default value for isActive
+            }}
             labelCol={{ span: 8 }}
             className="w-full"
             onFinish={handleSubmit} // Added onFinish event handler
@@ -82,6 +93,7 @@ const database = useDatabase();
                   name="firstName"
                   rules={[
                     { required: true, message: 'Please enter your first name!' },
+                    { validator: validateName }
                   ]}
                 >
                   <Input />
@@ -93,6 +105,7 @@ const database = useDatabase();
                   name="lastName"
                   rules={[
                     { required: true, message: 'Please enter your last name!' },
+                    { validator: validateName }
                   ]}
                 >
                   <Input />
@@ -107,6 +120,7 @@ const database = useDatabase();
                   name="email"
                   rules={[
                     { required: true, message: 'Please enter your email!' },
+                    { validator: validateEmail }
                   ]}
                 >
                   <Input />
@@ -116,9 +130,7 @@ const database = useDatabase();
                 <Form.Item
                   label="Role"
                   name="roleId"
-                  rules={[
-                    { required: true, message: 'Please select a role!' },
-                  ]}
+                  rules={[{ required: true, message: 'Please select a role!' }]}
                 >
                   <Select>
                     {roles.map((role) => (
@@ -132,7 +144,7 @@ const database = useDatabase();
             </Row>
 
             <div className="flex w-full justify-end">
-              <Button type="primary" htmlType="submit">
+              <Button type="primary" htmlType="submit" loading={isSubmitting}>
                 ADD
               </Button>
             </div>

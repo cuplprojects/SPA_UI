@@ -59,7 +59,7 @@ const AllotFlag = ({ fieldNames }) => {
         Allot Flags
       </Button>
       <Modal
-        title="Allot Modal"
+        title="Allot Flags"
         open={showAllotModal}
         onCancel={handleCloseModal}
         footer={null} // Disable default footer buttons

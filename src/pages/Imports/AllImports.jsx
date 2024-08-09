@@ -179,12 +179,14 @@ const Import = () => {
 
 
   const handleDeleteAbsentee = async (projectId) => {
+    setLoading(true)
     try {
       const response = await axios.delete(`${apiurl}/Absentee?WhichDatabase=${database}&ProjectId=${ProjectId}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
+      setLoading(false)
       notification.success({
         message: 'Absentee data deleted',
         duartion: 3,
@@ -192,10 +194,12 @@ const Import = () => {
       // Handle the response here
       console.log('Deletion successful:', response.data);
     } catch (error) {
+      setLoading(false)
       notification.error({
         message: 'Error in deleting Absentee',
         duartion: 3,
       })
+      setLoading(false)
       // Handle errors here
       notification.error({
         message: 'Error in deleting Absentee',
@@ -257,12 +261,14 @@ const Import = () => {
 
 
   const handleDeleteScanned = async (projectId) => {
+    setLoading(true)
     try {
       const response = await axios.delete(`${apiurl}/OMRData/Scanned?WhichDatabase=${database}&ProjectId=${ProjectId}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
+      setLoading(false)
       notification.success({
         message: 'Scanned data deleted',
         duartion: 3,
@@ -270,6 +276,7 @@ const Import = () => {
       // Handle the response here
       console.log('Deletion successful:', response.data);
     } catch (error) {
+      setLoading(false)
       notification.error({
         message: 'Error in deleting Scanned',
         duartion: 3,
@@ -455,6 +462,7 @@ const Import = () => {
   useEffect(() => { }, [registrationMapping]);
 
   const handleDeleteRegistration = async (projectId) => {
+    setLoading(true)
     try {
       const response = await axios.delete(`${apiurl}/Registration?WhichDatabase=${database}&ProjectId=${ProjectId}`,{
         headers:{
@@ -464,9 +472,11 @@ const Import = () => {
         message: 'Registration data deleted',
         duartion: 3,
       })
+      setLoading(false)
       // Handle the response here
       console.log('Deletion successful:', response.data);
     } catch (error) {
+      setLoading(false)
       notification.error({
         message: 'Error in deleting Registration',
         duartion: 3,
@@ -569,12 +579,14 @@ const Import = () => {
           message: 'Upload successful!',
           duration: 3
         })
+        setSelectedFile(null);
       } catch (error) {
         console.error('Error uploading registration data:', error);
         notification.error({
           message: 'Error uploading data!',
           duration: 3
         })
+        setSelectedFile(null);
       } finally {
         setLoading(false);
         setSelectedFile(null);

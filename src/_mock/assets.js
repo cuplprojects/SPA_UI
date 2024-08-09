@@ -43,7 +43,7 @@ const DASHBOARD_PERMISSION = {
       id: '2.1',
       parentId: '2',
       label: 'sys.menu.workbench',
-      name: 'Workbench',
+      name: 'Dashboard',
       type: PermissionType.MENU,
       route: 'workbench',
       component: '/dashboard/workbench/index.tsx',
@@ -376,17 +376,6 @@ const OTHERS_PERMISSION = [
     route: 'AllImports',
     component: '/Imports/index.tsx',
   },
-
-  {
-    id: '12',
-    parentId: '',
-    label: 'sys.menu.GenerateScore',
-    name: 'ScoreProcessing',
-    icon: 'solar:checklist-minimalistic-bold-duotone',
-    type: PermissionType.MENU,
-    route: 'GenerateScore',
-    component: '/ScoreProcessing/index.tsx',
-  },
   //Audit
   {
     id: '13',
@@ -408,6 +397,16 @@ const OTHERS_PERMISSION = [
     type: PermissionType.MENU,
     route: 'correction',
     component: '/correction/index.tsx',
+  },
+  {
+    id: '12',
+    parentId: '',
+    label: 'sys.menu.GenerateScore',
+    name: 'ScoreProcessing',
+    icon: 'solar:checklist-minimalistic-bold-duotone',
+    type: PermissionType.MENU,
+    route: 'GenerateScore',
+    component: '/ScoreProcessing/index.tsx',
   },
   // {
   //   id: '15',

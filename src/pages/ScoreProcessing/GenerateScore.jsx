@@ -25,7 +25,7 @@ const GenerateScore = () => {
   // const [modalVisible, setModalVisible] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [fileInfo, setFileInfo] = useState({});
-  const [keycount, setkeycount] = useState([])
+  const [keycount, setkeycount] = useState([]);
   const [updateLoading, setUpdateLoading] = useState({});
   const [updateFile, setUpdateFile] = useState(null);
   const database = useDatabase();
@@ -33,23 +33,27 @@ const GenerateScore = () => {
   const token = useUserToken();
   const [globalFile, setGlobalFile] = useState(null);
 
-
   useEffect(() => {
-    getdata()
+    getdata();
   }, [ProjectId]); // Run these effects whenever ProjectId changes
 
   const getdata = () => {
     fetchCourseNames();
     fetchCourseCounts();
-    fetchKeyCounts()
-  }
+    fetchKeyCounts();
+  };
   const fetchCourseNames = async () => {
     try {
-      const response = await fetch(`${apiurl}/ResponseConfigs/unique?ProjectId=${ProjectId}&WhichDatabase=${database}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+
+      const response = await fetch(
+        `${apiurl}/ResponseConfigs/unique?whichDatabase=${database}&ProjectId=${ProjectId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
       if (!response.ok) {
         throw new Error('Failed to fetch course names');
       }
@@ -64,17 +68,20 @@ const GenerateScore = () => {
   };
   const fetchKeyCounts = async () => {
     try {
-      const response = await fetch(`${apiurl}/Key/counts?WhichDatabase=${database}&projectId=${ProjectId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await fetch(
+        `${apiurl}/Key/counts?WhichDatabase=${database}&projectId=${ProjectId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
       if (!response.ok) {
         throw new Error('Failed to fetch key count');
       }
       const result = await response.json();
       const counts = {};
-      result.forEach(item => {
+      result.forEach((item) => {
         counts[item.courseName] = item.count;
       });
       setkeycount(counts);
@@ -89,17 +96,20 @@ const GenerateScore = () => {
   // Function to fetch course counts
   const fetchCourseCounts = async () => {
     try {
-      const response = await fetch(`${apiurl}/Score/count?WhichDatabase=${database}&projectId=${ProjectId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await fetch(
+        `${apiurl}/Score/count?WhichDatabase=${database}&projectId=${ProjectId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
       if (!response.ok) {
         throw new Error('Failed to fetch course counts');
       }
       const result = await response.json();
       const counts = {};
-      result.forEach(item => {
+      result.forEach((item) => {
         counts[item.courseName] = item.count;
       });
       setCourseCounts(counts);
@@ -111,11 +121,12 @@ const GenerateScore = () => {
     }
   };
 
-
-  
   const handleApplyGlobalKey = async () => {
     if (!globalFile) {
-      notification.error({ message: 'Please select a file to apply for all courses!', duration: 3 });
+      notification.error({
+        message: 'Please select a file to apply for all courses!',
+        duration: 3,
+      });
       return;
     }
 
@@ -124,12 +135,16 @@ const GenerateScore = () => {
 
     try {
       setLoading(true);
-      const promises = courseNames.map(courseName => {
+      const promises = courseNames.map((courseName) => {
         const data = new FormData();
         data.append('file', globalFile.file);
-        return axios.post(`${apiurl}/Key/upload?WhichDatabase=${database}&ProjectId=${ProjectId}&courseName=${courseName}`, data, {
-          headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}`},
-        });
+        return axios.post(
+          `${apiurl}/Key/upload?WhichDatabase=${database}&ProjectId=${ProjectId}&courseName=${courseName}`,
+          data,
+          {
+            headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` },
+          },
+        );
       });
 
       await Promise.all(promises);
@@ -144,15 +159,19 @@ const GenerateScore = () => {
     }
   };
 
-
   const handleProcessScore = async (courseName) => {
     try {
       setProcessing((prev) => ({ ...prev, [courseName]: true }));
-      const response = await fetch(`${apiurl}/Score/omrdata/${ProjectId}/details?courseName=${encodeURIComponent(courseName)}&WhichDatabase=${database}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await fetch(
+        `${apiurl}/Score/omrdata/${ProjectId}/details?courseName=${encodeURIComponent(
+          courseName,
+        )}&WhichDatabase=${database}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
       if (!response.ok) {
         throw new Error('Failed to process scores');
       }
@@ -173,24 +192,22 @@ const GenerateScore = () => {
     }
   };
 
-
-
   const handleFileChange = (file, courseName) => {
-    if ((file)) {
+    if (file) {
       setFile({ file, courseName });
-      setFileInfo(prev => ({
+      setFileInfo((prev) => ({
         ...prev,
-        [courseName]: { name: file.name } // Store file info for the specific course
+        [courseName]: { name: file.name }, // Store file info for the specific course
       }));
     }
   };
 
   const handleUpdateFileChange = (file, courseName) => {
-    if ((file)) {
+    if (file) {
       setUpdateFile({ file, courseName });
-      setFileInfo(prev => ({
+      setFileInfo((prev) => ({
         ...prev,
-        [courseName]: { name: file.name } // Store file info for the specific course
+        [courseName]: { name: file.name }, // Store file info for the specific course
       }));
     }
   };
@@ -205,9 +222,7 @@ const GenerateScore = () => {
   //   setSelectedCourse(''); // Clear selected course
   // };
 
-
   const handleUpdateClick = async (courseName) => {
-
     if (!updateFile || updateFile.courseName !== courseName) {
       notification.error({
         message: 'Please select a file for the correct course!',
@@ -221,13 +236,16 @@ const GenerateScore = () => {
     formData.append('courseName', courseName);
 
     try {
-
-      const response = await axios.put(`${apiurl}/Key/updatekey?courseName=${courseName}&ProjectId=${ProjectId}&WhichDatabase=${database}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`,
+      const response = await axios.put(
+        `${apiurl}/Key/updatekey?courseName=${courseName}&ProjectId=${ProjectId}&WhichDatabase=${database}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       if (response.status === 200) {
         fetchKeyCounts();
@@ -236,9 +254,9 @@ const GenerateScore = () => {
           duration: 3,
         });
         setUpdateFile(null); // Reset file after successful update
-        setFileInfo(prev => ({
+        setFileInfo((prev) => ({
           ...prev,
-          [courseName]: { name: '' } // Reset file info after successful update
+          [courseName]: { name: '' }, // Reset file info after successful update
         }));
       } else {
         notification.error({
@@ -256,7 +274,6 @@ const GenerateScore = () => {
     }
   };
 
-
   const handleUpload = async (courseName) => {
     if (!file || file.courseName !== courseName) {
       notification.error({
@@ -272,26 +289,29 @@ const GenerateScore = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${apiurl}/Key/upload?WhichDatabase=${database}&ProjectId=${ProjectId}&courseName=${courseName}`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          Authorization: `Bearer ${token}`
+      const response = await fetch(
+        `${apiurl}/Key/upload?WhichDatabase=${database}&ProjectId=${ProjectId}&courseName=${courseName}`,
+        {
+          method: 'POST',
+          body: formData,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
       const result = await response.json();
 
       if (result.message) {
-        fetchKeyCounts()
+        fetchKeyCounts();
         notification.success({
           message: `File uploaded successfully for course ${courseName}!`,
           duration: 3,
         });
         setLoading(false);
         setFile(null); // Reset file after successful upload
-        setFileInfo(prev => ({
+        setFileInfo((prev) => ({
           ...prev,
-          [courseName]: { name: '' } // Reset file info after unsuccessful upload
+          [courseName]: { name: '' }, // Reset file info after unsuccessful upload
         }));
       } else {
         notification.error({
@@ -300,9 +320,9 @@ const GenerateScore = () => {
         });
         setLoading(false);
         setFile(null); // Reset file after unsuccessful upload
-        setFileInfo(prev => ({
+        setFileInfo((prev) => ({
           ...prev,
-          [courseName]: { name: '' } // Reset file info after unsuccessful upload
+          [courseName]: { name: '' }, // Reset file info after unsuccessful upload
         }));
       }
     } catch (error) {
@@ -312,9 +332,9 @@ const GenerateScore = () => {
       });
       setLoading(false);
       setFile(null); // Reset file after unsuccessful upload
-      setFileInfo(prev => ({
+      setFileInfo((prev) => ({
         ...prev,
-        [courseName]: { name: '' } // Reset file info after unsuccessful upload
+        [courseName]: { name: '' }, // Reset file info after unsuccessful upload
       }));
     }
   };
@@ -332,24 +352,22 @@ const GenerateScore = () => {
       render: (text, record) => (
         <div>
           {keycount[record.courseName] > 0 ? (
-            <Button type="primary" disabled
-            >
+            <Button type="primary" disabled>
               Uploaded
             </Button>
           ) : (
             <>
               <Upload
                 showUploadList={false}
-
                 customRequest={({ file }) => handleFileChange(file, record.courseName)}
-                accept='.xlsx'
+                accept=".xlsx"
               >
                 <Button icon={<UploadOutlined />}>
                   {fileInfo[record.courseName]?.name || 'Click to Upload'}
                 </Button>
               </Upload>
               <Button
-                className='ms-2'
+                className="ms-2"
                 type="primary"
                 onClick={() => handleUpload(record.courseName)}
                 disabled={loading || !file || (file && file.courseName !== record.courseName)}
@@ -368,48 +386,42 @@ const GenerateScore = () => {
       key: 'generateScore',
       render: (text, record) => (
         <div>
-          {
-            (() => {
-              const entryCount = courseCounts[record.courseName] || 0;
-              const isProcessing = processing[record.courseName] || false;
-              const isKeyUploaded = keycount[record.courseName] >= 0;
+          {(() => {
+            const entryCount = courseCounts[record.courseName] || 0;
+            const isProcessing = processing[record.courseName] || false;
+            const isKeyUploaded = keycount[record.courseName] >= 0;
 
-              if (isKeyUploaded) {
-                if (entryCount > 0) {
-                  return (
-                    <Button
-                      type="primary"
-                      style={{ marginTop: 10 }}
-                      onClick={() => handleClick(record.courseName)}
-                    >
-                      View Score
-                    </Button>
-                  );
-                } else {
-                  return (
-                    <Button
-                      type="primary"
-                      style={{ marginTop: 10 }}
-                      onClick={() => handleProcessScore(record.courseName)}
-                      disabled={isProcessing}
-                    >
-                      {isProcessing ? 'Processing...' : 'Generate Score'}
-                    </Button>
-                  );
-                }
+            if (isKeyUploaded) {
+              if (entryCount > 0) {
+                return (
+                  <Button
+                    type="primary"
+                    style={{ marginTop: 10 }}
+                    onClick={() => handleClick(record.courseName)}
+                  >
+                    View Score
+                  </Button>
+                );
               } else {
                 return (
                   <Button
                     type="primary"
                     style={{ marginTop: 10 }}
-                    disabled={true}
+                    onClick={() => handleProcessScore(record.courseName)}
+                    disabled={isProcessing}
                   >
-                    Generate Score
+                    {isProcessing ? 'Processing...' : 'Generate Score'}
                   </Button>
                 );
               }
-            })()
-          }
+            } else {
+              return (
+                <Button type="primary" style={{ marginTop: 10 }} disabled={true}>
+                  Generate Score
+                </Button>
+              );
+            }
+          })()}
         </div>
       ),
     },
@@ -422,70 +434,66 @@ const GenerateScore = () => {
             <>
               <Upload
                 showUploadList={false}
-
                 customRequest={({ file }) => handleUpdateFileChange(file, record.courseName)}
-                accept='.xlsx'
+                accept=".xlsx"
               >
                 <Button icon={<UploadOutlined />}>
                   {fileInfo[record.courseName]?.name || 'Click to Update'}
                 </Button>
               </Upload>
               <Button
-                className='ms-2'
+                className="ms-2"
                 type="primary"
                 onClick={() => handleUpdateClick(record.courseName)}
                 disabled={updateLoading[record.courseName]}
               >
-                {updateLoading[record.courseName]
-                  ? 'Updating...'
-                  : 'Update Key'}
+                {updateLoading[record.courseName] ? 'Updating...' : 'Update Key'}
               </Button>
-
             </>
           )}
         </div>
       ),
     },
-
-
   ];
   return (
     <div>
       <div>
-        <div className='d-flex align-items-center justify-content-between mb-4' >
+        <div className="d-flex align-items-center justify-content-between mb-4">
           <a href="/keytemplate.xlsx">
-            <Button
-              type="primary"
-              disabled={loading}
-            >
+            <Button type="primary" disabled={loading}>
               Download Key Template
             </Button>
           </a>
           {courseNames.length > 1 && (
-          <div>
-            <Upload
-              showUploadList={false}
-              customRequest={({ file }) => setGlobalFile({ file })}
-              accept='.xlsx'
+            <div>
+              <Upload
+                showUploadList={false}
+                customRequest={({ file }) => setGlobalFile({ file })}
+                accept=".xlsx"
               >
-              <Button icon={<UploadOutlined />}>
-                {globalFile ? globalFile.file.name : 'Select Key for All'}
+                <Button icon={<UploadOutlined />}>
+                  {globalFile ? globalFile.file.name : 'Select Key for All'}
+                </Button>
+              </Upload>
+              <Button
+                className="ms-2"
+                type="primary"
+                onClick={handleApplyGlobalKey}
+                disabled={loading || !globalFile}
+              >
+                {loading ? 'Uploading...' : 'Apply Key for All Courses'}
               </Button>
-            </Upload>
-            <Button
-              className='ms-2'
-              type="primary"
-              onClick={handleApplyGlobalKey}
-              disabled={loading || !globalFile}
-              >
-              {loading ? 'Uploading...' : 'Apply Key for All Courses'}
-            </Button>
-          </div>
-        )}
+            </div>
+          )}
         </div>
-      </div >
-      <div className='gap-5'>
-        <Table columns={columns} dataSource={courseNames.map((courseName) => ({ courseName }))} rowKey="courseName" />
+      </div>
+      <div className="gap-5">
+        <Table
+          columns={columns}
+          dataSource={courseNames.map((courseName) => ({ courseName }))}
+          rowKey="courseName"
+          bordered
+        />
       </div>
       {/* {modalVisible && (
 
@@ -502,7 +510,7 @@ const GenerateScore = () => {
         </Modal>
       )
       } */}
-    </div >
+    </div>
   );
 };
 

@@ -36,7 +36,7 @@ const Scanned = ({
             <input type="file" onChange={handleFileUpload} accept=".csv,.dat,.xlsx" />
           </p>
           <Button danger
-            onClick={handleDeleteScanned}>
+            onClick={handleDeleteScanned} disabled={loading}>
             Delete
           </Button>
         </div>

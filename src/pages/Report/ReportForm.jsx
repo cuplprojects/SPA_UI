@@ -437,6 +437,7 @@ const handleFieldChange = (fields) => {
             dataSource={sortData(reportData)}
             rowKey="id" // Ensure you have a unique key for each row
             style={{ marginTop: '20px' }}
+            bordered
           />
         )
       )}

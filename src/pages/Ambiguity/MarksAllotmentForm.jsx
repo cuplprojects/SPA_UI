@@ -302,6 +302,7 @@ const MarksAllotmentForm = () => {
                         columns={columns}
                         dataSource={renderTableData()}
                         pagination={false}
+                        bordered={true}
                     />
                 </Col>
             </Row>

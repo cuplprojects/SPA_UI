@@ -32,7 +32,7 @@ const Absentee = ({
           <p>
             <input type="file" onChange={handleFileUpload} accept=".xlsx" />
           </p>
-          <Button danger onClick={handleDeleteAbsentee}>
+          <Button danger onClick={handleDeleteAbsentee} disabled={loading}>
              Delete
           </Button>
         </div>

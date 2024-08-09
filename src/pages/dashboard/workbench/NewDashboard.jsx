@@ -1,6 +1,5 @@
-// src/pages/NewDashboard.jsx
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Row, Container } from 'react-bootstrap';
+import { Card, Col, Row, Container, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useProjectActions } from '@/store/ProjectState';
@@ -16,8 +15,9 @@ const NewDashboard = () => {
   const themeToken = useThemeToken();
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]); // State to store fetched projects
+  const [loading, setLoading] = useState(true); // State to manage loading
   const { setProjectId } = useProjectActions();
-  const {userId} = useUserInfo();
+  const { userId } = useUserInfo();
   const database = useDatabase();
   const token = useUserToken();
 
@@ -28,7 +28,6 @@ const NewDashboard = () => {
 
   useEffect(() => {
     if (token) {
-      
       fetchProjects(); // Fetch projects when component mounts
     }
   }, [token]);
@@ -36,13 +35,19 @@ const NewDashboard = () => {
   const fetchProjects = async () => {
     try {
       // Fetch projects from API
-      const response = await axios.get(`${apiurl}/Projects/ByUser/${userId}?WhichDatabase=${database}`,{
-        headers:{
-        Authorization : `Bearer ${token}`
-      }});
+      const response = await axios.get(
+        `${apiurl}/Projects/ByUser/${userId}?WhichDatabase=${database}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
       setProjects(response.data); // Update projects state with fetched data
     } catch (error) {
       console.error('Error fetching projects:', error);
+    } finally {
+      setLoading(false); // Set loading to false after data is fetched
     }
   };
 
@@ -69,13 +74,20 @@ const NewDashboard = () => {
                 Recent Projects
               </Card.Title>
               <Row>
-                {projects.map((project) => (
-                  <ProjectCard
-                    key={project.projectId}
-                    project={project}
-                    onClickProjectId={onClickProjectId}
-                  />
-                ))}
+                {loading
+                  ? // Render skeletons while loading
+                    Array.from({ length: 4 }).map((_, index) => (
+                      <ProjectCard key={index} loading={true} />
+                    ))
+                  : // Render project cards when data is loaded
+                    projects.map((project) => (
+                      <ProjectCard
+                        key={project.projectId}
+                        project={project}
+                        onClickProjectId={onClickProjectId}
+                        loading={false}
+                      />
+                    ))}
               </Row>
             </Card.Body>
           </Card>
