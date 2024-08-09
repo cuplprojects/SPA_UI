@@ -35,7 +35,8 @@ const Segmentation = () => {
   const [marksForWrongOption, setMarksForWrongOption] = useState('');
   const [courseOptions, setCourseOptions] = useState([]);
   const projectId = useProjectId();
-  const [responseOption, setResponseOption] = useState('ABC'); // State for selected response option
+  const [responseOption, setResponseOption] = useState('ABC');
+  const [numBlocks, setNumBlocks] = useState(4); // State for selected response option
   const database = useDatabase();
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -319,6 +320,7 @@ const Segmentation = () => {
 
   // Function that needs to be async
   const submitData = async () => {
+
     if (!error) {
       setLoading(true);
       try {
@@ -360,6 +362,7 @@ const Segmentation = () => {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`,
             },
+
           },
         );
 
@@ -700,6 +703,7 @@ const Segmentation = () => {
           )}
         </div>
 
+
         <div>
           <ResponseConfig />
         </div>
@@ -712,6 +716,7 @@ const Segmentation = () => {
         </div>
       </Form>
     </>
+
   );
 };
 

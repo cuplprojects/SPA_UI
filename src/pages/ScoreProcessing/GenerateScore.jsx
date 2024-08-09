@@ -44,6 +44,7 @@ const GenerateScore = () => {
   };
   const fetchCourseNames = async () => {
     try {
+
       const response = await fetch(
         `${apiurl}/ResponseConfigs/unique?whichDatabase=${database}&ProjectId=${ProjectId}`,
         {
@@ -52,6 +53,7 @@ const GenerateScore = () => {
           },
         },
       );
+
       if (!response.ok) {
         throw new Error('Failed to fetch course names');
       }
