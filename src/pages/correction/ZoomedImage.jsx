@@ -156,9 +156,23 @@ const ZoomedImage = ({ data, onUpdate, onNext }) => {
   };
 
   const handleKeyDown = (e) => {
+    const validValues = JSON.parse(data.fieldConfig.FieldAttributesJson)[0]?.Responses?.split(',').map(val => val.trim())
+
+      console.log('Valid Values:', validValues);
     if (e.key === 'Enter') {
-      onUpdate(selectedResponse);
-      onNext();
+      
+      if (validValues.includes(e.target.value.trim())) {
+        if (JSON.parse(data.fieldConfig.FieldAttributesJson)[0]?.NumberOfBlocks === e.target.value.length ) {
+          onUpdate(e.target.value.trim());
+        onNext();
+        }
+        else {
+          alert('Please enter the correct number of digits');
+        }
+        
+      } else {
+        alert(`Invalid value! Allowed values: ${validValues.join(', ')}`);
+      }
     }
   };
 

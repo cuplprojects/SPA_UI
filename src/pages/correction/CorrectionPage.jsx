@@ -35,6 +35,7 @@ const CorrectionPage = () => {
   const [filters, setFilters] = useState([{ fieldName: '', fieldValue: '' }]);
   const [availableOptions, setAvailableOptions] = useState([]);
   const [regData, setRegData] = useState([]);
+  const [parsedData, setparsedData] = useState([]);
   const [currentRegIndex, setCurrentRegIndex] = useState(0);
   const database = useDatabase();
   // const [flagData, setFlagData] = useState([]);
@@ -223,8 +224,7 @@ const CorrectionPage = () => {
         cyphertextt: handleEncrypt(JSON.stringify(payload)),
       };
       const response = await axios.post(
-        `${apiurl}/Correction/SubmitCorrection?WhichDatabase=${database}&status=${
-          noChangeRequired ? 2 : 3
+        `${apiurl}/Correction/SubmitCorrection?WhichDatabase=${database}&status=${noChangeRequired ? 2 : 3
         }&ProjectId=${projectId}`,
         payloadtobesend,
         { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } },
@@ -243,6 +243,17 @@ const CorrectionPage = () => {
       console.error('Current data is undefined or null');
       return;
     }
+
+    // Check for blank data
+  if (currentData.fieldNameValue.trim() === '') {
+    notification.error({
+      message: 'Error',
+      description: 'Blank data is not accepted. Please fill in the required field.',
+      duration: 3,
+    });
+    return;
+  }
+  
     if (unchangedata === currentData.fieldNameValue && !noChangeRequired) {
       console.log('Data has not changed:', unchangedata);
       notification.error({
@@ -331,6 +342,12 @@ const CorrectionPage = () => {
         },
       );
       setRegData(response.data);
+      const currentReg = response.data[currentRegIndex];
+      const parsedRegData = currentReg
+        ? { 'Roll Number': currentReg.rollNumber, ...parseRegData(currentReg.registrationsData) }
+        : null;
+        setparsedData(parsedRegData)
+
       console.log('Filtered data:', response.data);
     } catch (error) {
       console.error('Error fetching filtered data:', error);
@@ -416,10 +433,10 @@ const CorrectionPage = () => {
     setCurrentRegIndex((prevIndex) => prevIndex - 1);
   };
 
-  const currentReg = regData[currentRegIndex];
-  const parsedData = currentReg
-    ? { 'Roll Number': currentReg.rollNumber, ...parseRegData(currentReg.registrationsData) }
-    : null;
+  // const currentReg = regData[currentRegIndex];
+  // const parsedData = currentReg
+  //   ? { 'Roll Number': currentReg.rollNumber, ...parseRegData(currentReg.registrationsData) }
+  //   : null;
 
   return (
     <>

@@ -137,7 +137,7 @@ const Segmentation = () => {
     const fetchCourses = async () => {
       try {
         const response = await fetch(
-          `${apiurl}/Registration/GetUniqueValues?whichDatabase=${database}&key=Course%20Name&ProjectId=${projectId}`,
+          `${apiurl}/Registration/GetUniqueValues?whichDatabase=${database}&key=Subject%20Code&ProjectId=${projectId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

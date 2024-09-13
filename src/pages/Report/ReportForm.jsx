@@ -132,6 +132,10 @@ const ReportForm = () => {
 };
 
 
+
+
+
+
 const handleFieldChange = (fields) => {
   const updatedFieldOrder = fieldOrder.filter(field => fields.includes(field));
   setFieldOrder(updatedFieldOrder);  //if there is any remove in the selected fields then only call

@@ -371,7 +371,7 @@ const Import = () => {
           if (rowData['Answers']) {
             const answers = {};
             const ansArray = rowData['Answers'].split('');
-            for (let i = 0; i < 100; i++) {
+            for (let i = 0; i < 150; i++) {
               if (i < ansArray.length) {
                 let answer = ansArray[i];
                 // Trim trailing white spaces

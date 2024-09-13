@@ -3,6 +3,7 @@ import axios from 'axios';
 import { notification } from 'antd';
 import { useProjectId } from '@/store/ProjectState';
 import { useDatabase } from '@/store/DatabaseStore';
+import { useUserToken } from '@/store/UserDataStore';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -17,10 +18,14 @@ export const PreferredResponseProvider = ({ children }) => {
   const projectId = useProjectId();
   const [preferredResponse, setPreferredResponse] = useState('');
   const database = useDatabase();
+  const token = useUserToken();
   const fetchPreferredResponse = async (fieldName) => {
     try {
       const response = await axios.get(
         `${apiUrl}/Registration/GetUniqueValues?whichDatabase=${database}&key=${fieldName}&ProjectId=${projectId}`,
+        {headers:{
+          Authorization :`Bearer ${token}`
+        }}
       );
       const data = response.data || []; // Ensure data is an array or handle accordingly
 
