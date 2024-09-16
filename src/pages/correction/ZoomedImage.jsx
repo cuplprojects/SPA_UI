@@ -156,26 +156,33 @@ const ZoomedImage = ({ data, onUpdate, onNext }) => {
   };
 
   const handleKeyDown = (e) => {
-    const validValues = JSON.parse(data.fieldConfig.FieldAttributesJson)[0]?.Responses?.split(',').map(val => val.trim())
-
-      console.log('Valid Values:', validValues);
+    const fieldAttributes = JSON.parse(data.fieldConfig.FieldAttributesJson)[0];
+    const rawValidValues = fieldAttributes?.Responses?.split(',').map(val => val.trim()) || [];
+    
+    // Filter out blank strings from validValues
+    const filteredValidValues = rawValidValues.filter(val => val !== '');
+  
+    console.log('Filtered Valid Values:', filteredValidValues);
+  
     if (e.key === 'Enter') {
+      const inputValue = e.target.value.trim();
       
-      if (validValues.includes(e.target.value.trim())) {
-        if (JSON.parse(data.fieldConfig.FieldAttributesJson)[0]?.NumberOfBlocks === e.target.value.length ) {
-          onUpdate(e.target.value.trim());
-        onNext();
-        }
-        else {
+      // Skip validation if filteredValidValues is empty
+      const isValidValue = filteredValidValues.length === 0 || filteredValidValues.includes(inputValue);
+  
+      if (isValidValue) {
+        if (fieldAttributes?.NumberOfBlocks == inputValue.length) {
+          onUpdate(inputValue);
+          onNext();
+        } else {
           alert('Please enter the correct number of digits');
         }
-        
       } else {
-        alert(`Invalid value! Allowed values: ${validValues.join(', ')}`);
+        alert(`Invalid value! Allowed values: ${filteredValidValues.join(', ')}`);
       }
     }
   };
-
+  
   if (!data || !data.coordinates) {
     onNext();
     return null;

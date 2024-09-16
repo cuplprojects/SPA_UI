@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Col, Row, Card, Table, Pagination } from 'react-bootstrap';
+import { Col, Row, Card, Table, Pagination, Dropdown } from 'react-bootstrap';
 import { Button, notification } from 'antd';
 import ChartComponent from './ChartComponent';
 import { useProjectId } from '@/store/ProjectState';
@@ -11,8 +11,10 @@ import { useNavigate } from 'react-router-dom';
 import AllotFlag from '../correction/AllotFlags';
 import { useDatabase } from '@/store/DatabaseStore';
 import { useUserToken } from '@/store/UserDataStore';
+import axios from 'axios';
 
 const APIURL = import.meta.env.VITE_API_URL;
+const baseUrl = 'https://localhost:7290/api/Audit';
 
 const AuditButton = () => {
   const ProjectId = useProjectId();
@@ -24,13 +26,16 @@ const AuditButton = () => {
   const navigate = useNavigate();
   const database = useDatabase();
   const token = useUserToken();
+  const [selectedAudit, setSelectedAudit] = useState('');
+  const [regData, setRegData] = useState(0);
 
   useEffect(() => {
     getFlags();
     if (totalCount > 0) {
       setWIP(((corrected / totalCount) * 100).toFixed(3));
     }
-  }, [corrected, totalCount, ProjectId]);
+    fetchRegData(ProjectId); // Fetch registration data
+  }, [corrected, totalCount, ProjectId, database]);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,6 +61,19 @@ const AuditButton = () => {
     } catch (error) {
       console.error('Error:', error);
       alert('An error occurred while performing the audit.');
+    }
+  };
+
+  const fetchRegData = async (ProjectId) => {
+    try {
+      const response = await axios.get(`${APIURL}/Projects/GetProjectCounts?ProjectId=${ProjectId}&CategoryName=Registration&WhichDatabase=${database}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setRegData(response.data); 
+    } catch (error) {
+      console.error('Error fetching registration data:', error);
     }
   };
 
@@ -123,15 +141,65 @@ const AuditButton = () => {
     return items;
   };
 
+  const handleSelect = async (eventKey) => {
+    const apiEndpoints = {
+      RangeAudit: 'RangeAudit',
+      RegistrationAudit: 'RegistrationAudit',
+      DuplicateRollNumberAudit: 'DuplicateRollNumberAudit',
+      ContainsCharacterAudit: 'ContainsCharacterAudit',
+      MissingRollNumbers: 'MissingRollNumbers'
+    };
+
+    const selectedApi = apiEndpoints[eventKey];
+    if (selectedApi) {
+      const url = `${baseUrl}/${selectedApi}?WhichDatabase=${database}&ProjectId=${ProjectId}`;
+
+      try {
+        const response = await axios.get(url, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        getFlags(); // Call your function to handle the response data
+        notification.success({
+          message: 'Audit Data Fetched Successfully!',
+          description: `The data for ${eventKey} has been fetched successfully.`,
+          duration: 3,
+        });
+        console.log(response.data); // Handle the data from the API here
+      } catch (error) {
+        notification.error({
+          message: 'Error Fetching Data',
+          description: 'There was an error fetching the data. Please try again.',
+          duration: 3,
+        });
+        console.error('Error fetching data:', error);
+      }
+    }
+  };
+
   return (
     <div>
       <div className="d-flex align-items-center justify-content-between mb-3 mr-3 mt-3 gap-2">
         {/* <AllotFlag remaining={remaining}/> */}
         <div className="d-flex align-items-center justify-content-end mb-3 mr-3 mt-3 gap-2">
-          <AuditMissingRollNo getFlags={getFlags} />
+          {/* <AuditMissingRollNo getFlags={getFlags} />
           <Button type="primary" onClick={handleClickAudit} disabled={isAuditing}>
             {isAuditing ? 'Auditing' : 'Run Audit'}
-          </Button>
+          </Button> */}
+          <Dropdown  onSelect={handleSelect}>
+      <Dropdown.Toggle variant="success" id="dropdown-basic">
+        Audit 
+      </Dropdown.Toggle>
+
+      <Dropdown.Menu>
+        <Dropdown.Item eventKey="RangeAudit">Range Audit</Dropdown.Item>
+        <Dropdown.Item eventKey="RegistrationAudit" disabled={regData <= 1}>Registration Audit</Dropdown.Item>
+        <Dropdown.Item eventKey="DuplicateRollNumberAudit">Duplicate Roll Number Audit</Dropdown.Item>
+        <Dropdown.Item eventKey="ContainsCharacterAudit">Contains Character Audit</Dropdown.Item>
+        <Dropdown.Item eventKey="MissingRollNumbers" disabled={regData <= 1}>Missing Roll Numbers</Dropdown.Item>
+      </Dropdown.Menu>
+    </Dropdown>
         </div>
       </div>
       <Card style={{ height: 'auto' }}>

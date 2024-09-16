@@ -124,6 +124,12 @@ export const useSignIn = () => {
           description: `${t('sys.login.loginSuccessDesc')}: ${username}`,
           duration: 3,
         });
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 250); // Delay in milliseconds (2000 ms = 2 seconds)
+
+
       } catch (err) {
         // Handling login error
         message.warning({

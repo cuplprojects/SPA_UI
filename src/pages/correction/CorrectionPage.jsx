@@ -56,6 +56,17 @@ const CorrectionPage = () => {
   }, []);
 
   useEffect(() => {
+    if (regData.length > 0 && regData[currentRegIndex]) {
+      const currentReg = regData[currentRegIndex];
+      const parsedRegData = currentReg
+        ? { 'Roll Number': currentReg.rollNumber, ...parseRegData(currentReg.registrationsData) }
+        : null;
+      setparsedData(parsedRegData);
+    }
+  }, [regData, currentRegIndex]);
+
+
+  useEffect(() => {
     if (data[currentIndex]) {
       setUnchangeData(data[currentIndex].fieldNameValue);
     }
@@ -97,6 +108,7 @@ const CorrectionPage = () => {
         },
       );
       setAvailableOptions(response.data.keys);
+
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -321,6 +333,9 @@ const CorrectionPage = () => {
     setFilters(updatedFilters);
   };
 
+
+  
+  
   // get student filterd data
   const handleSubmitFilter = async (e) => {
     try {
@@ -342,11 +357,12 @@ const CorrectionPage = () => {
         },
       );
       setRegData(response.data);
-      const currentReg = response.data[currentRegIndex];
-      const parsedRegData = currentReg
-        ? { 'Roll Number': currentReg.rollNumber, ...parseRegData(currentReg.registrationsData) }
-        : null;
-        setparsedData(parsedRegData)
+      setCurrentRegIndex(0)
+      // const currentReg = response.data[currentRegIndex];
+      // const parsedRegData = currentReg
+      //   ? { 'Roll Number': currentReg.rollNumber, ...parseRegData(currentReg.registrationsData) }
+      //   : null;
+      //   setparsedData(parsedRegData)
 
       console.log('Filtered data:', response.data);
     } catch (error) {
@@ -424,6 +440,7 @@ const CorrectionPage = () => {
       return null;
     }
   };
+  
 
   const showNextReg = () => {
     setCurrentRegIndex((prevIndex) => prevIndex + 1);
@@ -432,6 +449,14 @@ const CorrectionPage = () => {
   const showPreviousReg = () => {
     setCurrentRegIndex((prevIndex) => prevIndex - 1);
   };
+
+  // const showNextReg = () => {
+  //   setCurrentRegIndex(prevIndex => Math.min(prevIndex + 1, regData.length - 1));
+  // };
+  
+  // const showPreviousReg = () => {
+  //   setCurrentRegIndex(prevIndex => Math.max(prevIndex - 1, 0));
+  // };
 
   // const currentReg = regData[currentRegIndex];
   // const parsedData = currentReg
@@ -597,7 +622,7 @@ const CorrectionPage = () => {
             </div>
           </div>
         ) : (
-          <Button type="primary" onClick={() => handleShowRegDataTableClick()}>
+          <Button type="primary" onClick={handleShowRegDataTableClick}>
             Get Registration data
           </Button>
         )}
