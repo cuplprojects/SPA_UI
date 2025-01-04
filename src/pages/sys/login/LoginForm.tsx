@@ -1,19 +1,14 @@
-import {  Button, Checkbox, Col, Divider, Form, Input, Row } from 'antd';
+import { Button, Checkbox, Col, Divider, Form, Input, Row } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-// import { AiFillGithub, AiFillGoogleCircle, AiFillWechat } from 'react-icons/ai';
 
 import { SignInReq } from '@/api/services/userService';
 import { useSignIn } from '@/store/UserDataStore';
-// import ProTag from '@/theme/antd/components/tag';
-// import { useThemeToken } from '@/theme/hooks';
 
 import { LoginStateEnum, useLoginStateContext } from './providers/LoginStateProvider';
 
-
 function LoginForm() {
   const { t } = useTranslation();
-  // const themeToken = useThemeToken();
   const [loading, setLoading] = useState(false);
 
   const { loginState, setLoginState } = useLoginStateContext();
@@ -29,6 +24,15 @@ function LoginForm() {
       setLoading(false);
     }
   };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Prevent the default action to avoid unwanted behavior
+      const form = (e.target as HTMLElement).closest('form'); // Cast target to HTMLElement
+      form?.dispatchEvent(new Event('submit', { bubbles: true })); // Manually trigger form submission
+    }
+  };
+
   return (
     <>
       <div className="mb-4 text-2xl font-bold xl:text-3xl">{t('sys.login.signInFormTitle')}</div>
@@ -42,55 +46,17 @@ function LoginForm() {
         }}
         onFinish={handleFinish}
       >
-        {/* <div className="mb-4 flex flex-col">
-          <Alert
-            type="info"
-            description={
-              <div className="flex flex-col">
-                <div className="flex">
-                  <ProTag className="flex-shrink-0">Admin {t('sys.login.userName')}:</ProTag>
-                  <strong className="ml-1" style={{ color: themeToken.colorInfoTextHover }}>
-                    <span>{DEFAULT_USER.username}</span>
-                  </strong>
-                </div>
-
-                <div className="flex">
-                  <ProTag className="flex-shrink-0">Test {t('sys.login.userName')}:</ProTag>
-                  <strong className="ml-1" style={{ color: themeToken.colorInfoTextHover }}>
-                    <span>{TEST_USER.username}</span>
-                  </strong>
-                </div>
-
-                <div className="flex">
-                  <ProTag className="flex-shrink-0">Test {t('sys.login.userName')}:</ProTag>
-                  <strong className="ml-1" style={{ color: themeToken.colorInfoTextHover }}>
-                    <span>{USER_USER.username}</span>
-                  </strong>
-                </div>
-
-                <div>
-                  <ProTag className="flex-shrink-0">{t('sys.login.password')}:</ProTag>
-                  <strong className=" ml-1" style={{ color: themeToken.colorInfoTextHover }}>
-                    {DEFAULT_USER.password}
-                  </strong>
-                </div>
-              </div>
-            }
-            showIcon
-          />
-        </div> */}
-
         <Form.Item
           name="username"
           rules={[{ required: true, message: t('sys.login.accountPlaceholder') }]}
         >
-          <Input placeholder={t('sys.login.userName')} />
+          <Input placeholder={t('sys.login.userName')} onKeyDown={handleKeyDown} />
         </Form.Item>
         <Form.Item
           name="password"
           rules={[{ required: true, message: t('sys.login.passwordPlaceholder') }]}
         >
-          <Input.Password type="password" placeholder={t('sys.login.password')} />
+          <Input.Password type="password" placeholder={t('sys.login.password')} onKeyDown={handleKeyDown} />
         </Form.Item>
         <Form.Item>
           <Row>
@@ -100,8 +66,9 @@ function LoginForm() {
               </Form.Item>
             </Col>
             <Col span={12} className="text-right">
-              <button className="!underline"
-              onClick={() => setLoginState(LoginStateEnum.RESET_PASSWORD)}>{t('sys.login.forgetPassword')}</button>
+              <button className="!underline" onClick={() => setLoginState(LoginStateEnum.RESET_PASSWORD)}>
+                {t('sys.login.forgetPassword')}
+              </button>
             </Col>
           </Row>
         </Form.Item>
@@ -111,37 +78,7 @@ function LoginForm() {
           </Button>
         </Form.Item>
 
-        {/* <Row align="middle" gutter={8}>
-          <Col span={9} flex="1">
-            <Button
-              className="w-full !text-sm"
-              onClick={() => setLoginState(LoginStateEnum.MOBILE)}
-            >
-              {t('sys.login.mobileSignInFormTitle')}
-            </Button>
-          </Col>
-          <Col span={9} flex="1">
-            <Button
-              className="w-full !text-sm"
-              onClick={() => setLoginState(LoginStateEnum.QR_CODE)}
-            >
-              {t('sys.login.qrSignInFormTitle')}
-            </Button>
-          </Col>
-          <Col span={6} flex="1" onClick={() => setLoginState(LoginStateEnum.REGISTER)}>
-            <Button className="w-full !text-sm">{t('sys.login.signUpFormTitle')}</Button>
-          </Col>
-        </Row> */}
-
-        <Divider className="!text-xs">
-          {/* {t('sys.login.otherSignIn')} */}
-          </Divider>
-{/* 
-        <div className="flex cursor-pointer justify-around text-2xl">
-          <AiFillGithub />
-          <AiFillWechat />
-          <AiFillGoogleCircle />
-        </div> */}
+        <Divider className="!text-xs"></Divider>
       </Form>
     </>
   );

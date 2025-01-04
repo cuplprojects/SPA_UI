@@ -35,7 +35,7 @@ const Segmentation = () => {
   const [marksForWrongOption, setMarksForWrongOption] = useState('');
   const [courseOptions, setCourseOptions] = useState([]);
   const projectId = useProjectId();
-  const [responseOption, setResponseOption] = useState('ABC');
+  const [responseOption, setResponseOption] = useState('ABCD');
   const [numBlocks, setNumBlocks] = useState(4); // State for selected response option
   const database = useDatabase();
   const [modalVisible, setModalVisible] = useState(false);
@@ -117,18 +117,18 @@ const Segmentation = () => {
   }, [projectId, database]);
 
   const handleNumberChange = (value) => {
-    if (typeof value === 'number' && !isNaN(value)) {
-      if (value > marksPerQuestion) {
+    if (typeof value === 'number' && !isNaN(value) || typeof value === 'string' && !isNaN(parseFloat(value))) {
+      if (parseFloat(value) > marksPerQuestion) {
         setError(`Value must be less than or equal to ${marksPerQuestion? marksPerQuestion: 'Marks Per Correct Question'}`);
       } else {
         setError(null);
       }
-      setMarksForWrongOption(value);
+      setMarksForWrongOption(parseFloat(value));
     }
   };
 
   const handleKeyPress = (event) => {
-    if (!/[0-9]/.test(event.key)) {
+    if (!/[0-9.]/.test(event.key)) {
       event.preventDefault();
     }
   };
@@ -631,12 +631,14 @@ const Segmentation = () => {
                         onChange={(value) => setTotalQuestions(value)}
                         style={{ width: '100%' }}
                         onKeyPress={handleKeyPress}
+                        rules={[{ required: true, message: 'Please enter total questions' }]}
                       />
                     </Form.Item>
                   </Col>
                   <Col>
                     <Form.Item label="Question From">
-                      <Input onChange={(e) => setQuestionFrom(e.target.value)}  onKeyPress={handleKeyPress} />
+                      <Input
+                      rules={[{ required: true, message: 'Please enter question from' }]} onChange={(e) => setQuestionFrom(e.target.value)}  onKeyPress={handleKeyPress} />
                     </Form.Item>
                   </Col>
                 </Row>
@@ -644,8 +646,11 @@ const Segmentation = () => {
                 <Row>
                   <Col>
                     <Form.Item label="Question To">
-                      <Input onChange={(e) => setQuestionTo(e.target.value)} 
-                      onKeyPress={handleKeyPress} />
+                      <Input  
+                      rules={[{ required: true, message: 'Please enter question to' }]}
+                        onChange={(e) => setQuestionTo(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                      />
                     </Form.Item>
                   </Col>
                   <Col>
@@ -655,6 +660,7 @@ const Segmentation = () => {
                         onChange={(value) => setMarksPerQuestion(value)}
                         style={{ width: '100%' }}
                         onKeyPress={handleKeyPress}
+                        rules={[{ required: true, message: 'Please enter marks per correct question' }]} 
                       />
                     </Form.Item>
                   </Col>
@@ -689,6 +695,8 @@ const Segmentation = () => {
                     help={error}
                   >
                     <InputNumber
+                    min='0'
+                    step=".1"
                       prefix="-"
                       value={marksForWrongOption}
                       onChange={handleNumberChange}
