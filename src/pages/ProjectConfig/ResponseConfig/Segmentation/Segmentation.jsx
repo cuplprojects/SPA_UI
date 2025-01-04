@@ -320,7 +320,49 @@ const Segmentation = () => {
 
   // Function that needs to be async
   const submitData = async () => {
+    if (!selectedCourse) {
+      notification.error({
+        message: 'Course is required',
+        duration: 3,
+      });
+      return;
+    }
+  
+    if (hasSections) {
+      // If sections are enabled, we validate sections-related fields
+      if (!sections || sections.length === 0) {
+        notification.error({
+          message: 'At least one section is required',
+          duration: 3,
+        });
+        return;
+      }
+    } else {
+      // If sections are not enabled, validate fields that are required for submission
+      if (!totalQuestions || totalQuestions <= 0) {
+        notification.error({
+          message: 'Total questions is required',
+          duration: 3,
+        });
+        return;
+      }
+  
+    if (!questionFrom || !questionTo || !marksPerQuestion) {
+      notification.error({
+        message: 'All fields for question range and marks are required',
+        duration: 3,
+      });
+      return;
+    }
 
+    if (negativeMarking === 'yes' && !marksForWrongOption) {
+      notification.error({
+        message: 'Marks deduction for wrong answers is required when negative marking is enabled',
+        duration: 3,
+      });
+      return;
+    }
+  }
     if (!error) {
       setLoading(true);
       try {
@@ -447,21 +489,7 @@ const Segmentation = () => {
           </div>
 
           <Row>
-            {/* <Col>
-            <Form.Item label="Select Course">
-              <Select
-                placeholder="Select a course"
-                onChange={handleCourseChange}
-                value={selectedCourse}
-              >
-                {filteredCourseOptions.map((course) => (
-                  <Option key={course} value={course}>
-                    {course}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col> */}
+
             <Col>
               <Form.Item label="Select Course">
                 {courseOptions && courseOptions.length > 0 ? (
