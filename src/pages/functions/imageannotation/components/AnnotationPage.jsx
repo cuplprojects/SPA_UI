@@ -38,6 +38,7 @@ const AnnotationPage = () => {
 
   useEffect(() => {
     clearAnnotation();
+    
   }, [projectId]);
 
   const clearAnnotation = () => {
@@ -45,23 +46,48 @@ const AnnotationPage = () => {
       localStorage.setItem('annotations', []);
     }
   };
+console.log(token)
+useEffect(() => {
+  const getFieldConfig = async () => {
+    try {
+      // Fetch field configurations from API
+      const response = await axios.get(
+        `${apiurl}/FieldConfigurations/GetByProjectId/${projectId}?WhichDatabase=${database}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-  useEffect(() => {
-    // Fetch input fields from API
-    axios
-      .get(`${apiurl}/Fields?WhichDatabase=${database}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        const fieldNames = response.data.map((field) => field.fieldName); // Extract field names
-        setInputFields(fieldNames);
-      })
-      .catch((error) => {
-        console.error('Error fetching input fields:', error);
-      });
-  }, []);
+      // Log the response to see what data we're working with
+      console.log(response.data);
+
+      // Assuming `handleDecrypt` is a function to decrypt the response data
+      const decryptedData = handleDecrypt(response.data);
+      console.log(decryptedData);
+
+      // Parse the decrypted data if it's a JSON string
+      const parsedData = JSON.parse(decryptedData);
+      console.log(parsedData);
+
+      // Extract only the FieldNames from the parsed data
+      const fieldNames = parsedData.map((field) => field.FieldName);
+      console.log(fieldNames); // Log the extracted field names
+
+      // Set the field names into the inputFields state
+      setInputFields(fieldNames);
+
+    } catch (error) {
+      console.error('Error fetching field configurations:', error);
+    }
+  };
+
+  getFieldConfig();
+}, [projectId, database, token]); // Add projectId, database, and token as dependencies to re-fetch if they change
+
+
+
 
   // get image config by perojecvt id
   useEffect(() => {

@@ -111,18 +111,26 @@ const ReportForm = () => {
             }
         );
         console.log('API Response:', response.data);
+
         // Map through the response data and structure it as desired
         const structuredData = response.data.map((item) => {
             // Destructure and exclude omrData and registrationData
             const { omrData, registrationData, ...rest } = item;
 
+            // Optionally parse omrData if you need it, otherwise leave it out
+            const omrParsed = omrData ? JSON.parse(omrData) : {}; // Parse omrData if it's a string
+            
             // Return the desired structure
             return {
                 ...rest, // Spread the remaining fields
                 ...registrationData, // Spread the fields from registrationData directly
-                ...omrData
+                // Include only the relevant data from omrParsed, or exclude it entirely
+                ...omrParsed // If omrParsed contains useful information, spread it here
             };
         });
+
+        console.log('Structured Data:', structuredData);
+
         setReportData(structuredData);
         setDataKeys(Object.keys(structuredData[0] || {})); // Update dataKeys here
     } catch (error) {
@@ -130,6 +138,7 @@ const ReportForm = () => {
     }
     setLoading(false);
 };
+
 
 
 const handleFieldChange = (fields) => {

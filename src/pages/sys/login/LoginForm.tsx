@@ -42,44 +42,7 @@ function LoginForm() {
         }}
         onFinish={handleFinish}
       >
-        {/* <div className="mb-4 flex flex-col">
-          <Alert
-            type="info"
-            description={
-              <div className="flex flex-col">
-                <div className="flex">
-                  <ProTag className="flex-shrink-0">Admin {t('sys.login.userName')}:</ProTag>
-                  <strong className="ml-1" style={{ color: themeToken.colorInfoTextHover }}>
-                    <span>{DEFAULT_USER.username}</span>
-                  </strong>
-                </div>
-
-                <div className="flex">
-                  <ProTag className="flex-shrink-0">Test {t('sys.login.userName')}:</ProTag>
-                  <strong className="ml-1" style={{ color: themeToken.colorInfoTextHover }}>
-                    <span>{TEST_USER.username}</span>
-                  </strong>
-                </div>
-
-                <div className="flex">
-                  <ProTag className="flex-shrink-0">Test {t('sys.login.userName')}:</ProTag>
-                  <strong className="ml-1" style={{ color: themeToken.colorInfoTextHover }}>
-                    <span>{USER_USER.username}</span>
-                  </strong>
-                </div>
-
-                <div>
-                  <ProTag className="flex-shrink-0">{t('sys.login.password')}:</ProTag>
-                  <strong className=" ml-1" style={{ color: themeToken.colorInfoTextHover }}>
-                    {DEFAULT_USER.password}
-                  </strong>
-                </div>
-              </div>
-            }
-            showIcon
-          />
-        </div> */}
-
+       
         <Form.Item
           name="username"
           rules={[{ required: true, message: t('sys.login.accountPlaceholder') }]}
@@ -110,38 +73,10 @@ function LoginForm() {
             {t('sys.login.loginButton')}
           </Button>
         </Form.Item>
-
-        {/* <Row align="middle" gutter={8}>
-          <Col span={9} flex="1">
-            <Button
-              className="w-full !text-sm"
-              onClick={() => setLoginState(LoginStateEnum.MOBILE)}
-            >
-              {t('sys.login.mobileSignInFormTitle')}
-            </Button>
-          </Col>
-          <Col span={9} flex="1">
-            <Button
-              className="w-full !text-sm"
-              onClick={() => setLoginState(LoginStateEnum.QR_CODE)}
-            >
-              {t('sys.login.qrSignInFormTitle')}
-            </Button>
-          </Col>
-          <Col span={6} flex="1" onClick={() => setLoginState(LoginStateEnum.REGISTER)}>
-            <Button className="w-full !text-sm">{t('sys.login.signUpFormTitle')}</Button>
-          </Col>
-        </Row> */}
-
         <Divider className="!text-xs">
           {/* {t('sys.login.otherSignIn')} */}
           </Divider>
-{/* 
-        <div className="flex cursor-pointer justify-around text-2xl">
-          <AiFillGithub />
-          <AiFillWechat />
-          <AiFillGoogleCircle />
-        </div> */}
+
       </Form>
     </>
   );
