@@ -14,7 +14,7 @@ import { useUserToken } from '@/store/UserDataStore';
 import axios from 'axios';
 
 const APIURL = import.meta.env.VITE_API_URL;
-const baseUrl = 'https://localhost:7290/api/Audit';
+const baseUrl = `${APIURL}/Audit`;
 
 const AuditButton = () => {
   const ProjectId = useProjectId();

@@ -2,29 +2,36 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { Form, Input, Radio, Typography, Divider, Row, Col, Space, Table, Select, Button } from 'antd';
 import { useProjectId } from '@/store/ProjectState';
+import { useUserToken } from '@/store/UserDataStore';
+import { useDatabase } from '@/store/DatabaseStore';
 
 const { Title } = Typography;
 
-
-const apiurl = import.meta.env.VITE_API_URL;
-
+const APIURL= import.meta.env.VITE_API_URL;
 
 const MarksAllotmentForm = () => {
     const projectId = useProjectId()
+    const token = useUserToken
+    const database = useDatabase()
+
     const [formState, setFormState] = useState({
         numberOfAmbiguousQuestions: '',
         optionsJumbled: '',
         setCode: '',
         ambiguousQuestions: {},
-        markingLogic: '', // New state to store the selected marking logic
+        markingLogic: '',
     });
 
     const [setCodes, setSetCodes] = useState([]);
     const [markingRules, setMarkingRules] = useState([]);
-
+    const [ambfetchdata, setAmbfetchdata] = useState([]);
 
     useEffect(() => {
-        axios.get('http://localhost:5071/api/Ambiguity/BSetResponsesByProject/1')
+        axios.get(`${APIURL}/Ambiguity/BSetResponsesByProject/${projectId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
             .then(response => {
                 const setCodesArray = response.data.split(',');
                 setSetCodes(setCodesArray);
@@ -39,41 +46,40 @@ const MarksAllotmentForm = () => {
                 console.error('Error fetching set codes:', error);
             });
 
-        axios.get('http://localhost:5071/api/MarkingRule')
+        axios.get(`${APIURL}/Ambiguity/MarkingRule`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
             .then(response => {
                 setMarkingRules(response.data);
             })
             .catch(error => {
                 console.error('Error fetching marking rules:', error);
             });
-    }, []);
-
+    }, []); 
 
     useEffect(() => {
-        axios.get(`${apiurl}/Ambiguity/BSetResponsesByProject/${projectId}`)
-            .then(response => {
-                const setCodesArray = response.data.split(',');
-                setSetCodes(setCodesArray);
-                if (setCodesArray.length > 0) {
-                    setFormState(prevState => ({
-                        ...prevState,
-                        setCode: response.data
-                    }));
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching set codes:', error);
-            });
-
-        axios.get(`${apiurl}/MarkingRule`)
-            .then(response => {
-                setMarkingRules(response.data);
-            })
-            .catch(error => {
-                console.error('Error fetching marking rules:', error);
-            });
-    }, []);
-
+        axios.get(`${APIURL}/Ambiguity/ByProjectId/${projectId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(response => {
+            const filteredData = response.data.map(item => ({
+                ambiguousId: item.ambiguousId,
+                projectId: item.projectId,
+                markingId: item.markingId,
+                setCode: item.setCode,
+                questionNumber: item.questionNumber,
+                option: item.option
+            }));
+            setAmbfetchdata(filteredData);
+        })
+        .catch(error => {
+            console.error('Error fetching ambiguous data:', error);
+        });
+    }, [projectId, token]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -90,48 +96,40 @@ const MarksAllotmentForm = () => {
         });
     };
 
-
-    const transformData = () => {
-        const transformed = [];
-
-        Object.keys(formState.ambiguousQuestions).forEach(setCode => {
-            Object.keys(formState.ambiguousQuestions[setCode]).forEach(questionNumber => {
-                const questionData = formState.ambiguousQuestions[setCode][questionNumber];
-
-
-                if (questionData && questionData.options) {
-                    const optionsKey = Object.keys(questionData.options)[0];
-                    const optionValue = questionData.options[optionsKey];
-
-                    transformed.push({
-                        Set: setCode,
-                        Question: questionNumber,
-                        Option: optionValue
-                    });
-                }
-            });
-        });
-
-        return transformed;
-
-    };
-
     const handleSubmit = async () => {
-        const requestData = {
-            projectId, // Update this as per your requirement
+        const dataToSubmit = renderTableData().map(row => ({
+            projectId,
             markingId: formState.markingLogic,
-            setQuesAns: JSON.stringify(transformData()) // Convert to JSON string
-        };
+            setCode: row.setCode.split(' ')[1],
+            questionNumber: row.questionNumber.props.value || null,
+            option: row.option ? row.option.props.value || null : null
+        }));
 
         try {
-            const response = await axios.post('http://localhost:5071/api/Ambiguity/allot-marks', requestData, {
+            const response = await axios.post(`${APIURL}/Ambiguity/allot-marks?WhichDatabase=${database}`, dataToSubmit, {
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 }
             });
             console.log('Form submitted successfully:', response.data);
         } catch (error) {
             console.error('Error submitting form:', error);
+        }
+    };
+
+    const handleDelete = async () => {
+        try {
+            // Assuming you want to delete all ambiguous questions
+            await axios.delete(`${APIURL}/Ambiguity?WhichDatabase=${database}&ProjectId=${projectId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            setAmbfetchdata([]);
+            console.log('All items deleted successfully');
+        } catch (error) {
+            console.error('Error deleting items:', error);
         }
     };
 
@@ -156,17 +154,19 @@ const MarksAllotmentForm = () => {
             const updatedQuestions = { ...prevState.ambiguousQuestions };
 
             if (formState.optionsJumbled === "No") {
-                // Iterate over setCodes array directly
-                setCodes.forEach(code => {
-                    if (!updatedQuestions[code]) {
-                        updatedQuestions[code] = {};
+                // If options are not jumbled, copy the same value to all sets for this question
+                for (let i = 0; i < 4; i++) {
+                    const currentSetCode = `Set ${String.fromCharCode(formState.setCode.charCodeAt(0) + i)}`;
+                    if (!updatedQuestions[currentSetCode]) {
+                        updatedQuestions[currentSetCode] = {};
                     }
-                    if (!updatedQuestions[code][questionNumber]) {
-                        updatedQuestions[code][questionNumber] = { options: {} };
+                    if (!updatedQuestions[currentSetCode][questionNumber]) {
+                        updatedQuestions[currentSetCode][questionNumber] = { options: {} };
                     }
-                    updatedQuestions[code][questionNumber].options[option] = value;
-                });
+                    updatedQuestions[currentSetCode][questionNumber].options[option] = value;
+                }
             } else {
+                // If options are jumbled, only update the specific set
                 if (!updatedQuestions[setCode]) {
                     updatedQuestions[setCode] = {};
                 }
@@ -180,41 +180,48 @@ const MarksAllotmentForm = () => {
     };
 
     const renderTableData = () => {
-        const { numberOfAmbiguousQuestions } = formState;
+        const { numberOfAmbiguousQuestions, setCode, markingLogic } = formState;
         const data = [];
 
-        if (numberOfAmbiguousQuestions && !isNaN(numberOfAmbiguousQuestions)) {
+        if (numberOfAmbiguousQuestions && !isNaN(numberOfAmbiguousQuestions) && setCode) {
             for (let i = 1; i <= parseInt(numberOfAmbiguousQuestions); i++) {
-                setCodes.forEach(setCode => {
+                // For each question, create 4 rows with consecutive letters starting from setCode
+                for (let j = 0; j < 4; j++) {
+                    const currentSetLetter = String.fromCharCode(setCode.charCodeAt(0) + j);
+                    const isDisabled = formState.optionsJumbled === "No" && j > 0;
+                    const questionNumberInput = (
+                        <Input
+                            type="number"
+                            placeholder={`Question ${i}`}
+                            value={formState.ambiguousQuestions[`Set ${currentSetLetter}`] && formState.ambiguousQuestions[`Set ${currentSetLetter}`][i] && formState.ambiguousQuestions[`Set ${currentSetLetter}`][i].question}
+                            onChange={(e) => handleQuestionChange(`Set ${currentSetLetter}`, i, e)}
+                            style={{ borderRadius: '0' }}
+                        />
+                    );
+
+                    const optionInput = (
+                        <Input
+                            type="text"
+                            placeholder={`Option for Question ${i}`}
+                            value={formState.ambiguousQuestions[`Set ${currentSetLetter}`] && formState.ambiguousQuestions[`Set ${currentSetLetter}`][i] && formState.ambiguousQuestions[`Set ${currentSetLetter}`][i].options && formState.ambiguousQuestions[`Set ${currentSetLetter}`][i].options['option']}
+                            onChange={(e) => handleOptionChange(`Set ${currentSetLetter}`, i, 'option', e)}
+                            style={{ borderRadius: '0' }}
+                            disabled={isDisabled}
+                        />
+                    );
+
                     data.push({
-                        key: `${setCode}-${i}`,
-                        setCode: setCode,
-                        questionNumber: (
-                            <Input
-                                type="number"
-                                placeholder={`Question ${i}`}
-                                value={formState.ambiguousQuestions[setCode] && formState.ambiguousQuestions[setCode][i] && formState.ambiguousQuestions[setCode][i].question}
-                                onChange={(e) => handleQuestionChange(setCode, i, e)}
-                                style={{ borderRadius: '0' }}
-                            />
-                        ),
-                        option: (
-                            <Input
-                                type="text"
-                                placeholder={`Option for Question ${i}`}
-                                value={formState.ambiguousQuestions[setCode] && formState.ambiguousQuestions[setCode][i] && formState.ambiguousQuestions[setCode][i].options && formState.ambiguousQuestions[setCode][i].options['option']}
-                                onChange={(e) => handleOptionChange(setCode, i, 'option', e)}
-                                style={{ borderRadius: '0' }}
-                            />
-                        )
+                        key: `${i}-${j}`,
+                        setCode: `Set ${currentSetLetter}`,
+                        questionNumber: questionNumberInput,
+                        ...(markingLogic && markingRules.slice(0, 3).some(rule => rule.markingId === markingLogic) ? {} : { option: optionInput })
                     });
-                });
+                }
             }
         }
 
         return data;
     };
-
 
     const columns = [
         {
@@ -226,14 +233,12 @@ const MarksAllotmentForm = () => {
             title: 'Question Number',
             dataIndex: 'questionNumber',
             key: 'questionNumber',
-
         },
-        {
+        ...(markingRules.slice(0, 3).some(rule => rule.markingId === formState.markingLogic) ? [] : [{
             title: 'Option',
             dataIndex: 'option',
             key: 'option',
-        },
-
+        }]),
     ];
 
     return (
@@ -255,9 +260,13 @@ const MarksAllotmentForm = () => {
                 <Col span={6}>
                     <Form.Item label={<span style={{ fontWeight: 'bold', color: '#ff0000' }}>Set Code</span>}>
                         <Input
+                            name="setCode"
                             value={formState.setCode}
-                            disabled
+                            onChange={handleChange}
                             style={{ borderRadius: '0' }}
+                            pattern="[A-Za-z]"
+                            maxLength={1}
+                            placeholder="Enter a single alphabet"
                         />
                     </Form.Item>
                 </Col>
@@ -291,12 +300,10 @@ const MarksAllotmentForm = () => {
                         </Select>
                     </Form.Item>
                 </Col>
-
             </Row>
 
             <Divider />
             <Row gutter={16}>
-
                 <Col span={24}>
                     <Table
                         columns={columns}
@@ -306,15 +313,36 @@ const MarksAllotmentForm = () => {
                     />
                 </Col>
             </Row>
-            <Form.Item>
+            <Divider />
+            <Row gutter={16}>
+                <Col span={24}>
+                    <Table
+                        columns={[
+                            { title: 'Set Code', dataIndex: 'setCode', key: 'setCode' },
+                            { title: 'Question Number', dataIndex: 'questionNumber', key: 'questionNumber' },
+                            { title: 'Option', dataIndex: 'option', key: 'option' },
+                        ]}
+                        dataSource={ambfetchdata}
+                        pagination={false}
+                        bordered={true}
+                    />
+                </Col>
+            </Row>
+            <Form.Item style={{ marginTop: '20px' }}>
                 <Button
                     type="primary"
                     onClick={handleSubmit}
                 >
                     Submit
                 </Button>
+                <Button
+                    type="danger"
+                    onClick={handleDelete}
+                    style={{ marginLeft: '10px' }}
+                >
+                    Delete All
+                </Button>
             </Form.Item>
-
         </Form>
     );
 };

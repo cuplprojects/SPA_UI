@@ -1,259 +1,248 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
-import { Button, Progress, notification } from 'antd';
+import { Button, Progress, notification, Upload, Typography, Card, Table, Space } from 'antd';
+import { UploadOutlined, DownloadOutlined, CloudUploadOutlined } from '@ant-design/icons';
 import { useProjectId } from '@/store/ProjectState';
-import { handleEncrypt } from '@/Security/Security';
 import { useDatabase } from '@/store/DatabaseStore';
 import { useUserToken } from '@/store/UserDataStore';
+import * as XLSX from 'xlsx';
+
+const { Title, Text } = Typography;
 
 const apiurl = import.meta.env.VITE_API_URL;
 
 const ImportOmr = () => {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showSkipBtn, setShowSkipBtn] = useState(false);
-  const [showReplaceBtn, setShowReplaceBtn] = useState(false);
-  const [showSkipAllBtn, setShowSkipAllBtn] = useState(false);
-  const [showReplaceAllBtn, setShowReplaceAllBtn] = useState(false);
-  const [conflictingFiles, setConflictingFiles] = useState([]);
-  
-  const [lastUploadedFile, setLastUploadedFile] = useState('');
-
   const [progress, setProgress] = useState(0);
+  const [failedFiles, setFailedFiles] = useState([]);
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 5 });
+
   const token = useUserToken();
   const ProjectId = useProjectId();
   const database = useDatabase();
 
-  useEffect(() => {
-    fetchLastOmrImageName(ProjectId);
-  }, [ProjectId]);
-
-  const fetchLastOmrImageName = async (ProjectId) => {
-    try {
-      const response = await axios.get(
-        `${apiurl}/OMRData/omrdata/${ProjectId}/last-image-name?WhichDatabase=${database}`,{
-          headers:{
-          Authorization : `Bearer ${token}`
-        }
-    });
-      setLastUploadedFile(response.data);
-    } catch (error) {
-      console.error('Error fetching the last OMR image name:', error);
+  const handleFileChange = ({ fileList }) => {
+    if (fileList.length === 0) {
+      setFailedFiles([]);
+      setFiles([]);
+    } else {
+      setFailedFiles([]);
+      setFiles(fileList.map((f) => f.originFileObj));
     }
   };
 
-  const handleFileChange = (e) => {
-    const selectedFiles = [...e.target.files];
-    setFiles(selectedFiles);
-  };
-
-
-  const readFileAsBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(',')[1]);
-      reader.onerror = (error) => reject(error);
-      reader.readAsDataURL(file);
+  // Function to handle batch upload and capture file-level errors
+  const uploadBatch = async (batchFiles, batchIndex, totalBatches) => {
+    const formData = new FormData();
+    batchFiles.forEach((file) => {
+      formData.append('files', file);
     });
-  };
 
-  const handleDeleteImages = async (projectId) => {
     try {
-      const response = await axios.delete(`${apiurl}/OMRData/Images?WhichDatabase=${database}&ProjectId=${ProjectId}`, {
-          headers:{
-          Authorization : `Bearer ${token}`
-        }
-      });
-      notification.success({
-        message: 'Images deleted',
-        duartion: 3,
-      })
-      // Handle the response here
-      console.log('Deletion successful:', response.data);
-    } catch (error) {
-      notification.error({
-        message: 'Error in deleting Images',
-        duartion: 3,
-      })
-      // Handle errors here
-      notification.error({
-        message: 'Error in deleting Images',
-        duartion: 3,
-      })
-      console.error('Error deleting Images :', error.response ? error.response.data : error.message);
-    }
-  };
-
-  const uploadFile = async (file, replace = false) => {
-    let progressPercent = 0;
-    try {
-      const base64File = await readFileAsBase64(file);
-      const fileNameWithoutExtension = file.name.replace(/\.[^/.]+$/, '');
-
-      const datatosend = {
-        omrImagesName: fileNameWithoutExtension,
-        filePath: base64File,
-        replace: replace,
-      };
-      const datatosendjsonstring = JSON.stringify(datatosend);
-      const encryptedData = handleEncrypt(datatosendjsonstring);
-      const encryptedDatatosend = {
-        cyphertextt: encryptedData
-      }
-
-      await axios.post(
-        `${apiurl}/OMRData/upload-request?ProjectId=${ProjectId}&WhichDatabase=${database}`,
-        // { omrImagesName: fileNameWithoutExtension, filePath: base64File, replace: replace } ,
-        encryptedDatatosend,
+      const response = await axios.post(
+        `${apiurl}/OMRData/upload-batch?WhichDatabase=${database}&ProjectId=${ProjectId}`,
+        formData,
         {
           headers: {
-            'Content-Type': 'application/json',
-              Authorization : `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
           },
           onUploadProgress: (progressEvent) => {
-            if (progressEvent.lengthComputable) {
-              progressPercent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-              setProgress(progressPercent);
+            if (progressEvent.total) {
+              const batchProgress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+              const overallProgress =
+                ((batchIndex / totalBatches) * 100) + (batchProgress / totalBatches);
+              setProgress(overallProgress);
             }
           },
-        },
+        }
       );
-      
-      return { success: true, conflict: false };
-      
-    } catch (error) {
-      if (error.response && error.response.status === 409) {
-        return { success: false, conflict: true };
-      } else {
-        console.error(`Error uploading file ${file.name}:`, error);
-        return { success: false, conflict: false };
+
+      // Handling individual file errors from the response
+      if (response.data.failedFiles) {
+        const newFailedFiles = response.data.failedFiles.map((failedFile) => {
+          return {
+            fileName: failedFile.split(":")[0].trim(), // Get file name from the response
+            reason: failedFile.split(":")[1].trim(),   // Get the reason for failure
+          };
+        });
+        console.log(newFailedFiles);
+        // Append the new failed files to the existing failedFiles state
+        setFailedFiles((prevFailedFiles) => [
+          ...prevFailedFiles,
+          ...newFailedFiles,
+        ]);
       }
+
+    } catch (error) {
+      if (error.response && error.response.status === 400) {
+        const newFailedFiles = error.response.data.failedFiles.map((failedFile) => {
+          return {
+            fileName: failedFile.split(":")[0].trim(), // Get file name from the response
+            reason: failedFile.split(":")[1].trim().replace(/.*Duplicate entry '.+?'.* for key '.+?'/, 'Duplicate entry'),
+          };
+        });
+        console.log(newFailedFiles);
+        // Append the new failed files to the existing failedFiles state
+        setFailedFiles((prevFailedFiles) => [
+          ...prevFailedFiles,
+          ...newFailedFiles,
+        ]);
+      }
+      // Handle any errors that might occur while uploading the batch
+      // setFailedFiles((prevFailedFiles) => [
+      //   ...prevFailedFiles,
+      //   {
+      //     fileName: `Batch ${batchIndex + 1}`,
+      //     reason: error.response ? error.response.data.message : error.message,
+      //   },
+      // ]);
     }
   };
 
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Submit function to start the batch upload process
+  const handleSubmit = async () => {
     setLoading(true);
-    setProgress(0); // Reset progress
+    setProgress(0);
+    setFailedFiles([]);
 
-    const uploadPromises = files.map((file) => uploadFile(file));
-    const results = await Promise.all(uploadPromises);
+    const totalFiles = files.length;
+    const batchSize = 20;
+    const batches = [];
 
-    const conflicts = results
-      .map((result, index) => (result.conflict ? files[index] : null))
-      .filter((file) => file !== null);
+    for (let i = 0; i < totalFiles; i += batchSize) {
+      batches.push(files.slice(i, i + batchSize));
+    }
 
-    setConflictingFiles(conflicts);
+    const totalBatches = batches.length;
 
-    if (conflicts.length > 0) {
-      setShowSkipBtn(true);
-      setShowReplaceBtn(true);
-      setShowSkipAllBtn(true);
-      setShowReplaceAllBtn(true);
+    for (let i = 0; i < totalBatches; i++) {
+      await uploadBatch(batches[i], i, totalBatches); // Upload batch of files
+      setProgress(((i + 1) / totalBatches) * 100); // Update progress after each batch
+
+    }
+
+    setLoading(false);
+  // Clear the selected files
+    setFiles([]);
+    if (failedFiles.length > 0) {
       notification.warning({
-        message: 'Some files have conflicts.',
-        duration: 3
-      })
+        message: 'Upload completed with failures.',
+        description: `${failedFiles.length} file(s) failed to upload.`,
+        duration: 5,
+      });
     } else {
       notification.success({
-        message: 'All files uploaded successfully.',
-        duration: 3
-      })
-   
-      setFiles([]);
+        message: 'All files uploaded successfully!',
+        duration: 3,
+      });
     }
-    setLoading(false);
+
+  
   };
 
-  const resolveConflict = async (file, action) => {
-    if (action === 'skip') {
-      setFiles(files.filter((f) => f.name !== file.name));
-    } else if (action === 'replace') {
-      await uploadFile(file, true);
-    }
-
-    const remainingConflicts = conflictingFiles.filter((f) => f.name !== file.name);
-    setConflictingFiles(remainingConflicts);
-
-    if (remainingConflicts.length === 0) {
-      setShowSkipBtn(false);
-      setShowReplaceBtn(false);
-      setShowSkipAllBtn(false);
-      setShowReplaceAllBtn(false);
-      
-      setLoading(false);
-    }
+  // Handle failed files download
+  const handleDownloadFailedFiles = () => {
+    const worksheet = XLSX.utils.json_to_sheet(failedFiles);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Failed Files');
+    XLSX.writeFile(workbook, 'FailedFilesReport.xlsx');
   };
 
-  const resolveAllConflicts = async (action) => {
-    setLoading(true);
-    setProgress(0); // Reset progress
-
-    if (action === 'skip') {
-      setFiles(files.filter((file) => !conflictingFiles.includes(file)));
-    } else if (action === 'replace') {
-      for (const file of conflictingFiles) {
-        await uploadFile(file, true);
-      }
-    }
-
-    setConflictingFiles([]);
-    setShowSkipBtn(false);
-    setShowReplaceBtn(false);
-    setShowSkipAllBtn(false);
-    setShowReplaceAllBtn(false);
-   
-    setLoading(false);
-  };
+  const columns = [
+    {
+      title: 'File Name',
+      dataIndex: 'fileName',
+      key: 'fileName',
+    },
+    {
+      title: 'Reason',
+      dataIndex: 'reason',
+      key: 'reason',
+    },
+  ];
 
   return (
-    <>
-    <div className='d-flex align-items-center justify-content-between'>
-     <h3 className="head fs-3 text-center">Upload OMR Images</h3>
+    <Card style={{ margin: '20px auto', maxWidth: 900, padding: 20 }}>
+      <Title level={3} style={{ textAlign: 'center', marginBottom: 20 }}>
+        Upload OMR Images
+      </Title>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="file"
-          name="files"
-          onChange={handleFileChange}
+      <Space direction="vertical" style={{ width: '100%' }}>
+        <Upload
           multiple
           accept=".jpg,.jpeg"
-          required
-        />
-        <Button type="primary" htmlType="submit" loading={loading} disabled={files.length === 0}>
-          Upload Files
-        </Button>
-        <Button danger onClick={handleDeleteImages}>Delete</Button>
-      </form>
-  
-      <div className="d-flex gap-4">
-        {showSkipBtn && (
-          <Button danger onClick={() => resolveConflict(conflictingFiles[0], 'skip')}>
-            Skip {conflictingFiles[0].name}
+          beforeUpload={() => false}
+          onChange={handleFileChange}
+          showUploadList={false}
+        >
+          <Button icon={<UploadOutlined />} block size="medium" type="primary">
+            Select Files
           </Button>
+        </Upload>
+
+        {files.length > 0 && (
+          <div style={{ textAlign: 'center', marginTop: 20 }}>
+            <Text>Selected Files: {files.length}</Text>
+          </div>
         )}
-        {showReplaceBtn && (
-          <Button type="primary" onClick={() => resolveConflict(conflictingFiles[0], 'replace')}>
-            Replace {conflictingFiles[0].name}
+
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <Button
+            type="primary"
+            onClick={handleSubmit}
+            loading={loading}
+            disabled={files.length === 0}
+            icon={<CloudUploadOutlined />}
+            size="medium"
+            block
+          >
+            Upload Files
           </Button>
+        </div>
+
+        {progress > 0 && (
+          <div style={{ marginTop: 20 }}>
+            <Progress percent={Math.round(progress)} status={loading ? 'active' : 'normal'} />
+            <Text style={{ display: 'block', textAlign: 'center', marginTop: 10 }}>
+              {Math.round(progress)}% Uploaded
+            </Text>
+          </div>
         )}
-        {showSkipAllBtn && (
-          <Button danger onClick={() => resolveAllConflicts('skip')}>
-            Skip All Files
-          </Button>
+
+        {failedFiles.length > 0 && (
+          <div style={{ marginTop: 20 }}>
+            <Text type="danger" style={{ display: 'block', textAlign: 'center' }}>
+              {failedFiles.length} file(s) failed to upload.
+            </Text>
+            <Table
+              columns={columns}
+              dataSource={failedFiles}
+              pagination={{
+                current: pagination.current,
+                pageSize: pagination.pageSize,
+                total: failedFiles.length,
+                onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
+              }}
+              rowKey="fileName"
+              style={{ marginTop: 20 }}
+            />
+            <div style={{ textAlign: 'center', marginTop: 10 }}>
+              <Button
+                type="primary"
+                icon={<DownloadOutlined />}
+                onClick={handleDownloadFailedFiles}
+                size="large"
+                style={{ backgroundColor: '#1890ff', color: 'white' }}
+              >
+                Download Failed Files Report
+              </Button>
+            </div>
+          </div>
         )}
-        {showReplaceAllBtn && (
-          <Button type="primary" onClick={() => resolveAllConflicts('replace')}>
-            Replace All Files
-          </Button>
-        )}
-      </div>
-      
-    </div>
-    {loading && <Progress percent={progress} status="active" />}
-      {lastUploadedFile && <p>Last Uploaded File: {lastUploadedFile}</p>}
-    </>
+      </Space>
+    </Card>
   );
 };
 

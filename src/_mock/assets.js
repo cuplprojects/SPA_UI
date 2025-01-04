@@ -408,16 +408,16 @@ const OTHERS_PERMISSION = [
     route: 'GenerateScore',
     component: '/ScoreProcessing/index.tsx',
   },
-  // {
-  //   id: '15',
-  //   parentId: '',
-  //   label: 'Ambiguity',
-  //   name: 'Ambiguity',
-  //   icon: 'solar:document-add-bold-duotone',
-  //   type: PermissionType.MENU,
-  //   route: 'Ambiguity',
-  //   component: '/Ambiguity/index.tsx',
-  // },
+  {
+    id: '15',
+    parentId: '',
+    label: 'Ambiguity',
+    name: 'Ambiguity',
+    icon: 'solar:document-add-bold-duotone',
+    type: PermissionType.MENU,
+    route: 'Ambiguity',
+    component: '/Ambiguity/index.tsx',
+  },
 
   {
     id: '16',

@@ -108,18 +108,34 @@ const Import = () => {
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
         const rows = jsonData.slice(1); // Exclude headers
+        // const mappedData = rows.map((row) => {
+        //   const rowData = {};
+        //   for (let property in mapping) {
+        //     const header = mapping[property];
+        //     const index = jsonData[0].indexOf(header);
+        //     // Ensure the value is converted to string before assigning
+        //     rowData[property] = index !== -1 ? String(row[index]) : '';
+        //   }
+        //   // Add projectId to each row
+        //   rowData['projectId'] = ProjectId;
+        //   return rowData;
+        // });
+
         const mappedData = rows.map((row) => {
+          if (row.every(cell => cell === '' || cell === undefined)) {
+              return null; // Skip empty rows
+          }
+          
           const rowData = {};
           for (let property in mapping) {
-            const header = mapping[property];
-            const index = jsonData[0].indexOf(header);
-            // Ensure the value is converted to string before assigning
-            rowData[property] = index !== -1 ? String(row[index]) : '';
+              const header = mapping[property];
+              const index = jsonData[0].indexOf(header);
+              rowData[property] = index !== -1 && row[index] !== undefined ? String(row[index]) : '';
           }
-          // Add projectId to each row
           rowData['projectId'] = ProjectId;
           return rowData;
-        });
+      }).filter(Boolean); // Remove any null values
+      
 
         try {
           const jsonmappeddata = JSON.stringify(mappedData);
@@ -615,7 +631,7 @@ const Import = () => {
               <div className="">
                 <ul className="d-flex align-items-center justify-content-around my-4" id="myTab">
                   <li
-                    style={{ border: `2px solid ${colorPrimary}` }}
+                    style={{ border: `2px solid ${ colorPrimary} ` }}
                     className="tabcircle"
                     onClick={() => {
                       setActivetab('OMRImages');
