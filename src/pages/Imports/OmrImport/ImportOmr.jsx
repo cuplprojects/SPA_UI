@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Button, Progress, notification, Upload, Typography, Card, Table, Space } from 'antd';
-import { UploadOutlined, DownloadOutlined, CloudUploadOutlined } from '@ant-design/icons';
+import { Button, Progress, notification, Upload, Typography, Card, Table, Space, Popconfirm, Badge } from 'antd';
+import { UploadOutlined, DownloadOutlined, CloudUploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useProjectId } from '@/store/ProjectState';
 import { useDatabase } from '@/store/DatabaseStore';
 import { useUserToken } from '@/store/UserDataStore';
@@ -17,18 +17,38 @@ const ImportOmr = () => {
   const [progress, setProgress] = useState(0);
   const [failedFiles, setFailedFiles] = useState([]);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 5 });
+  const [uplodedImages, setUplodedImages] = useState([]);
 
   const token = useUserToken();
   const ProjectId = useProjectId();
   const database = useDatabase();
 
   const handleFileChange = ({ fileList }) => {
-    if (fileList.length === 0) {
-      setFailedFiles([]);
-      setFiles([]);
-    } else {
-      setFailedFiles([]);
-      setFiles(fileList.map((f) => f.originFileObj));
+    // Clear any previously selected files and set the new ones
+    setFiles(fileList.map((f) => f.originFileObj));  // Reset state with the newly selected files
+  };
+  
+  const clearFiles = () => {
+    setFiles([]);
+    setFailedFiles([]);
+  };
+
+  
+  useEffect(() => {
+    fetchUplodedImages();
+  }, []);
+
+  const fetchUplodedImages = async () => {
+    try {
+      const omrImagesCount = await axios.get(`${apiurl}/Projects/GetProjectCounts?ProjectId=${ProjectId}&CategoryName=Images&WhichDatabase=${database}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log(omrImagesCount.data);
+      setUplodedImages(omrImagesCount.data);
+    } catch (error) {
+      console.error('Error fetching uploded images:', error);
     }
   };
 
@@ -90,14 +110,6 @@ const ImportOmr = () => {
           ...newFailedFiles,
         ]);
       }
-      // Handle any errors that might occur while uploading the batch
-      // setFailedFiles((prevFailedFiles) => [
-      //   ...prevFailedFiles,
-      //   {
-      //     fileName: `Batch ${batchIndex + 1}`,
-      //     reason: error.response ? error.response.data.message : error.message,
-      //   },
-      // ]);
     }
   };
 
@@ -124,22 +136,40 @@ const ImportOmr = () => {
     }
 
     setLoading(false);
-  // Clear the selected files
+    // Clear the selected files
     setFiles([]);
     if (failedFiles.length > 0) {
+      setFiles([]);
       notification.warning({
         message: 'Upload completed with failures.',
         description: `${failedFiles.length} file(s) failed to upload.`,
         duration: 5,
       });
     } else {
+      setFiles([]);
+      fetchUplodedImages();
       notification.success({
         message: 'All files uploaded successfully!',
         duration: 3,
       });
     }
+  };
 
-  
+  const handleDeleteAllImages = async () => {
+    try {
+      await axios.delete(`${apiurl}/OMRData/Images?WhichDatabase=${database}&ProjectId=${ProjectId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      notification.success({
+        message: 'All images deleted successfully!',
+        duration: 3,
+      });
+      fetchUplodedImages();
+    } catch (error) {
+      console.error('Error deleting all images:', error);
+    }
   };
 
   // Handle failed files download
@@ -170,17 +200,38 @@ const ImportOmr = () => {
       </Title>
 
       <Space direction="vertical" style={{ width: '100%' }}>
-        <Upload
-          multiple
-          accept=".jpg,.jpeg"
-          beforeUpload={() => false}
-          onChange={handleFileChange}
-          showUploadList={false}
-        >
-          <Button icon={<UploadOutlined />} block size="medium" type="primary">
-            Select Files
-          </Button>
-        </Upload>
+        <div className='d-flex justify-content-between align-items-center'>
+          <Upload
+            multiple
+            accept=".jpg,.jpeg"
+            beforeUpload={() => false}
+            onChange={handleFileChange}
+            showUploadList={false}
+            fileList={[]} // Ensure fileList is reset when needed
+          >
+            <Button icon={<UploadOutlined />} block size="medium" type="primary">
+              Select Files
+            </Button>
+          </Upload>
+          <span className="ant-btn ant-btn-default border border-primary rounded px-4 py-1 text-primary">
+            Uploaded Images: <span className='fw-bold'>{uplodedImages || 0}</span>
+          </span>
+          
+          <div className='d-flex align-items-center'>
+            <Popconfirm
+              title="Are you sure you want to delete all images?"
+              onConfirm={handleDeleteAllImages}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button danger>
+                <DeleteOutlined />
+                Delete All Images
+              </Button>
+            </Popconfirm>
+          </div>
+        </div>
+
 
         {files.length > 0 && (
           <div style={{ textAlign: 'center', marginTop: 20 }}>
