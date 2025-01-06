@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import './style.css';
 import { Button } from 'antd';
+import { useProjectId } from '@/store/ProjectState';
+import { useDatabase } from '@/store/DatabaseStore';
+import { useUserToken } from '@/store/UserDataStore';
 
 const Absentee = ({
   handleFileUpload,
@@ -14,8 +17,14 @@ const Absentee = ({
  
 }) => {
   const [isValidData, setIsValidData] = useState(false);
+  const [count,setCount] = useState([]);
+  const token = useUserToken();
+const ProjectId = useProjectId();
+const database = useDatabase();
+const apiurl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
+    getCount();
     // Check if all properties in mapping have a corresponding header in headers
     const isValid = Object.values(mapping).every((value) => headers.includes(value));
     setIsValidData(isValid);
@@ -23,6 +32,23 @@ const Absentee = ({
 
   // Get already mapped headers
   const mappedHeaders = Object.values(mapping);
+
+  const getCount = async()=>{
+    try{
+    const response = await fetch(`${apiurl}/Absentee/absentee/count/${ProjectId}?WhichDatabase=${database}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+    const count = await response.json()
+    setCount(count);
+  }
+  catch(error){
+    console.error('Failed to fetch count',error)
+  }
+  }
 
   return (
     <>
@@ -32,10 +58,19 @@ const Absentee = ({
           <p>
             <input type="file" onChange={handleFileUpload} accept=".xlsx" />
           </p>
+          {count > 0 &&
           <Button danger onClick={handleDeleteAbsentee} disabled={loading}>
              Delete
           </Button>
+          }
         </div>
+        {count !== null ? (
+          <p className="count-display text-center mt-4">
+            Current Absentee Count: {count}
+          </p>
+        ) : (
+          <p className="text-center mt-4">Loading count...</p>
+        )}
         {headers.length > 0 && (
           <div className="d-flex justify-content-center mt-4">
             <table className="table table-bordered">

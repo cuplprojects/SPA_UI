@@ -127,10 +127,8 @@ const GenerateScore = () => {
       });
       return;
     }
-
     const formData = new FormData();
     formData.append('file', globalFile.file);
-
     try {
       setLoading(true);
       const promises = courseNames.map((courseName) => {
@@ -146,7 +144,6 @@ const GenerateScore = () => {
       });
 
       await Promise.all(promises);
-
       fetchKeyCounts();
       notification.success({ message: 'File uploaded successfully for all courses!', duration: 3 });
       setGlobalFile(null);
@@ -247,6 +244,7 @@ const GenerateScore = () => {
 
           if (response.status === 200) {
             fetchKeyCounts();
+            fetchCourseCounts();
             notification.success({
               message: `Key updated successfully for course ${courseName}!`,
               duration: 3,
