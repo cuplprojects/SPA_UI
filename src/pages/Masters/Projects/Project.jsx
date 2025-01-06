@@ -146,10 +146,10 @@ function Project() {
 
   const cancel = () => {
     setEditingKey('');
-    const lastRow = data[data.length - 1];
+    const lastRow = data[0];
     if (lastRow && lastRow.projectName.trim() === '') {
       const newData = [...data];
-      newData.pop();
+      newData.shift();
       setData(newData);
       setFilteredData(newData);
       setHasUnsavedChanges(false);
@@ -330,15 +330,11 @@ function Project() {
       userAssigned: [],
       method: 'POST',
     };
-    setData([...data, newData]);
-    setFilteredData([...data, newData]);
+    setData([newData,...data]);
+    setFilteredData([newData,...data]);
     setEditingKey(newRowKey.toString());
     setHasUnsavedChanges(true);
   };
-
-  // const handleImport = () => {
-
-  // }
 
   const columns = [
     {

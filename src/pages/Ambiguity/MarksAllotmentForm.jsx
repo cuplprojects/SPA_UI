@@ -7,7 +7,7 @@ import { useDatabase } from '@/store/DatabaseStore';
 
 const { Title } = Typography;
 
-const APIURL= import.meta.env.VITE_API_URL;
+const APIURL = import.meta.env.VITE_API_URL;
 
 const MarksAllotmentForm = () => {
     const projectId = useProjectId()
@@ -25,6 +25,8 @@ const MarksAllotmentForm = () => {
     const [setCodes, setSetCodes] = useState([]);
     const [markingRules, setMarkingRules] = useState([]);
     const [ambfetchdata, setAmbfetchdata] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         axios.get(`${APIURL}/Ambiguity/BSetResponsesByProject/${projectId}`, {
@@ -57,29 +59,42 @@ const MarksAllotmentForm = () => {
             .catch(error => {
                 console.error('Error fetching marking rules:', error);
             });
-    }, []); 
+    }, []);
 
-    useEffect(() => {
-        axios.get(`${APIURL}/Ambiguity/ByProjectId/${projectId}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        })
-        .then(response => {
+
+    const getAmbiguity = async () => {
+        try {
+            // Fetch ambiguous data using axios
+            const response = await axios.get(
+                `${APIURL}/Ambiguity/ByProjectId/${projectId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            // Map the response data into the desired format
             const filteredData = response.data.map(item => ({
                 ambiguousId: item.ambiguousId,
                 projectId: item.projectId,
                 markingId: item.markingId,
                 setCode: item.setCode,
                 questionNumber: item.questionNumber,
-                option: item.option
+                option: item.option,
             }));
+
+            // Set the state with the filtered data
             setAmbfetchdata(filteredData);
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('Error fetching ambiguous data:', error);
-        });
+        }
+    };
+
+    useEffect(() => {
+        getAmbiguity();
     }, [projectId, token]);
+
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -97,6 +112,7 @@ const MarksAllotmentForm = () => {
     };
 
     const handleSubmit = async () => {
+        setIsSubmitting(true);
         const dataToSubmit = renderTableData().map(row => ({
             projectId,
             markingId: formState.markingLogic,
@@ -113,12 +129,29 @@ const MarksAllotmentForm = () => {
                 }
             });
             console.log('Form submitted successfully:', response.data);
+
+            setAmbfetchdata([]);
+            getAmbiguity();
+            notification.success({
+                message: 'Marks Allotment added successfully!',
+                duration: 3,
+            });
+
         } catch (error) {
             console.error('Error submitting form:', error);
+            notification.error({
+                message: 'Error adding Marks Allotment',
+                duration: 3,
+            });
+
+        }
+        finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleDelete = async () => {
+        setIsDeleting(true);
         try {
             // Assuming you want to delete all ambiguous questions
             await axios.delete(`${APIURL}/Ambiguity?WhichDatabase=${database}&ProjectId=${projectId}`, {
@@ -127,9 +160,23 @@ const MarksAllotmentForm = () => {
                 }
             });
             setAmbfetchdata([]);
+            getAmbiguity();
+            notification.success({
+                message: 'Allotment deleted successfully!',
+                duration: 3,
+            });
             console.log('All items deleted successfully');
+
         } catch (error) {
             console.error('Error deleting items:', error);
+            notification.error({
+                message: 'Error deleting items:', error,
+                duration: 3,
+            });
+
+        }
+        finally {
+            setIsDeleting(false);
         }
     };
 
@@ -303,16 +350,17 @@ const MarksAllotmentForm = () => {
             </Row>
 
             <Divider />
-            <Row gutter={16}>
-                <Col span={24}>
-                    <Table
-                        columns={columns}
-                        dataSource={renderTableData()}
-                        pagination={false}
-                        bordered={true}
-                    />
-                </Col>
-            </Row>
+            {!isSubmitting &&
+                <Row gutter={16}>
+                    <Col span={24}>
+                        <Table
+                            columns={columns}
+                            dataSource={renderTableData()}
+                            pagination={false}
+                            bordered={true}
+                        />
+                    </Col>
+                </Row>}
             <Divider />
             <Row gutter={16}>
                 <Col span={24}>
@@ -332,17 +380,23 @@ const MarksAllotmentForm = () => {
                 <Button
                     type="primary"
                     onClick={handleSubmit}
+
+                    disabled={isSubmitting}  // Disable while submitting
+                    loading={isSubmitting}  // Show loading spinner
                 >
-                    Submit
+                    {isSubmitting ? 'Submitting...' : 'Submit'}
                 </Button>
+
                 <Button
                     type="danger"
                     onClick={handleDelete}
                     style={{ marginLeft: '10px' }}
+                    loading={isDeleting}  // Disable while deleting
                 >
-                    Delete All
+                    {isDeleting ? 'Deleting...' : 'Delete All'}
                 </Button>
             </Form.Item>
+
         </Form>
     );
 };

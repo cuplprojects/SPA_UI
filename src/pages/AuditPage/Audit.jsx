@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Col, Row, Card, Table, Pagination, Dropdown } from 'react-bootstrap';
+import { Col, Row, Card, Table, Pagination, Dropdown, Spinner} from 'react-bootstrap';
 import { Button, notification } from 'antd';
 import ChartComponent from './ChartComponent';
 import { useProjectId } from '@/store/ProjectState';
@@ -28,7 +28,7 @@ const AuditButton = () => {
   const token = useUserToken();
   const [selectedAudit, setSelectedAudit] = useState('');
   const [regData, setRegData] = useState(0);
-
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     getFlags();
     if (totalCount > 0) {
@@ -153,7 +153,7 @@ const AuditButton = () => {
     const selectedApi = apiEndpoints[eventKey];
     if (selectedApi) {
       const url = `${baseUrl}/${selectedApi}?WhichDatabase=${database}&ProjectId=${ProjectId}`;
-
+      setLoading(true);
       try {
         const response = await axios.get(url, {
           headers: {
@@ -175,6 +175,10 @@ const AuditButton = () => {
         });
         console.error('Error fetching data:', error);
       }
+      finally {
+        // Stop loading after the API call completes
+        setLoading(false);
+      }
     }
   };
 
@@ -188,15 +192,19 @@ const AuditButton = () => {
             {isAuditing ? 'Auditing' : 'Run Audit'}
           </Button> */}
           <Dropdown  onSelect={handleSelect}>
-      <Dropdown.Toggle variant="success" id="dropdown-basic">
-        Audit 
+          <Dropdown.Toggle variant="success" id="dropdown-basic">
+        {loading ? (
+          <Spinner animation="border" size="sm" /> // Spinner while loading
+        ) : (
+          'Audit'
+        )}
       </Dropdown.Toggle>
 
       <Dropdown.Menu>
         <Dropdown.Item eventKey="RangeAudit">Range Audit</Dropdown.Item>
-        <Dropdown.Item eventKey="RegistrationAudit" disabled={regData <= 1}>Registration Audit</Dropdown.Item>
-        <Dropdown.Item eventKey="DuplicateRollNumberAudit">Duplicate Roll Number Audit</Dropdown.Item>
-        <Dropdown.Item eventKey="ContainsCharacterAudit">Contains Character Audit</Dropdown.Item>
+         <Dropdown.Item eventKey="ContainsCharacterAudit">Contains Character Audit</Dropdown.Item> 
+         <Dropdown.Item eventKey="DuplicateRollNumberAudit">Duplicate Roll Number Audit</Dropdown.Item>  
+        <Dropdown.Item eventKey="RegistrationAudit" disabled={regData <= 1}>Registration Audit</Dropdown.Item>       
         <Dropdown.Item eventKey="MissingRollNumbers" disabled={regData <= 1}>Missing Roll Numbers</Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
