@@ -31,6 +31,7 @@ const Import = () => {
   const ProjectId = useProjectId();
   const database = useDatabase();
   const token = useUserToken();
+  const [totalQues, setTotalQues] = useState([]);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -69,6 +70,7 @@ const Import = () => {
   };
 
   useEffect(() => {
+    getTotalQuestion();
     // Fetch mapping fields from backend
     const fetchMappingFields = async () => {
       try {
@@ -95,6 +97,53 @@ const Import = () => {
     fetchMappingFields();
   }, []);
 
+  const getTotalQuestion = async () => {
+    try {
+      const response = await fetch(
+        `${apiurl}/ResponseConfigs/byproject/${ProjectId}?WhichDatabase=${database}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      // Log the entire response to check the structure
+      console.log('API Response:', response);
+  
+      // Check if the response was successful (status 200)
+      if (!response.ok) {
+        console.error('Failed to fetch data. Status:', response.status);
+        return;
+      }
+  
+      // Parse the JSON response
+      const data = await response.json();
+  
+      // Log the parsed data to check the structure
+      console.log('Parsed Data:', data);
+  
+      // Check if the sections array exists and has elements
+      if (data.sections && Array.isArray(data.sections) && data.sections.length > 0) {
+        const lastSection = data.sections[data.sections.length - 1]; // Get the last section
+        const endQuestion = lastSection.endQuestion; // Get endQuestion from the last section
+  
+        // Log to ensure that we correctly get the last section's endQuestion
+        console.log('Last Section endQuestion:', endQuestion);
+  
+        // Update the state with the endQuestion value
+        setTotalQues(endQuestion);
+      } else {
+        console.error('No sections found in the response data.');
+      }
+    } catch (error) {
+      // If the request fails or JSON parsing fails, log the error
+      console.error('Failed to fetch Question', error);
+    }
+  };
+  
+  
+
   const handleAbsenteeUpload = async (projectId) => {
     if (selectedFile) {
       setLoading(true);
@@ -108,19 +157,6 @@ const Import = () => {
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
         const rows = jsonData.slice(1); // Exclude headers
-        // const mappedData = rows.map((row) => {
-        //   const rowData = {};
-        //   for (let property in mapping) {
-        //     const header = mapping[property];
-        //     const index = jsonData[0].indexOf(header);
-        //     // Ensure the value is converted to string before assigning
-        //     rowData[property] = index !== -1 ? String(row[index]) : '';
-        //   }
-        //   // Add projectId to each row
-        //   rowData['projectId'] = ProjectId;
-        //   return rowData;
-        // });
-
         const mappedData = rows.map((row) => {
           if (row.every(cell => cell === '' || cell === undefined)) {
               return null; // Skip empty rows
@@ -143,14 +179,6 @@ const Import = () => {
           const encrypteddatatosend = {
             cyphertextt: encryptedData,
           };
-
-          // const response = await fetch(`${apiurl}/Absentee/upload?WhichDatabase=Local&ProjectId=${ProjectId}`, {
-          //   method: 'POST',
-          //   headers: {
-          //     'Content-Type': 'application/json',
-          //   },
-          //   encrypteddatatosend,
-          // });
 
           const response = await axios.post(`${apiurl}/Absentee/upload`, encrypteddatatosend, {
             headers: {
@@ -340,6 +368,8 @@ const Import = () => {
     setFieldMappings((prevMappings) => ({ ...prevMappings, [field]: e.target.value || '' }));
   };
 
+  console.log(totalQues);
+
   const handleScannedUpload = async () => {
     if (selectedFile) {
       setLoading(true);
@@ -371,23 +401,10 @@ const Import = () => {
             }
           });
 
-          // if (rowData['Answers']) {
-          //   const answers = {};
-          //   const ansArray = rowData['Answers'].split('');
-          //   for (let i = 0; i < 100; i++) {
-          //     if (i < ansArray.length) {
-          //       answers[i + 1] = `'${ansArray[i]}'`;
-          //     } else {
-          //       answers[i + 1] = "''";
-          //     }
-          //   }
-          //   rowData['Answers'] = JSON.stringify(answers).replace(/"/g, '');
-          // }
-
           if (rowData['Answers']) {
             const answers = {};
             const ansArray = rowData['Answers'].split('');
-            for (let i = 0; i < 150; i++) {
+            for (let i = 0; i < totalQues; i++) {
               if (i < ansArray.length) {
                 let answer = ansArray[i];
                 // Trim trailing white spaces

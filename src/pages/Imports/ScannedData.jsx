@@ -1,5 +1,8 @@
 import { Button } from 'antd';
 import React, { useState, useEffect } from 'react';
+import { useProjectId } from '@/store/ProjectState';
+import { useDatabase } from '@/store/DatabaseStore';
+import { useUserToken } from '@/store/UserDataStore';
 
 const Scanned = ({
   handleFileUpload,
@@ -12,8 +15,14 @@ const Scanned = ({
   handleFieldMappingChange,
 }) => {
   const [isValidData, setIsValidData] = useState(false);
+  const [count, setCount] = useState([]);
+  const token = useUserToken();
+  const ProjectId = useProjectId();
+  const database = useDatabase();
+  const apiurl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
+    getCount();
     // Check if all properties in mapping have a corresponding header in headers
     const isValid = Object.keys(fieldMappings).every((field) =>
       headers.includes(fieldMappings[field]),
@@ -23,6 +32,22 @@ const Scanned = ({
 
   // Get already mapped headers
   const mappedHeaders = Object.values(fieldMappings);
+  const getCount = async () => {
+    try {
+      const response = await fetch(`${apiurl}/OMRData/count/${ProjectId}?WhichDatabase=${database}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+      const count = await response.json()
+      setCount(count);
+    }
+    catch (error) {
+      console.error('Failed to fetch count', error)
+    }
+  }
 
   return (
     <>
@@ -35,11 +60,20 @@ const Scanned = ({
           <p>
             <input type="file" onChange={handleFileUpload} accept=".csv,.dat,.xlsx" />
           </p>
-          <Button danger
-            onClick={handleDeleteScanned} disabled={loading}>
-            Delete
-          </Button>
+
+          {count > 0 &&
+            <Button danger onClick={handleDeleteScanned} disabled={loading}>
+              Delete
+            </Button>
+          }
         </div>
+        {count !== null ? (
+          <p className="count-display text-center mt-4">
+            Current Scanned sheet: {count}
+          </p>
+        ) : (
+          <p className="text-center mt-4">Loading count...</p>
+        )}
         {headers.length > 0 && (
           <div className="d-flex justify-content-center mt-4">
             <table className="table-bordered table">
@@ -88,7 +122,7 @@ const Scanned = ({
             {loading ? 'Uploading...' : 'Upload'}
           </button>
         )}
-       
+
       </div>
     </>
   );
