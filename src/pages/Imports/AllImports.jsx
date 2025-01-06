@@ -379,6 +379,14 @@ const Import = () => {
   console.log(totalQues);
 
   const handleScannedUpload = async () => {
+    if (!totalQues || totalQues <= 0) {
+      notification.error({
+        message: 'Response Configuration Missing',
+        description: 'You must upload the response configuration first.',
+        duration: 10,
+      });
+      return; // Prevent further execution if totalQues is not set
+    }
     if (selectedFile) {
       setLoading(true);
       const reader = new FileReader();
