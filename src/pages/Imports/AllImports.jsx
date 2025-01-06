@@ -123,24 +123,32 @@ const Import = () => {
       // Log the parsed data to check the structure
       console.log('Parsed Data:', data);
   
-      // Check if the sections array exists and has elements
-      if (data.sections && Array.isArray(data.sections) && data.sections.length > 0) {
-        const lastSection = data.sections[data.sections.length - 1]; // Get the last section
-        const endQuestion = lastSection.endQuestion; // Get endQuestion from the last section
+      // Ensure data is an array and contains at least one element
+      if (Array.isArray(data) && data.length > 0) {
+        const sections = data[0].sections; // Access the first item of the array and its sections
   
-        // Log to ensure that we correctly get the last section's endQuestion
-        console.log('Last Section endQuestion:', endQuestion);
+        // Check if the sections array exists and has elements
+        if (sections && sections.length > 0) {
+          const lastSection = sections[sections.length - 1]; // Get the last section
+          const endQuestion = lastSection.endQuestion; // Get endQuestion from the last section
   
-        // Update the state with the endQuestion value
-        setTotalQues(endQuestion);
+          // Log to ensure that we correctly get the last section's endQuestion
+          console.log('Last Section endQuestion:', endQuestion);
+  
+          // Update the state with the endQuestion value
+          setTotalQues(endQuestion);
+        } else {
+          console.error('No sections found in the response data.');
+        }
       } else {
-        console.error('No sections found in the response data.');
+        console.error('The response data is not in the expected array format.');
       }
     } catch (error) {
       // If the request fails or JSON parsing fails, log the error
       console.error('Failed to fetch Question', error);
     }
   };
+  
   
   
 
