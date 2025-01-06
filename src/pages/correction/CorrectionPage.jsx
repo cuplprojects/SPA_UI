@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Select, notification, Checkbox, Form, Input } from 'antd';
+import { Button, Select, notification, Checkbox, Form, Input, Spin } from 'antd';
 import { Card, Table } from 'react-bootstrap';
 import axios from 'axios';
 import ZoomedImage from './ZoomedImage';
 import FullImageView from './FullImageView';
 import { useProjectActions, useProjectId } from '@/store/ProjectState';
-import { CloseCircleOutlined, DeleteOutlined } from '@ant-design/icons';
+import { CloseCircleOutlined, DeleteOutlined, LoadingOutlined } from '@ant-design/icons';
 import { handleDecrypt, handleEncrypt } from '@/Security/Security';
 import { convertLegacyProps } from 'antd/es/button';
 import { useDatabase } from '@/store/DatabaseStore';
@@ -15,6 +15,7 @@ import { useFlagActions, useFlagData } from '@/store/useFlagStore';
 import useProject from '@/CustomHooks/useProject';
 import { useUserToken } from '@/store/UserDataStore';
 import noomrimg from '@/assets/images/NoOMRImage.png';
+import { CircleLoading } from '@/components/loading';
 
 const apiurl = import.meta.env.VITE_API_URL;
 const { Option } = Select;
@@ -154,30 +155,7 @@ const CorrectionPage = () => {
                 fieldNameValue: '',
                 imageUrl: '',
               }),
-            );
-
-            let imageUrl = '';
-            try {
-              const omrImageResponse = await axios.get(
-                `${apiurl}/OMRData/OMRImagebyName?WhichDatabase=${database}&ProjectId=${projectId}&Name=${flag.barCode}`,
-                {
-                  params: { WhichDatabase: database },
-                  headers: { accept: 'text/plain', Authorization: `Bearer ${token}` },
-                },
-              );
-              imageUrl = 'data:image/png;base64,' + omrImageResponse.data.filePath;
-            } catch (error) {
-              if (error.response && error.response.status === 404) {
-                // If the image is not found (404), set the placeholder image URL
-
-                imageUrl = noomrimg;
-              } else {
-                console.error('Error fetching OMR image:', error);
-                // For other errors, you can also set a placeholder image or handle it differently
-                imageUrl = noomrimg;
-
-              }
-            }
+            );         
 
             // Find the annotation for the current flag's field name
             const annotation = parsedAnnotations.find(
@@ -196,7 +174,7 @@ const CorrectionPage = () => {
               barCode: flag.barCode,
               projectId: projectId,
               isCorrected: true,
-              imageUrl,
+              imageUrl: flag.imagePath  || noomrimg,
               noChangeRequired: false,
               fieldConfig, // Adding the field configuration to the flag data
             };
@@ -316,7 +294,13 @@ const CorrectionPage = () => {
   }, [currentIndex, data, allDataCorrected]);
 
   if (loading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="d-flex justify-content-center" style={{ minHeight: '100vh' }}>
+        <div className="my-auto">
+          <CircleLoading />
+        </div>
+      </div>
+    );
   }
 
   const handleFilterChange = (index, field, value) => {
@@ -359,7 +343,6 @@ const CorrectionPage = () => {
       setRegData(response.data);
       setCurrentRegIndex(0)
 
-      console.log('Filtered data:', response.data);
     } catch (error) {
       console.error('Error fetching filtered data:', error);
     }
@@ -660,4 +643,3 @@ const CorrectionPage = () => {
 };
 
 export default CorrectionPage;
-

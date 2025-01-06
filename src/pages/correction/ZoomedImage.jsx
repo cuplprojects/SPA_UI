@@ -136,7 +136,7 @@
 // export default ZoomedImage;
 
 import React, { useState, useEffect } from 'react';
-import { Select } from 'antd'; // Import Select from antd
+import { notification, Select } from 'antd'; // Import Select from antd
 import './style.css';
 
 const { Option } = Select;
@@ -175,10 +175,20 @@ const ZoomedImage = ({ data, onUpdate, onNext }) => {
           onUpdate(inputValue);
           onNext();
         } else {
-          alert('Please enter the correct number of digits');
+          // Using Ant Design's notification
+          notification.error({
+            message: 'Input Error',
+            description: 'Please enter the correct number of digits.',
+            duration: 5, // Display duration in seconds
+          });
         }
       } else {
-        alert(`Invalid value! Allowed values: ${filteredValidValues.join(', ')}`);
+        // Using Ant Design's notification
+        notification.error({
+          message: 'Invalid Value',
+          description: `Invalid value! Allowed values: ${filteredValidValues.join(', ')}`,
+          duration: 5, // Display duration in seconds
+        });
       }
     }
   };

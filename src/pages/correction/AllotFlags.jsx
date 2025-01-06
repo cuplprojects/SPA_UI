@@ -9,6 +9,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
 const { Option } = Select;
 
 const AllotFlag = ({ fieldNames }) => {
+  console.log(fieldNames)
   const [showAllotModal, setShowAllotModal] = useState(false);
   const [form] = Form.useForm(); // Form instance for handling form inputs
   const projectId = useProjectId();
@@ -73,7 +74,7 @@ const AllotFlag = ({ fieldNames }) => {
             <Select placeholder="Select Field Category">
               {fieldNames.map((field, index) => (
                 <Option key={index} value={field.fieldName}>
-                  {field.fieldName}
+                  {field.fieldName} {`(${field.count})`}
                 </Option>
               ))}
             </Select>

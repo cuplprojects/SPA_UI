@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import { Form, Input, Radio, Typography, Divider, Row, Col, Space, Table, Select, Button } from 'antd';
+import { Form, Input, Radio, Typography, Divider, Row, Col, Space, Table, Select, Button, Popconfirm } from 'antd';
 import { useProjectId } from '@/store/ProjectState';
 import { useUserToken } from '@/store/UserDataStore';
 import { useDatabase } from '@/store/DatabaseStore';
@@ -376,26 +376,39 @@ const MarksAllotmentForm = () => {
                     />
                 </Col>
             </Row>
-            <Form.Item style={{ marginTop: '20px' }}>
-                <Button
-                    type="primary"
-                    onClick={handleSubmit}
+            <Row>
+                <div style={{ margin: '20px auto', textAlign: 'center' }}>
+                    <Space>
+                        <Button
+                            type="primary"
+                            onClick={handleSubmit}
+                            disabled={isSubmitting}
+                            loading={isSubmitting}
+                        >
+                            {isSubmitting ? 'Submitting...' : 'Submit'}
+                        </Button>
 
-                    disabled={isSubmitting}  // Disable while submitting
-                    loading={isSubmitting}  // Show loading spinner
-                >
-                    {isSubmitting ? 'Submitting...' : 'Submit'}
-                </Button>
+                        <Popconfirm
+                            title="Are you sure you want to delete all?"
+                            description="This action cannot be undone."
+                            onConfirm={handleDelete} // Executes delete action when user confirms
+                            okText="Yes"
+                            cancelText="No"
+                        >
+                            <Button
+                               danger
+                                variant="outlined"
+                                disabled={isDeleting}
+                                loading={isDeleting}
+                            >
+                                {isDeleting ? 'Deleting...' : 'Delete All'}
+                            </Button>
+                        </Popconfirm>
+                    </Space>
+                </div>
+            </Row>
 
-                <Button
-                    type="danger"
-                    onClick={handleDelete}
-                    style={{ marginLeft: '10px' }}
-                    loading={isDeleting}  // Disable while deleting
-                >
-                    {isDeleting ? 'Deleting...' : 'Delete All'}
-                </Button>
-            </Form.Item>
+
 
         </Form>
     );
