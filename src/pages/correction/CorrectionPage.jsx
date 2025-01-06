@@ -342,11 +342,6 @@ const CorrectionPage = () => {
       );
       setRegData(response.data);
       setCurrentRegIndex(0)
-      // const currentReg = response.data[currentRegIndex];
-      // const parsedRegData = currentReg
-      //   ? { 'Roll Number': currentReg.rollNumber, ...parseRegData(currentReg.registrationsData) }
-      //   : null;
-      //   setparsedData(parsedRegData)
 
     } catch (error) {
       console.error('Error fetching filtered data:', error);
@@ -433,35 +428,10 @@ const CorrectionPage = () => {
     setCurrentRegIndex((prevIndex) => prevIndex - 1);
   };
 
-  // const showNextReg = () => {
-  //   setCurrentRegIndex(prevIndex => Math.min(prevIndex + 1, regData.length - 1));
-  // };
-  
-  // const showPreviousReg = () => {
-  //   setCurrentRegIndex(prevIndex => Math.max(prevIndex - 1, 0));
-  // };
-
-  // const currentReg = regData[currentRegIndex];
-  // const parsedData = currentReg
-  //   ? { 'Roll Number': currentReg.rollNumber, ...parseRegData(currentReg.registrationsData) }
-  //   : null;
 
   return (
     <>
       <div className="d-flex align-items-center justify-content-between">
-        {/* <Select
-          placeholder="All Fields"
-          style={{ width: 200 }}
-          value={selectedField}
-          onChange={handleFieldChange} // Corrected onChange handler
-        >
-          <Option value="all">All</Option>
-          {flags.map((field, index) => (
-            <Option key={index} value={field.fieldName}>
-              {field.fieldName}
-            </Option>
-          ))}
-        </Select> */}
         <AllotFlag fieldNames={flags} />
         <Button type="primary" onClick={toggleExpandMode}>
           {expandMode ? 'Zoomed View' : 'Expand OMR'}
