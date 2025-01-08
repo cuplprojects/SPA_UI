@@ -12,6 +12,7 @@ const Registration = ({
   headers,
   registrationMapping,
   handleRegistrationMappingChange,
+  registrationCount,
 
   loading,
 }) => {
@@ -23,29 +24,13 @@ const Registration = ({
   const apiurl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    getCount();
+
     // Check if all properties in mapping have a corresponding header in headers
     const isValid = Object.keys(registrationMapping).every(field => headers.includes(registrationMapping[field]));
     setIsValidData(isValid);
   }, [headers, registrationMapping]);
 
   const mappedHeaders = Object.values(registrationMapping);
-  const getCount = async () => {
-    try {
-      const response = await fetch(`${apiurl}/Registration/CountByProjectId?whichDatabase=${database}&ProjectId=${ProjectId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      )
-      const count = await response.json()
-      setCount(count);
-    }
-    catch (error) {
-      console.error('Failed to fetch count', error)
-    }
-  }
 
   return (
     <>
@@ -54,14 +39,22 @@ const Registration = ({
         <div className="d-flex justify-content-center align-items-center">
           <input type="file" onChange={handleFileUpload} accept=".xlsx" />
           {count > 0 &&
-            <Button danger onClick={handleDeleteRegistration} disabled={loading}>
-              Delete
-            </Button>
+            <Popconfirm
+              title="Are you sure you want to delete all Registration?"
+              onConfirm={handleDeleteRegistration}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button danger >
+                <DeleteOutlined />
+                Delete Registration
+              </Button>
+            </Popconfirm>
           }
         </div>
         {count !== null ? (
           <p className="count-display text-center mt-4">
-            Current Registeration: {count}
+            Current Registeration: {registrationCount}
           </p>
         ) : (
           <p className="text-center mt-4">Loading count...</p>

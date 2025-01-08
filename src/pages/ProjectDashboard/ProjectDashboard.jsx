@@ -78,33 +78,17 @@ const ProjectDashboard = () => {
   // Function to fetch counts
   const fetchCounts = async (projectId) => {
     try {
-      const omrImagesCount = await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=Images&WhichDatabase=${database}`,{
-        headers:{
-        Authorization : `Bearer ${token}`
-      }});
-      const omrDataCount = await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=Scanned&WhichDatabase=${database}`,{
-        headers:{
-        Authorization : `Bearer ${token}`
-      }});
-      const absenteeCount = await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=Absentees&WhichDatabase=${database}`,{
-        headers:{
-        Authorization : `Bearer ${token}`
-      }});
-      const keyCount = await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=Keys&WhichDatabase=${database}`,{
-        headers:{
-        Authorization : `Bearer ${token}`
-      }});
-      const RegCount = await axios.get(`${apiUrl}/Projects/GetProjectCounts?ProjectId=${projectId}&CategoryName=Registration&WhichDatabase=${database}`,{
+      const AllCount = await axios.get(`${apiUrl}/Projects/AllCounts?projectId=${projectId}&whichDatabase=${database}`,{
         headers:{
         Authorization : `Bearer ${token}`
       }});
       
       setDataCounts([
-        { name: 'OMR Images', count: omrImagesCount.data },
-        { name: 'Scanned Data', count: omrDataCount.data },
-        { name: 'Absentees Upload', count: absenteeCount.data },
-        { name: 'Keys Upload', count: keyCount.data },
-        { name: 'Registration ', count: RegCount.data }
+        { name: 'OMR Images', count: AllCount?.data?.omrImages},
+        { name: 'Scanned Data', count: AllCount.data?.scannedData },
+        { name: 'Absentees Upload', count: AllCount.data?.absenteesUpload },
+        { name: 'Keys Upload', count: AllCount.data?.keys },
+        { name: 'Registration ', count: AllCount.data?.registration}
       ]);
     } catch (error) {
       console.error('Error fetching counts:', error);

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './style.css';
-import { Button } from 'antd';
+import { Button, Popconfirm} from 'antd';
+import { DeleteOutlined } from '@ant-design/icons';
 import { useProjectId } from '@/store/ProjectState';
 import { useDatabase } from '@/store/DatabaseStore';
 import { useUserToken } from '@/store/UserDataStore';
@@ -14,7 +15,7 @@ const Absentee = ({
   mapping,
   handleMappingChange,
   loading,
- 
+ absenteeCount
 }) => {
   const [isValidData, setIsValidData] = useState(false);
   const [count,setCount] = useState([]);
@@ -22,9 +23,10 @@ const Absentee = ({
 const ProjectId = useProjectId();
 const database = useDatabase();
 const apiurl = import.meta.env.VITE_API_URL;
+console.log(absenteeCount)
 
   useEffect(() => {
-    getCount();
+  
     // Check if all properties in mapping have a corresponding header in headers
     const isValid = Object.values(mapping).every((value) => headers.includes(value));
     setIsValidData(isValid);
@@ -33,22 +35,7 @@ const apiurl = import.meta.env.VITE_API_URL;
   // Get already mapped headers
   const mappedHeaders = Object.values(mapping);
 
-  const getCount = async()=>{
-    try{
-    const response = await fetch(`${apiurl}/Absentee/absentee/count/${ProjectId}?WhichDatabase=${database}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    )
-    const count = await response.json()
-    setCount(count);
-  }
-  catch(error){
-    console.error('Failed to fetch count',error)
-  }
-  }
+  
 
   return (
     <>
@@ -59,14 +46,23 @@ const apiurl = import.meta.env.VITE_API_URL;
             <input type="file" onChange={handleFileUpload} accept=".xlsx" />
           </p>
           {count > 0 &&
-          <Button danger onClick={handleDeleteAbsentee} disabled={loading}>
-             Delete
+          <Popconfirm
+          title="Are you sure you want to delete all absentee?"
+          onConfirm={handleDeleteAbsentee}
+          okText="Yes"
+          cancelText="No"
+        >
+          <Button danger >
+          <DeleteOutlined />
+             Delete Absentee
           </Button>
+        </Popconfirm>
+          
           }
         </div>
         {count !== null ? (
           <p className="count-display text-center mt-4">
-            Current Absentee Count: {count}
+            Current Absentee Count: {absenteeCount}
           </p>
         ) : (
           <p className="text-center mt-4">Loading count...</p>
