@@ -366,6 +366,7 @@ const GenerateScore = () => {
     } catch (error) {
       notification.error({
         message: `Error uploading file for course ${courseName}`,
+        description: error.response ? error.response.data : error.message,
         duration: 3,
       });
       setLoading(false);

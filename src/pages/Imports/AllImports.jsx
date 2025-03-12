@@ -4,7 +4,7 @@ import Registration from './RegistrationData';
 import Absentee from './Absentee';
 import * as XLSX from 'xlsx';
 import axios from 'axios';
-import { Upload, Button, Table, notification, Modal } from 'antd';
+import { Upload, Button, Table, notification, Modal, Badge } from 'antd';
 import './style.css';
 import { useThemeToken } from '@/theme/hooks';
 import { color } from 'framer-motion';
@@ -681,7 +681,9 @@ const Import = () => {
                   >
                     <a data-toggle="tab" title="OMR Images">
                       <span className="round-tabs-pq one-pq">
+                      <Badge count={dataCounts?.omrImages} overflowCount={Infinity}>
                         <i className="fa-regular fa-image " style={{ color: colorPrimary }}></i>
+                        </Badge>
                       </span>
                     </a>
                   </li>
@@ -699,7 +701,9 @@ const Import = () => {
                   >
                     <a data-toggle="tab" title="Scanned Data">
                       <span className="round-tabs-pq two-pq">
+                      <Badge count={dataCounts?.scannedData} overflowCount={Infinity}>
                         <i className="fa-solid fa-file-csv" style={{ color: colorPrimary }}></i>
+                        </Badge>
                       </span>
                     </a>
                   </li>
@@ -716,8 +720,11 @@ const Import = () => {
                     }}
                   >
                     <a data-toggle="tab" title="Registration Data">
+                        <Badge count={dataCounts?.registration} overflowCount={Infinity}>
+                        </Badge>
                       <span className="round-tabs-pq three-pq">
-                        <i className="fa-regular fa-id-card" style={{ color: colorPrimary }}></i>
+                        <i className="fa-regular fa-id-card " style={{ color: colorPrimary }}></i>
+                    
                       </span>
                     </a>
                   </li>
@@ -735,7 +742,9 @@ const Import = () => {
                   >
                     <a data-toggle="tab" title="Absentee Data">
                       <span className="round-tabs-pq four-pq ">
+                      <Badge count={dataCounts?.absenteesUpload} overflowCount={Infinity}>
                         <i className="fa-solid fa-file-excel" style={{ color: colorPrimary }}></i>
+                        </Badge>
                       </span>
                     </a>
                   </li>
