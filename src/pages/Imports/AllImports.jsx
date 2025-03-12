@@ -159,6 +159,7 @@ const Import = () => {
         }
       });
       setDataCounts(AllCount.data);
+      console.log(AllCount.data)
     } catch (error) {
       console.error('Error fetching counts:', error);
     }
@@ -671,24 +672,27 @@ const Import = () => {
             <div className="board-pq">
               <div className="">
                 <ul className="d-flex align-items-center justify-content-around my-4" id="myTab">
-                  <li
-                    style={{ border: `2px solid ${colorPrimary} ` }}
-                    className="tabcircle"
-                    onClick={() => {
-                      setActivetab('OMRImages');
-                      setSelectedFile(null);
-                    }}
-                  >
-                    <a data-toggle="tab" title="OMR Images">
-                      <span className="round-tabs-pq one-pq">
-                      <Badge count={dataCounts?.omrImages} overflowCount={Infinity}>
-                        <i className="fa-regular fa-image " style={{ color: colorPrimary }}></i>
-                        </Badge>
-                      </span>
-                    </a>
-                  </li>
+                  <Badge count={ dataCounts?.omrImages} overflowCount = {Infinity} offset={[-10, 10]} size="large" >
+                    
+                    <li
+                      style={{ border: `2px solid ${colorPrimary} ` }}
+                      className="tabcircle"
+                      onClick={() => {
+                        setActivetab('OMRImages');
+                        setSelectedFile(null);
+                      }}
+                    >
+                      <a data-toggle="tab" title="OMR Images">
+                        <span className="round-tabs-pq one-pq">
+                          {/* <Badge count={dataCounts?.omrImages} overflowCount={Infinity}>
+                        </Badge> */}
+                          <i className="fa-regular fa-image " style={{ color: colorPrimary }}></i>
+                        </span>
+                      </a>
+                    </li>
+                  </Badge >
                   <span className="tabline"></span>
-
+                  <Badge offset={[-10, 10]} size="large" count={ dataCounts?.scannedData} overflowCount = {Infinity} >
                   <li
                     style={{ border: `2px solid ${colorPrimary}` }}
                     className="tabcircle"
@@ -701,14 +705,13 @@ const Import = () => {
                   >
                     <a data-toggle="tab" title="Scanned Data">
                       <span className="round-tabs-pq two-pq">
-                      <Badge count={dataCounts?.scannedData} overflowCount={Infinity}>
                         <i className="fa-solid fa-file-csv" style={{ color: colorPrimary }}></i>
-                        </Badge>
                       </span>
                     </a>
                   </li>
+                  </Badge>
                   <span className="tabline"></span>
-
+                  <Badge offset={[-10, 10]} size="large" count={ dataCounts?.registration} overflowCount = {Infinity}>
                   <li
                     style={{ border: `2px solid ${colorPrimary}` }}
                     className="tabcircle"
@@ -720,34 +723,35 @@ const Import = () => {
                     }}
                   >
                     <a data-toggle="tab" title="Registration Data">
-                        <Badge count={dataCounts?.registration} overflowCount={Infinity}>
-                        </Badge>
+
                       <span className="round-tabs-pq three-pq">
                         <i className="fa-regular fa-id-card " style={{ color: colorPrimary }}></i>
-                    
+
                       </span>
                     </a>
                   </li>
+                  </Badge>
                   <span className="tabline"></span>
+                  <Badge offset={[-10, 10]} size="large" count={ dataCounts?.absenteesUpload} overflowCount = {Infinity}>
+                    <li
+                      style={{ border: `2px solid ${colorPrimary}` }}
+                      className="tabcircle"
+                      onClick={() => {
+                        setActivetab('absentee');
+                        setSelectedFile(null);
+                        setHeaders([]);
 
-                  <li
-                    style={{ border: `2px solid ${colorPrimary}` }}
-                    className="tabcircle"
-                    onClick={() => {
-                      setActivetab('absentee');
-                      setSelectedFile(null);
-                      setHeaders([]);
+                      }}
+                    >
 
-                    }}
-                  >
-                    <a data-toggle="tab" title="Absentee Data">
-                      <span className="round-tabs-pq four-pq ">
-                      <Badge count={dataCounts?.absenteesUpload} overflowCount={Infinity}>
-                        <i className="fa-solid fa-file-excel" style={{ color: colorPrimary }}></i>
-                        </Badge>
-                      </span>
-                    </a>
-                  </li>
+                      <a data-toggle="tab" title="Absentee Data">
+                        <span className="round-tabs-pq four-pq ">
+                          <i className="fa-solid fa-file-excel" style={{ color: colorPrimary }}></i>
+                        </span>
+                      </a>
+
+                    </li>
+                    </Badge>
                 </ul>
               </div>
               <div className="tab-content-pq">

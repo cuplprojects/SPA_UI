@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import { Form, Input, Radio, Typography, Divider, Row, Col, Space, Table, Select, Button, Popconfirm } from 'antd';
+import { Form, Input, Radio, Typography, Divider, Row, Col, Space, Table, Select, Button, Popconfirm, notification } from 'antd';
 import { useProjectId } from '@/store/ProjectState';
 import { useUserToken } from '@/store/UserDataStore';
 import { useDatabase } from '@/store/DatabaseStore';
@@ -11,7 +11,7 @@ const APIURL = import.meta.env.VITE_API_URL;
 
 const MarksAllotmentForm = () => {
     const projectId = useProjectId()
-    const token = useUserToken
+    const token = useUserToken()
     const database = useDatabase()
 
     const [formState, setFormState] = useState({
@@ -20,13 +20,39 @@ const MarksAllotmentForm = () => {
         setCode: '',
         ambiguousQuestions: {},
         markingLogic: '',
+        selectedCourse: '',
     });
 
     const [setCodes, setSetCodes] = useState([]);
     const [markingRules, setMarkingRules] = useState([]);
     const [ambfetchdata, setAmbfetchdata] = useState([]);
+    const [courseNames, setCourseNames] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    const fetchCourseNames = async () => {
+        try {
+            const response = await fetch(
+                `${APIURL}/ResponseConfigs/unique?whichDatabase=${database}&ProjectId=${projectId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                },
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch course names');
+            }
+            const result = await response.json();
+            setCourseNames(result);
+        } catch (error) {
+            notification.error({
+                message: 'Failed to fetch course names!',
+                duration: 3,
+            });
+        }
+    };
 
     useEffect(() => {
         axios.get(`${APIURL}/Ambiguity/BSetResponsesByProject/${projectId}`, {
@@ -59,8 +85,9 @@ const MarksAllotmentForm = () => {
             .catch(error => {
                 console.error('Error fetching marking rules:', error);
             });
-    }, []);
 
+        fetchCourseNames();
+    }, []);
 
     const getAmbiguity = async () => {
         try {
@@ -95,7 +122,6 @@ const MarksAllotmentForm = () => {
         getAmbiguity();
     }, [projectId, token]);
 
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormState({
@@ -118,7 +144,8 @@ const MarksAllotmentForm = () => {
             markingId: formState.markingLogic,
             setCode: row.setCode.split(' ')[1],
             questionNumber: row.questionNumber.props.value || null,
-            option: row.option ? row.option.props.value || null : null
+            option: row.option ? row.option.props.value || null : null,
+            course: formState.selectedCourse
         }));
 
         try {
@@ -291,6 +318,22 @@ const MarksAllotmentForm = () => {
     return (
         <Form layout="vertical" style={{ maxWidth: '2000px', margin: '50px auto 0 auto' }}>
             <Row gutter={5}>
+                <Col span={6}>
+                    <Form.Item label="Course">
+                        <Select
+                            name="selectedCourse"
+                            value={formState.selectedCourse}
+                            onChange={value => handleSelectChange('selectedCourse', value)}
+                            style={{ width: '100%' }}
+                        >
+                            {courseNames.map(course => (
+                                <Select.Option key={course} value={course}>
+                                    {course}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+                </Col>
                 <Col span={6}>
                     <Form.Item label="Number of ambiguous questions" className='me-5'>
                         <Input
