@@ -13,6 +13,7 @@ const Scanned = ({
   headers,
   fieldMappings,
   handleFieldMappingChange,
+  scannedCount
 }) => {
   const [isValidData, setIsValidData] = useState(false);
   const [count, setCount] = useState([]);
@@ -22,7 +23,6 @@ const Scanned = ({
   const apiurl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    getCount();
     // Check if all properties in mapping have a corresponding header in headers
     const isValid = Object.keys(fieldMappings).every((field) =>
       headers.includes(fieldMappings[field]),
@@ -32,22 +32,7 @@ const Scanned = ({
 
   // Get already mapped headers
   const mappedHeaders = Object.values(fieldMappings);
-  const getCount = async () => {
-    try {
-      const response = await fetch(`${apiurl}/OMRData/count/${ProjectId}?WhichDatabase=${database}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      )
-      const count = await response.json()
-      setCount(count);
-    }
-    catch (error) {
-      console.error('Failed to fetch count', error)
-    }
-  }
+
 
   return (
     <>
@@ -60,16 +45,23 @@ const Scanned = ({
           <p>
             <input type="file" onChange={handleFileUpload} accept=".csv,.dat,.xlsx" />
           </p>
-
           {count > 0 &&
-            <Button danger onClick={handleDeleteScanned} disabled={loading}>
-              Delete
-            </Button>
+            <Popconfirm
+              title="Are you sure you want to delete all absentee?"
+              onConfirm={handleDeleteScanned}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button danger >
+                <DeleteOutlined />
+                Delete Scanned
+              </Button>
+            </Popconfirm>
           }
         </div>
         {count !== null ? (
           <p className="count-display text-center mt-4">
-            Current Scanned sheet: {count}
+            Current Scanned sheet: {scannedCount}
           </p>
         ) : (
           <p className="text-center mt-4">Loading count...</p>

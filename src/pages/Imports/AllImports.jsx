@@ -4,7 +4,7 @@ import Registration from './RegistrationData';
 import Absentee from './Absentee';
 import * as XLSX from 'xlsx';
 import axios from 'axios';
-import { Upload, Button, Table, notification, Modal } from 'antd';
+import { Upload, Button, Table, notification, Modal, Badge } from 'antd';
 import './style.css';
 import { useThemeToken } from '@/theme/hooks';
 import { color } from 'framer-motion';
@@ -32,6 +32,7 @@ const Import = () => {
   const database = useDatabase();
   const token = useUserToken();
   const [totalQues, setTotalQues] = useState([]);
+  const [dataCounts, setDataCounts] = useState([]);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -71,6 +72,7 @@ const Import = () => {
 
   useEffect(() => {
     getTotalQuestion();
+    fetchCounts();
     // Fetch mapping fields from backend
     const fetchMappingFields = async () => {
       try {
@@ -107,34 +109,34 @@ const Import = () => {
           },
         }
       );
-  
+
       // Log the entire response to check the structure
       console.log('API Response:', response);
-  
+
       // Check if the response was successful (status 200)
       if (!response.ok) {
         console.error('Failed to fetch data. Status:', response.status);
         return;
       }
-  
+
       // Parse the JSON response
       const data = await response.json();
-  
+
       // Log the parsed data to check the structure
       console.log('Parsed Data:', data);
-  
+
       // Ensure data is an array and contains at least one element
       if (Array.isArray(data) && data.length > 0) {
         const sections = data[0].sections; // Access the first item of the array and its sections
-  
+
         // Check if the sections array exists and has elements
         if (sections && sections.length > 0) {
           const lastSection = sections[sections.length - 1]; // Get the last section
           const endQuestion = lastSection.endQuestion; // Get endQuestion from the last section
-  
+
           // Log to ensure that we correctly get the last section's endQuestion
           console.log('Last Section endQuestion:', endQuestion);
-  
+
           // Update the state with the endQuestion value
           setTotalQues(endQuestion);
         } else {
@@ -148,46 +150,51 @@ const Import = () => {
       console.error('Failed to fetch Question', error);
     }
   };
-  
-  
-  
+
+  const fetchCounts = async (projectId) => {
+    try {
+      const AllCount = await axios.get(`${apiurl}/Projects/AllCounts?projectId=${ProjectId}&whichDatabase=${database}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setDataCounts(AllCount.data);
+      console.log(AllCount.data)
+    } catch (error) {
+      console.error('Error fetching counts:', error);
+    }
+  };
 
   const handleAbsenteeUpload = async (projectId) => {
     if (selectedFile) {
       setLoading(true);
       const reader = new FileReader();
-
       reader.onload = async (event) => {
         const data = new Uint8Array(event.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
         const rows = jsonData.slice(1); // Exclude headers
         const mappedData = rows.map((row) => {
           if (row.every(cell => cell === '' || cell === undefined)) {
-              return null; // Skip empty rows
+            return null; // Skip empty rows
           }
-          
           const rowData = {};
           for (let property in mapping) {
-              const header = mapping[property];
-              const index = jsonData[0].indexOf(header);
-              rowData[property] = index !== -1 && row[index] !== undefined ? String(row[index]) : '';
+            const header = mapping[property];
+            const index = jsonData[0].indexOf(header);
+            rowData[property] = index !== -1 && row[index] !== undefined ? String(row[index]) : '';
           }
           rowData['projectId'] = ProjectId;
           return rowData;
-      }).filter(Boolean); // Remove any null values
-      
-
+        }).filter(Boolean); // Remove any null values
         try {
           const jsonmappeddata = JSON.stringify(mappedData);
           const encryptedData = handleEncrypt(jsonmappeddata);
           const encrypteddatatosend = {
             cyphertextt: encryptedData,
           };
-
           const response = await axios.post(`${apiurl}/Absentee/upload`, encrypteddatatosend, {
             headers: {
               'Content-Type': 'application/json',
@@ -203,6 +210,7 @@ const Import = () => {
             message: 'Upload successful!',
             duration: 3,
           });
+          fetchCounts();
         } catch (error) {
           console.error('Error uploading data:', error);
           notification.error({
@@ -213,7 +221,6 @@ const Import = () => {
           setLoading(false);
         }
       };
-
       reader.readAsArrayBuffer(selectedFile);
       setSelectedFile(null);
     } else {
@@ -224,11 +231,8 @@ const Import = () => {
       })
       setLoading(false);
     }
-
     setSelectedFile(null); // Reset selected file after upload
   };
-
-
 
   const handleDeleteAbsentee = async (projectId) => {
     setLoading(true)
@@ -239,6 +243,7 @@ const Import = () => {
         }
       });
       setLoading(false)
+      fetchCounts();
       notification.success({
         message: 'Absentee data deleted',
         duartion: 3,
@@ -321,6 +326,7 @@ const Import = () => {
         }
       });
       setLoading(false)
+      fetchCounts();
       notification.success({
         message: 'Scanned data deleted',
         duartion: 3,
@@ -478,6 +484,7 @@ const Import = () => {
               duration: 3
             })
           }
+          fetchCounts();
         } catch (error) {
           console.error('Error uploading data:', error);
           notification.error({
@@ -513,14 +520,16 @@ const Import = () => {
   const handleDeleteRegistration = async (projectId) => {
     setLoading(true)
     try {
-      const response = await axios.delete(`${apiurl}/Registration?WhichDatabase=${database}&ProjectId=${ProjectId}`,{
-        headers:{
-        Authorization : `Bearer ${token}`
-      }});
+      const response = await axios.delete(`${apiurl}/Registration?WhichDatabase=${database}&ProjectId=${ProjectId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       notification.success({
         message: 'Registration data deleted',
         duartion: 3,
       })
+      fetchCounts();
       setLoading(false)
       // Handle the response here
       console.log('Deletion successful:', response.data);
@@ -614,16 +623,16 @@ const Import = () => {
         const response = await axios.post(`${apiurl}/Registration?`, encryptedregdatatosend, {
           headers: {
             'Content-Type': 'application/json',
-            
-              Authorization : `Bearer ${token}`,
-           
+
+            Authorization: `Bearer ${token}`,
+
           },
           params: {
             WhichDatabase: database,
             ProjectId: ProjectId,
           },
         });
-
+        fetchCounts();
         notification.success({
           message: 'Upload successful!',
           duration: 3
@@ -663,22 +672,27 @@ const Import = () => {
             <div className="board-pq">
               <div className="">
                 <ul className="d-flex align-items-center justify-content-around my-4" id="myTab">
-                  <li
-                    style={{ border: `2px solid ${ colorPrimary} ` }}
-                    className="tabcircle"
-                    onClick={() => {
-                      setActivetab('OMRImages');
-                      setSelectedFile(null);
-                    }}
-                  >
-                    <a data-toggle="tab" title="OMR Images">
-                      <span className="round-tabs-pq one-pq">
-                        <i className="fa-regular fa-image " style={{ color: colorPrimary }}></i>
-                      </span>
-                    </a>
-                  </li>
+                  <Badge count={ dataCounts?.omrImages} overflowCount = {Infinity} offset={[-10, 10]} size="large" >
+                    
+                    <li
+                      style={{ border: `2px solid ${colorPrimary} ` }}
+                      className="tabcircle"
+                      onClick={() => {
+                        setActivetab('OMRImages');
+                        setSelectedFile(null);
+                      }}
+                    >
+                      <a data-toggle="tab" title="OMR Images">
+                        <span className="round-tabs-pq one-pq">
+                          {/* <Badge count={dataCounts?.omrImages} overflowCount={Infinity}>
+                        </Badge> */}
+                          <i className="fa-regular fa-image " style={{ color: colorPrimary }}></i>
+                        </span>
+                      </a>
+                    </li>
+                  </Badge >
                   <span className="tabline"></span>
-
+                  <Badge offset={[-10, 10]} size="large" count={ dataCounts?.scannedData} overflowCount = {Infinity} >
                   <li
                     style={{ border: `2px solid ${colorPrimary}` }}
                     className="tabcircle"
@@ -695,8 +709,9 @@ const Import = () => {
                       </span>
                     </a>
                   </li>
+                  </Badge>
                   <span className="tabline"></span>
-
+                  <Badge offset={[-10, 10]} size="large" count={ dataCounts?.registration} overflowCount = {Infinity}>
                   <li
                     style={{ border: `2px solid ${colorPrimary}` }}
                     className="tabcircle"
@@ -708,29 +723,35 @@ const Import = () => {
                     }}
                   >
                     <a data-toggle="tab" title="Registration Data">
+
                       <span className="round-tabs-pq three-pq">
-                        <i className="fa-regular fa-id-card" style={{ color: colorPrimary }}></i>
+                        <i className="fa-regular fa-id-card " style={{ color: colorPrimary }}></i>
+
                       </span>
                     </a>
                   </li>
+                  </Badge>
                   <span className="tabline"></span>
+                  <Badge offset={[-10, 10]} size="large" count={ dataCounts?.absenteesUpload} overflowCount = {Infinity}>
+                    <li
+                      style={{ border: `2px solid ${colorPrimary}` }}
+                      className="tabcircle"
+                      onClick={() => {
+                        setActivetab('absentee');
+                        setSelectedFile(null);
+                        setHeaders([]);
 
-                  <li
-                    style={{ border: `2px solid ${colorPrimary}` }}
-                    className="tabcircle"
-                    onClick={() => {
-                      setActivetab('absentee');
-                      setSelectedFile(null);
-                      setHeaders([]);
+                      }}
+                    >
 
-                    }}
-                  >
-                    <a data-toggle="tab" title="Absentee Data">
-                      <span className="round-tabs-pq four-pq ">
-                        <i className="fa-solid fa-file-excel" style={{ color: colorPrimary }}></i>
-                      </span>
-                    </a>
-                  </li>
+                      <a data-toggle="tab" title="Absentee Data">
+                        <span className="round-tabs-pq four-pq ">
+                          <i className="fa-solid fa-file-excel" style={{ color: colorPrimary }}></i>
+                        </span>
+                      </a>
+
+                    </li>
+                    </Badge>
                 </ul>
               </div>
               <div className="tab-content-pq">
@@ -746,6 +767,7 @@ const Import = () => {
                     headers={headers}
                     fieldMappings={fieldMappings}
                     handleFieldMappingChange={handleFieldMappingChange}
+                    scannedCount={dataCounts?.scannedData}
                   />
                 )}
                 {activetab === 'registration' && (
@@ -758,6 +780,7 @@ const Import = () => {
                     registrationMapping={registrationMapping}
                     handleRegistrationMappingChange={handleRegistrationMappingChange}
                     loading={loading}
+                    registrationCount={dataCounts?.registration}
                   />
                 )}
                 {activetab === 'absentee' && (
@@ -770,6 +793,7 @@ const Import = () => {
                     mapping={mapping}
                     handleMappingChange={handleMappingChange}
                     loading={loading}
+                    absenteeCount={dataCounts?.absenteesUpload}
                   />
                 )}
                 <div className="clearfix-pq"></div>
