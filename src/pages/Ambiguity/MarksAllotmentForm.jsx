@@ -30,7 +30,6 @@ const MarksAllotmentForm = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
-
     const fetchCourseNames = async () => {
         try {
             const response = await fetch(
@@ -90,7 +89,6 @@ const MarksAllotmentForm = () => {
         fetchCourseNames();
     }, []);
 
-
     const getAmbiguity = async () => {
         try {
             // Fetch ambiguous data using axios
@@ -123,7 +121,6 @@ const MarksAllotmentForm = () => {
     useEffect(() => {
         getAmbiguity();
     }, [projectId, token]);
-
 
     const handleChange = (e) => {
         const { name, value } = e.target;
