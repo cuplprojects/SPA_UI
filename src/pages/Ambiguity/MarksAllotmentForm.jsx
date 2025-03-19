@@ -145,7 +145,7 @@ const MarksAllotmentForm = () => {
             setCode: row.setCode.split(' ')[1],
             questionNumber: row.questionNumber.props.value || null,
             option: row.option ? row.option.props.value || null : null,
-            course: formState.selectedCourse
+            courseName: formState.selectedCourse
         }));
 
         try {
@@ -439,7 +439,7 @@ const MarksAllotmentForm = () => {
                             cancelText="No"
                         >
                             <Button
-                               danger
+                                danger
                                 variant="outlined"
                                 disabled={isDeleting}
                                 loading={isDeleting}
