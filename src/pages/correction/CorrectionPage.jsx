@@ -17,7 +17,9 @@ import { useUserToken } from '@/store/UserDataStore';
 import noomrimg from '@/assets/images/NoOMRImage.png';
 import { CircleLoading } from '@/components/loading';
 
+
 const apiurl = import.meta.env.VITE_API_URL;
+const baseapiurl = import.meta.env.VITE_BASEAPI_URL;
 const { Option } = Select;
 
 const CorrectionPage = () => {
@@ -155,8 +157,9 @@ const CorrectionPage = () => {
                 fieldNameValue: '',
                 imageUrl: '',
               }),
-            );         
-
+            );     
+            
+           
             // Find the annotation for the current flag's field name
             const annotation = parsedAnnotations.find(
               (annotation) => annotation.FieldName === flag.field,
@@ -174,7 +177,7 @@ const CorrectionPage = () => {
               barCode: flag.barCode,
               projectId: projectId,
               isCorrected: true,
-              imageUrl: flag.imagePath  || noomrimg,
+              imageUrl : `${baseapiurl}${flag.imagePath}` || noomrimg,
               noChangeRequired: false,
               fieldConfig, // Adding the field configuration to the flag data
             };
