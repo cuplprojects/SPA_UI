@@ -35,29 +35,30 @@ const DASHBOARD_PERMISSION = {
   label: 'sys.menu.dashboard',
   name: 'Dashboard',
   icon: 'ic-analysis',
-  type: PermissionType.CATALOGUE,
+  type: PermissionType.MENU,
   route: 'dashboard',
   order: 1,
-  children: [
-    {
-      id: '2.1',
-      parentId: '2',
-      label: 'sys.menu.workbench',
-      name: 'Dashboard',
-      type: PermissionType.MENU,
-      route: 'workbench',
-      component: '/dashboard/workbench/index.tsx',
-    },
-    {
-      id: '2.2',
-      parentId: '2',
-      label: 'sys.menu.analysis',
-      name: 'Analysis',
-      type: PermissionType.MENU,
-      route: 'analysis',
-      component: '/dashboard/analysis/index.tsx',
-    },
-  ],
+  component: '/dashboard/workbench/index.tsx',
+  // children: [
+  //   {
+  //     id: '2.1',
+  //     parentId: '2',
+  //     label: 'sys.menu.workbench',
+  //     name: 'Dashboard',
+  //     type: PermissionType.MENU,
+  //     route: 'workbench',
+  //     component: '/dashboard/workbench/index.tsx',
+  //   },
+  //   {
+  //     id: '2.2',
+  //     parentId: '2',
+  //     label: 'sys.menu.analysis',
+  //     name: 'Analysis',
+  //     type: PermissionType.MENU,
+  //     route: 'analysis',
+  //     component: '/dashboard/analysis/index.tsx',
+  //   },
+  // ],
 };
 
 // parent 3

@@ -221,7 +221,7 @@ const ProfileTab = () => {
           </Card>
         </Col>
 
-        <Col span={24} md={12} lg={16}>
+        {/* <Col span={24} md={12} lg={16}>
           <Card className="flex-col !items-start">
             <Typography.Title level={5}>Activity Timeline</Typography.Title>
             <Timeline className="!mt-4 w-full" items={paginatedTimelineItems} />
@@ -246,10 +246,10 @@ const ProfileTab = () => {
               />
             </div>
           </Card>
-        </Col>
+        </Col> */}
       </Row>
 
-      <Row gutter={[16, 16]} className="mt-4">
+      {/* <Row gutter={[16, 16]} className="mt-4">
         <Col span={24}>
           <Card className="flex-col !items-start">
             <div className="mt-4 flex items-center justify-between">
@@ -285,7 +285,7 @@ const ProfileTab = () => {
             </div>
           </Card>
         </Col>
-      </Row>
+      </Row> */}
     </>
   );
 };
