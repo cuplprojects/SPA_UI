@@ -42,8 +42,8 @@ const Absentee = ({
 
   return (
     <>
-      <Card style={{ margin: '20px auto', maxWidth: 900, padding: 20 }}>
-        <Title level={3} style={{ textAlign: 'center', marginBottom: 20 }}>
+      <Card style={{ margin: '20px auto', maxWidth: 900, padding: 20, border:"1px solid #00A76F" }} className='shadow-md'>
+        <Title level={2} style={{ textAlign: 'center', marginBottom: 20,color:"#00A76F" }}>
           Upload Absentee
         </Title>
         <Space direction="vertical" style={{ width: '100%' }}>
