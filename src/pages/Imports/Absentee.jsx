@@ -147,7 +147,7 @@ const Absentee = ({
               // style={{ padding: '20px 0' }}
             >
               <p className="ant-upload-drag-icon">
-                <FileExcelOutlined style={{ fontSize: 48, color: '#00A76F' }} />
+                <FileExcelOutlined style={{ fontSize: 38, color: '#00A76F' }} />
               </p>
               <p className="ant-upload-text">Click or drag Excel file to upload</p>
               <p className="ant-upload-hint">
@@ -236,7 +236,7 @@ const Absentee = ({
                 size="middle"
                 bordered
                 className="mapping-table"
-                style={{ marginBottom: 24 }}
+                style={{ marginBottom: 14 }}
               />
             </Col>
           </Row>
@@ -244,7 +244,7 @@ const Absentee = ({
       )}
 
       {selectedFile && (
-        <Row justify="center" style={{ marginTop: 24 }}>
+        <Row justify="center" style={{ marginTop: 2 }}>
           <Col>
             <Button
               type="primary"
