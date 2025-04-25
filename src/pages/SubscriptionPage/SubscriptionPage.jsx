@@ -67,7 +67,7 @@ const SubscriptionPage = () => {
                 <div className="text-center mb-5">
                   <h1 className="display-4 fw-bold mb-4">Automated OMR Sheet Processing</h1>
                   <p className="lead text-secondary">
-                    Transform your assessment workflow with our AI-powered scanning solution
+                    Transform your assessment workflow with our advanced OMR scanning solution
                   </p>
                 </div>
               </Col>
@@ -86,7 +86,7 @@ const SubscriptionPage = () => {
               <Col md={6}>
                 <h2 className="fw-bold mb-4">What You'll Get</h2>
                 <p className="lead">
-                  Upload scanned OMR response sheets and let our AI-powered system take care of everything:
+                  Upload scanned OMR response sheets and let our system take care of everything:
                   from identifying marked corrections to generating precise scores in seconds.
                 </p>
                 <p>
@@ -97,7 +97,7 @@ const SubscriptionPage = () => {
             </Row>
 
             <Row className="justify-content-center mb-5">
-              <Col md={10} lg={8}>
+              <Col md={10} lg={12}>
                 <div className="how-it-works p-4 bg-light rounded shadow-sm">
                   <h3 className="fw-bold mb-4">How It Works</h3>
                   <div className="d-flex flex-column flex-md-row justify-content-between">
@@ -152,8 +152,8 @@ const SubscriptionPage = () => {
               <Col md={6} lg={4} className="text-center">
                 <Button
                   variant="primary"
-                  size="lg"
-                  className="px-5 py-3 fw-bold"
+                  size="md"
+                  className="p-2 fw-bold"
                   onClick={handleNext}
                 >
                   View Plans <i className="bi bi-arrow-right ms-2"></i>
