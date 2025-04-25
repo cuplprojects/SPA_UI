@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Form, ProgressBar, Navbar, Nav, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, ProgressBar, Badge } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './RegistrationPage.css';
 import Footer from '@/components/wrapper/Footer';
 import NavbarComponent from '@/components/wrapper/Navbar';
+import BackButton from '@/components/common/BackButton';
 
 const RegisterPage = () => {
   const location = useLocation();
@@ -126,6 +127,8 @@ const RegisterPage = () => {
       </div> */}
 
       <Container className="my-5">
+        <BackButton />
+
         <Row className="justify-content-center mb-5">
           <Col md={10} lg={8} className="text-center">
             <h2 className="display-5 fw-bold mb-3">Create Your Account</h2>
@@ -278,16 +281,7 @@ const RegisterPage = () => {
           </Col>
         </Row>
 
-        <Row className="justify-content-center">
-          <Col md={6} className="d-flex justify-content-between">
-            <Button
-              variant="outline-secondary"
-              onClick={handlePrevious}
-            >
-              <i className="bi bi-arrow-left me-2"></i> Back to Plans
-            </Button>
-          </Col>
-        </Row>
+
       </Container>
 
       {/* Footer Component Here */}

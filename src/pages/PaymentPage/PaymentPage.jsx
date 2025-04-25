@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Button, Form, ProgressBar, Navbar, Nav, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, ProgressBar, Badge } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './PaymentPage.css';
 import Footer from '@/components/wrapper/Footer';
 import NavbarComponent from '@/components/wrapper/Navbar';
+import BackButton from '@/components/common/BackButton';
 
 const PaymentPage = () => {
   const location = useLocation();
@@ -53,6 +54,8 @@ const PaymentPage = () => {
       </div>
 
       <Container className="my-5">
+        <BackButton />
+
         <Row className="justify-content-center mb-5">
           <Col md={10} lg={8} className="text-center">
             <h2 className="display-5 fw-bold mb-3">Complete Your Payment</h2>
