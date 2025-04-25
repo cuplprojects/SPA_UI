@@ -114,7 +114,7 @@ const RegisterPage = () => {
     <div className="registration-page">
       <NavbarComponent/>
 
-      {/* <div className="progress-container bg-light py-3">
+      <div className="progress-container bg-light py-3">
         <Container>
           <ProgressBar now={66} className="registration-progress" />
           <div className="d-flex justify-content-between mt-2">
@@ -124,7 +124,7 @@ const RegisterPage = () => {
             <div className="progress-step">Payment</div>
           </div>
         </Container>
-      </div> */}
+      </div>
 
       <Container className="my-5">
         <BackButton />
@@ -224,7 +224,7 @@ const RegisterPage = () => {
                       </Form.Control.Feedback>
                     </div>
                   </Form.Group>
-                  <Form.Group className="mb-3">
+                  {/* <Form.Group className="mb-3">
                     <Form.Label>Password</Form.Label>
                     <div className="input-group">
                       <span className="input-group-text"><i className="bi bi-lock"></i></span>
@@ -257,7 +257,7 @@ const RegisterPage = () => {
                         {errors.confirmPassword}
                       </Form.Control.Feedback>
                     </div>
-                  </Form.Group>
+                  </Form.Group> */}
                   <div className="d-grid">
                     <Button
                       variant="primary"

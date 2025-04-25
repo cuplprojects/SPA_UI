@@ -348,28 +348,27 @@ const SubscriptionPage = () => {
                           <input type="password" className="form-control" id="confirmPassword" placeholder="Confirm your password" required />
                         </div>
                       </div>
-                      <div className="d-grid">
-                        <Button
-                          variant="primary"
-                          size="lg"
-                          onClick={() => navigate('/PaymentPage', { state: { selectedPlan } })}
-                        >
-                          Continue to Payment <i className="bi bi-arrow-right ms-2"></i>
-                        </Button>
-                      </div>
                     </form>
                   </Card.Body>
                 </Card>
               </Col>
             </Row>
 
-            <Row className="justify-content-center">
-              <Col md={6} className="d-flex justify-content-between">
+            <Row className="justify-content-center mt-4">
+              <Col md={8} lg={6} className="d-flex justify-content-between">
                 <Button
                   variant="outline-secondary"
                   onClick={handlePrevious}
+                  className="d-none d-lg-flex align-items-center"
                 >
                   <i className="bi bi-arrow-left me-2"></i> Back
+                </Button>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={() => navigate('/PaymentPage', { state: { selectedPlan } })}
+                >
+                  Continue to Payment <i className="bi bi-arrow-right ms-2"></i>
                 </Button>
               </Col>
             </Row>
