@@ -6,7 +6,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 import './PaymentPage.css';
 import Footer from '@/components/wrapper/Footer';
 import NavbarComponent from '@/components/wrapper/Navbar';
-import BackButton from '@/components/common/BackButton';
+import BackButton from '@/components/wrapper/BackButton';
 
 const PaymentPage = () => {
   const location = useLocation();
