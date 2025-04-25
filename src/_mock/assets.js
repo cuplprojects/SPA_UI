@@ -39,26 +39,6 @@ const DASHBOARD_PERMISSION = {
   route: 'dashboard',
   order: 1,
   component: '/dashboard/workbench/index.tsx',
-  // children: [
-  //   {
-  //     id: '2.1',
-  //     parentId: '2',
-  //     label: 'sys.menu.workbench',
-  //     name: 'Dashboard',
-  //     type: PermissionType.MENU,
-  //     route: 'workbench',
-  //     component: '/dashboard/workbench/index.tsx',
-  //   },
-  //   {
-  //     id: '2.2',
-  //     parentId: '2',
-  //     label: 'sys.menu.analysis',
-  //     name: 'Analysis',
-  //     type: PermissionType.MENU,
-  //     route: 'analysis',
-  //     component: '/dashboard/analysis/index.tsx',
-  //   },
-  // ],
 };
 
 // parent 3
@@ -119,15 +99,6 @@ const MANAGEMENT_PERMISSION = {
       type: PermissionType.CATALOGUE,
       route: 'system',
       children: [
-        // {
-        //   id: '4.2.1',
-        //   parentId: '4.2',
-        //   label: 'sys.menu.system.permission',
-        //   name: 'Permission',
-        //   type: PermissionType.MENU,
-        //   route: 'permission',
-        //   component: '/management/system/permission/index.tsx',
-        // },
         {
           id: '4.2.1',
           parentId: '4.2',
