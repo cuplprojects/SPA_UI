@@ -127,7 +127,7 @@ const Absentee = ({
       </Title>
 
       <Row gutter={[24, 24]} justify="center" className='mb-1'>
-        <Col xs={24} md={12} lg={8}>
+        <Col xs={24} md={8} lg={8}>
           <Card
             className="upload-card"
             bordered={false}
@@ -166,7 +166,7 @@ const Absentee = ({
           </Card>
         </Col>
 
-        <Col xs={24} md={12} lg={8}>
+        <Col xs={24} md={8} lg={8}>
           <Card
             className="status-card"
             bordered={false}
@@ -216,20 +216,9 @@ const Absentee = ({
             )}
           </Card>
         </Col>
-      </Row>
-
-      {headers.length > 0 && (
-        <>
-          <Divider orientation="center">
-            <Space>
-              <InfoCircleOutlined />
-              <span>Map Excel Headers to Properties</span>
-            </Space>
-          </Divider>
-
-          <Row justify="center">
-            <Col xs={24} lg={20} xl={18}>
+        <Col xs={24} lg={8} xl={8}>
               <Table
+
                 columns={columns}
                 dataSource={tableData}
                 pagination={false}
@@ -239,9 +228,33 @@ const Absentee = ({
                 style={{ marginBottom: 14 }}
               />
             </Col>
-          </Row>
+      </Row>
+
+      {/* {headers.length > 0 && (
+        <>
+          <Divider orientation="center">
+            <Space>
+              <InfoCircleOutlined />
+              <span>Map Excel Headers to Properties</span>
+            </Space>
+          </Divider>
+
+         
+            <Col xs={24} lg={8} xl={8}>
+              <Table
+
+                columns={columns}
+                dataSource={tableData}
+                pagination={false}
+                size="middle"
+                bordered
+                className="mapping-table"
+                style={{ marginBottom: 14 }}
+              />
+            </Col>
+      
         </>
-      )}
+      )} */}
 
       {selectedFile && (
         <Row justify="center" style={{ marginTop: 2 }}>
