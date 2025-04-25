@@ -7,6 +7,8 @@ import './SubscriptionPage.css';
 import Footer from '@/components/wrapper/Footer';
 import NavbarComponent from '@/components/wrapper/Navbar';
 
+import auditpage from "./../../assets/images/app/audit.jpeg";
+
 const SubscriptionPage = () => {
   const [step, setStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -48,7 +50,7 @@ const SubscriptionPage = () => {
     <div className="subscription-page">
       <NavbarComponent/>
 
-      {/* <div className="progress-container bg-light py-3">
+      <div className="progress-container bg-light py-3 sticky-top">
         <Container>
           <ProgressBar now={(step / 3) * 100} className="subscription-progress" />
           <div className="d-flex justify-content-between mt-2">
@@ -57,7 +59,7 @@ const SubscriptionPage = () => {
             <div className={`progress-step ${step >= 3 ? 'active' : ''}`}>Register</div>
           </div>
         </Container>
-      </div> */}
+      </div>
 
       <Container className="my-5">
         {step === 1 && (
@@ -75,11 +77,57 @@ const SubscriptionPage = () => {
 
             <Row className="align-items-center mb-5">
               <Col md={6} className="mb-4 mb-md-0">
-                <div className="image-container">
+                <div className="image-container shadow-lg">
                   <img
-                    src="response-sheet-image.jpg"
+                    src={auditpage}
                     alt="Scanned Response Sheet"
-                    className="img-fluid rounded shadow"
+                    className="img-fluid rounded "
+                  />
+                </div>
+              </Col>
+              <Col md={6}>
+                <h2 className="fw-bold mb-4">What You'll Get</h2>
+                <p className="lead">
+                  Upload scanned OMR response sheets and let our system take care of everything:
+                  from identifying marked corrections to generating precise scores in seconds.
+                </p>
+                <p>
+                  Designed for institutions and educators, this tool helps you manage exams faster and with
+                  complete accuracy — no manual checking required.
+                </p>
+              </Col>
+            </Row>
+
+            <Row className="align-items-center mb-5">
+              <Col md={6}>
+                <h2 className="fw-bold mb-4">What You'll Get</h2>
+                <p className="lead">
+                  Upload scanned OMR response sheets and let our system take care of everything:
+                  from identifying marked corrections to generating precise scores in seconds.
+                </p>
+                <p>
+                  Designed for institutions and educators, this tool helps you manage exams faster and with
+                  complete accuracy — no manual checking required.
+                </p>
+              </Col>
+              <Col md={6} className="mb-4 mb-md-0">
+                <div className="image-container shadow-lg">
+                  <img
+                    src={auditpage}
+                    alt="Scanned Response Sheet"
+                    className="img-fluid rounded "
+                  />
+                </div>
+              </Col>
+            </Row>
+
+            <Row className="align-items-center mb-5">
+              <Col md={6} className="mb-4 mb-md-0">
+                <div className="image-container shadow-lg">
+                  <img
+                    src={auditpage}
+                    alt="Scanned Response Sheet"
+                    className="img-fluid rounded "
                   />
                 </div>
               </Col>

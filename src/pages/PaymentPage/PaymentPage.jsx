@@ -40,7 +40,7 @@ const PaymentPage = () => {
     <div className="payment-page">
       <NavbarComponent/>
 
-      {/* <div className="progress-container bg-light py-3">
+      <div className="progress-container bg-light py-3 sticky-top">
         <Container>
           <ProgressBar now={75} className="payment-progress" />
           <div className="d-flex justify-content-between mt-2">
@@ -50,7 +50,7 @@ const PaymentPage = () => {
             <div className="progress-step active">Payment</div>
           </div>
         </Container>
-      </div> */}
+      </div>
 
       <Container className="my-5">
         <Row className="justify-content-center mb-5">
