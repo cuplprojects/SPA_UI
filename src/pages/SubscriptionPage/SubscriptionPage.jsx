@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './SubscriptionPage.css';
 import { useNavigate } from 'react-router-dom';
+import { ProgressBar, Container, Row, Col, Card, Button, Nav, Badge } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import './SubscriptionPage.css';
+import Footer from '@/components/wrapper/Footer';
+import NavbarComponent from '@/components/wrapper/Navbar';
 
 const SubscriptionPage = () => {
   const [step, setStep] = useState(1);
@@ -9,40 +13,78 @@ const SubscriptionPage = () => {
   const navigate = useNavigate();
 
   const handleNext = () => {
-    setStep(2);
+    setStep(step + 1);
+  };
+
+  const handlePrevious = () => {
+    setStep(step - 1);
   };
 
   const handleSelectPlan = (plan) => {
     setSelectedPlan(plan);
+    localStorage.setItem('selectedPlan', plan);
   };
 
-
-  const handleStartSubscription = () => {
-    alert('Redirecting to login or sign-up page...');
-  };
+  const plans = [
+    {
+      title: '6-Month Plan',
+      duration: '6 months',
+      price: '$29.99',
+      features: ['Process up to 1000 response sheets', 'Access to premium support', 'Basic analytics'],
+      plan: '6-Month',
+      recommended: false
+    },
+    {
+      title: '1-Year Plan',
+      duration: '12 months',
+      price: '$49.99',
+      features: ['Process up to 2000 sheets', 'Premium support', 'Priority batch processing', 'Advanced analytics'],
+      plan: '1-Year',
+      recommended: true
+    }
+  ];
 
   return (
     <div className="subscription-page">
-      <header className="bg-dark text-white py-3 px-4 d-flex justify-content-between align-items-center">
-        <div className="h4 mb-0">YourLogo</div>
-        <nav>
-          <a className="text-white mx-2" href="#">Login / Sign Up</a>
-        </nav>
-      </header>
+      <NavbarComponent/>
 
-      <main className="container my-5">
+      {/* <div className="progress-container bg-light py-3">
+        <Container>
+          <ProgressBar now={(step / 3) * 100} className="subscription-progress" />
+          <div className="d-flex justify-content-between mt-2">
+            <div className={`progress-step ${step >= 1 ? 'active' : ''}`}>Intro</div>
+            <div className={`progress-step ${step >= 2 ? 'active' : ''}`}>Select Plan</div>
+            <div className={`progress-step ${step >= 3 ? 'active' : ''}`}>Register</div>
+          </div>
+        </Container>
+      </div> */}
+
+      <Container className="my-5">
         {step === 1 && (
-          <section className="product-details text-center my-5 px-3 px-md-5">
-            <h2 className="fw-bold mb-4">What You'll Get</h2>
+          <div className="intro-section">
+            <Row className="justify-content-center mb-5">
+              <Col md={10} lg={8}>
+                <div className="text-center mb-5">
+                  <h1 className="display-4 fw-bold mb-4">Automated OMR Sheet Processing</h1>
+                  <p className="lead text-secondary">
+                    Transform your assessment workflow with our AI-powered scanning solution
+                  </p>
+                </div>
+              </Col>
+            </Row>
 
-            <div className="d-flex flex-column flex-md-row align-items-center justify-content-center gap-4 mb-4">
-              <img
-                src="response-sheet-image.jpg"
-                alt="Scanned Response Sheet"
-                className="img-fluid shadow rounded"
-                style={{ maxWidth: '400px' }}
-              />
-              <div className="text-start" style={{ maxWidth: '500px' }}>
+            <Row className="align-items-center mb-5">
+              <Col md={6} className="mb-4 mb-md-0">
+                <div className="image-container">
+                  <img
+                    src="response-sheet-image.jpg"
+                    alt="Scanned Response Sheet"
+                    className="img-fluid rounded shadow"
+                  />
+                </div>
+              </Col>
+              <Col md={6}>
+                <h2 className="fw-bold mb-4">What You'll Get</h2>
                 <p className="lead">
                   Upload scanned OMR response sheets and let our AI-powered system take care of everything:
                   from identifying marked corrections to generating precise scores in seconds.
@@ -51,111 +93,244 @@ const SubscriptionPage = () => {
                   Designed for institutions and educators, this tool helps you manage exams faster and with
                   complete accuracy — no manual checking required.
                 </p>
-              </div>
-            </div>
+              </Col>
+            </Row>
 
-            <h3 className="fw-semibold mt-5 mb-3">How It Works</h3>
-            <ol className="text-start mx-auto" style={{ maxWidth: '500px' }}>
-              <li><strong>Step 1:</strong> Upload scanned JPG or PDF response sheets.</li>
-              <li><strong>Step 2:</strong> Our system reads answers and any corrections.</li>
-              <li><strong>Step 3:</strong> Final scores are generated and ready for download or review.</li>
-            </ol>
+            <Row className="justify-content-center mb-5">
+              <Col md={10} lg={8}>
+                <div className="how-it-works p-4 bg-light rounded shadow-sm">
+                  <h3 className="fw-bold mb-4">How It Works</h3>
+                  <div className="d-flex flex-column flex-md-row justify-content-between">
+                    <div className="step-item text-center mb-3 mb-md-0">
+                      <div className="step-icon">
+                        <i className="bi bi-upload fs-1"></i>
+                      </div>
+                      <h5 className="mt-3">Upload</h5>
+                      <p className="small text-secondary">Upload scanned JPG or PDF response sheets</p>
+                    </div>
+                    <div className="step-item text-center mb-3 mb-md-0">
+                      <div className="step-icon">
+                        <i className="bi bi-cpu fs-1"></i>
+                      </div>
+                      <h5 className="mt-3">Process</h5>
+                      <p className="small text-secondary">Our system reads answers and corrections</p>
+                    </div>
+                    <div className="step-item text-center">
+                      <div className="step-icon">
+                        <i className="bi bi-file-earmark-check fs-1"></i>
+                      </div>
+                      <h5 className="mt-3">Results</h5>
+                      <p className="small text-secondary">Get scores ready for download</p>
+                    </div>
+                  </div>
+                </div>
+              </Col>
+            </Row>
 
-            <div className="mt-5">
-              <button
-                className="btn btn-lg btn-danger px-4 py-2"
-                onClick={handleNext}
-                style={{ transition: '0.3s' }}
-              >
-                Next <i className="bi bi-arrow-right ms-2"></i>
-              </button>
-            </div>
+            <Row className="justify-content-center mb-5">
+              <Col md={10} lg={8}>
+                <div className="demo-section text-center">
+                  <h4 className="text-secondary mb-3">See it in action</h4>
+                  <div className="video-container">
+                    <video
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="rounded shadow"
+                      style={{ maxWidth: '100%' }}
+                    >
+                      <source src="/demo-omr-processing.mp4" type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                </div>
+              </Col>
+            </Row>
 
-            {/* Optional: Animated demo below the button */}
-            <div className="mt-5">
-              <h5 className="text-muted mb-3">See it in action</h5>
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="shadow rounded"
-                style={{ maxWidth: '600px', width: '100%' }}
-              >
-                <source src="/demo-omr-processing.mp4" type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-            </div>
-          </section>
+            <Row className="justify-content-center">
+              <Col md={6} lg={4} className="text-center">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  className="px-5 py-3 fw-bold"
+                  onClick={handleNext}
+                >
+                  View Plans <i className="bi bi-arrow-right ms-2"></i>
+                </Button>
+              </Col>
+            </Row>
+          </div>
         )}
 
         {step === 2 && (
-          <>
-            <div> <section className="hero text-white text-center d-flex flex-column justify-content-center align-items-center px-3">
-              <h1 className="display-4 fw-bold">Start Processing OMR Sheets Effortlessly</h1>
-              <p className="lead mt-3 mb-4">Choose a plan that fits your assessment needs.</p>
-              <button className="btn btn-danger btn-lg" onClick={handleStartSubscription}>
-                Start Your Subscription
-              </button>
-            </section>
-              <div className="row justify-content-center">
-                {[
-                  {
-                    title: '6-Month Plan',
-                    duration: '6 months',
-                    price: '$29.99',
-                    features: ['✔ Process up to 1000 response sheets', '✔ Access to premium support'],
-                    plan: '6-Month'
-                  },
-                  {
-                    title: '1-Year Plan',
-                    duration: '12 months',
-                    price: '$49.99',
-                    features: ['✔ Process up to 2000 sheets', '✔ Premium support', '✔ Priority batch processing'],
-                    plan: '1-Year'
-                  }
-                ].map(({ title, duration, price, features, plan }, idx) => (
-                  <div className="col-md-5 col-lg-4 mb-4" key={idx}>
-                    <div className="card h-100 shadow plan-card border-0">
-                      <div className="card-body text-center">
-                        <h3 className="card-title">{title}</h3>
-                        <p className="text-muted">{duration}</p>
-                        <h4 className="text-primary fw-bold">{price}</h4>
-                        <ul className="list-unstyled mt-3 mb-4">
-                          {features.map((f, i) => <li key={i}>{f}</li>)}
-                        </ul>
-                        <button className="btn btn-outline-primary" onClick={() => handleSelectPlan(plan)}>Select Plan</button>
+          <div className="plan-selection-section">
+            <Row className="justify-content-center mb-5">
+              <Col md={10} lg={8} className="text-center">
+                <h2 className="display-5 fw-bold mb-3">Choose Your Plan</h2>
+                <p className="lead text-secondary mb-5">
+                  Select a subscription plan that fits your assessment needs
+                </p>
+              </Col>
+            </Row>
+
+            <Row className="justify-content-center mb-5">
+              {plans.map((plan, idx) => (
+                <Col md={6} lg={5} xl={4} key={idx} className="mb-4">
+                  <Card
+                    className={`plan-card h-100 border-0 shadow ${selectedPlan === plan.plan ? 'selected' : ''} ${plan.recommended ? 'recommended' : ''}`}
+                  >
+                    {plan.recommended && (
+                      <div className="recommended-badge">
+                        <Badge bg="success" className="position-absolute top-0 end-0 m-3 px-3 py-2">
+                          RECOMMENDED
+                        </Badge>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="text-center mt-4">
-              <button
-                className="btn btn-success btn-lg"
-                onClick={() => navigate('/RegistrationPage', { state: { selectedPlan } })}
-                disabled={!selectedPlan}
-              >
-                Next
-              </button>
-              <p className="mt-2">Already have an account? <a href="/login">Login</a></p>
-            </div>
+                    )}
+                    <Card.Body className="p-4 text-center">
+                      <h3 className="card-title fw-bold mb-3">{plan.title}</h3>
+                      <p className="text-muted">{plan.duration}</p>
+                      <h2 className="price fw-bold my-4">{plan.price}</h2>
+                      <hr className="my-4" />
+                      <ul className="list-unstyled mb-4">
+                        {plan.features.map((feature, i) => (
+                          <li key={i} className="mb-2">
+                            <i className="bi bi-check-circle-fill text-success me-2"></i>
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                      <Button
+                        variant={selectedPlan === plan.plan ? "primary" : "outline-primary"}
+                        className="w-100 py-2"
+                        onClick={() => handleSelectPlan(plan.plan)}
+                      >
+                        {selectedPlan === plan.plan ? 'Selected' : 'Select Plan'}
+                      </Button>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
 
-
-          </>
+            <Row className="justify-content-center">
+              <Col md={6} className="d-flex justify-content-between">
+                <Button
+                  variant="outline-secondary"
+                  onClick={handlePrevious}
+                >
+                  <i className="bi bi-arrow-left me-2"></i> Back
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleNext}
+                  disabled={!selectedPlan}
+                >
+                  Continue <i className="bi bi-arrow-right ms-2"></i>
+                </Button>
+              </Col>
+            </Row>
+          </div>
         )}
 
-      </main>
+        {step === 3 && (
+          <div className="registration-section">
+            <Row className="justify-content-center mb-5">
+              <Col md={10} lg={8} className="text-center">
+                <h2 className="display-5 fw-bold mb-3">Register Your Account</h2>
+                <p className="lead text-secondary mb-3">
+                  Create your account to continue with your subscription
+                </p>
+                {selectedPlan && (
+                  <div className="selected-plan-badge">
+                    <Badge bg="success" className="px-3 py-2">
+                      Selected Plan: {selectedPlan}
+                    </Badge>
+                  </div>
+                )}
+              </Col>
+            </Row>
 
-      <footer className="bg-dark text-white text-center py-4">
-        <p className="mb-2">About Us | Privacy | Terms | Contact</p>
-        <div>
-          <a className="text-white mx-2" href="#">Facebook</a>
-          <a className="text-white mx-2" href="#">Twitter</a>
-          <a className="text-white mx-2" href="#">LinkedIn</a>
-        </div>
-      </footer>
+            <Row className="justify-content-center mb-5">
+              <Col md={8} lg={6}>
+                <Card className="border-0 shadow">
+                  <Card.Body className="p-4">
+                    <form>
+                      <Row>
+                        <Col md={6} className="mb-3">
+                          <label htmlFor="firstName" className="form-label">First Name</label>
+                          <div className="input-group">
+                            <span className="input-group-text"><i className="bi bi-person"></i></span>
+                            <input type="text" className="form-control" id="firstName" placeholder="Enter first name" required />
+                          </div>
+                        </Col>
+                        <Col md={6} className="mb-3">
+                          <label htmlFor="lastName" className="form-label">Last Name</label>
+                          <div className="input-group">
+                            <span className="input-group-text"><i className="bi bi-person"></i></span>
+                            <input type="text" className="form-control" id="lastName" placeholder="Enter last name" required />
+                          </div>
+                        </Col>
+                      </Row>
+                      <div className="mb-3">
+                        <label htmlFor="email" className="form-label">Email Address</label>
+                        <div className="input-group">
+                          <span className="input-group-text"><i className="bi bi-envelope"></i></span>
+                          <input type="email" className="form-control" id="email" placeholder="Enter email address" required />
+                        </div>
+                      </div>
+                      <div className="mb-3">
+                        <label htmlFor="organization" className="form-label">Organization Name</label>
+                        <div className="input-group">
+                          <span className="input-group-text"><i className="bi bi-building"></i></span>
+                          <input type="text" className="form-control" id="organization" placeholder="Enter organization name" required />
+                        </div>
+                      </div>
+                      <div className="mb-3">
+                        <label htmlFor="password" className="form-label">Password</label>
+                        <div className="input-group">
+                          <span className="input-group-text"><i className="bi bi-lock"></i></span>
+                          <input type="password" className="form-control" id="password" placeholder="Create a password" required />
+                        </div>
+                      </div>
+                      <div className="mb-4">
+                        <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+                        <div className="input-group">
+                          <span className="input-group-text"><i className="bi bi-lock"></i></span>
+                          <input type="password" className="form-control" id="confirmPassword" placeholder="Confirm your password" required />
+                        </div>
+                      </div>
+                      <div className="d-grid">
+                        <Button
+                          variant="primary"
+                          size="lg"
+                          onClick={() => navigate('/PaymentPage', { state: { selectedPlan } })}
+                        >
+                          Continue to Payment <i className="bi bi-arrow-right ms-2"></i>
+                        </Button>
+                      </div>
+                    </form>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+
+            <Row className="justify-content-center">
+              <Col md={6} className="d-flex justify-content-between">
+                <Button
+                  variant="outline-secondary"
+                  onClick={handlePrevious}
+                >
+                  <i className="bi bi-arrow-left me-2"></i> Back
+                </Button>
+              </Col>
+            </Row>
+          </div>
+        )}
+      </Container>
+
+      {/* Footer Component Here */}
+      <Footer />
     </div>
   );
 };
