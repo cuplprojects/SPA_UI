@@ -187,42 +187,67 @@ const FieldConfiguration = () => {
             },
           },
         )
-        .then((response) => {
+        .then(async (response) => {
           getFieldConfig();
           setLoading(false);
           notification.success({
             message: 'Field configuration updated successfully!',
             duration: 3,
           });
+
+
           
-          Modal.confirm({
-            title: 'Run Audit',
-            content: 'Would you like to run an audit after this configuration change?',
-            okText: 'Yes, Run Audit',
-            cancelText: 'No',
-            onOk: async () => {
-              try {
-                const response = await axios.get(
-                  `${baseUrl}/Audit/RangeAudit?WhichDatabase=${database}&ProjectId=${ProjectId}`,
-                  {
-                    headers: {
-                      Authorization: `Bearer ${token}`
-                    }
-                  }
-                );
-                notification.success({
-                  message: 'Audit Completed Successfully',
-                  duration: 3,
-                });
-              } catch (error) {
-                notification.error({
-                  message: 'Audit Failed',
-                  description: 'Failed to run the audit. Please try again.',
-                  duration: 3,
-                });
+          // Check if flags exist for the project
+          const flagsExistResponse = await axios.get(
+            `${APIURL}/Flags/FlagExist?id=${ProjectId}&WhichDatabase=${database}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`
               }
             }
-          });
+          );
+          console.log(flagsExistResponse.data)
+          if (flagsExistResponse.data.status === true) {
+            Modal.confirm({
+              title: 'Run Audit',
+              content: 'Would you like to run an audit after this configuration change?',
+              okText: 'Yes, Run Audit',
+              cancelText: 'No',
+              onOk: async () => {
+                try {
+                  // Delete existing flags
+                  await axios.delete(
+                    `${APIURL}/Flags/DeleteforNewAudit?id=${newConfig.FieldConfigurationId}&WhichDatabase=${database}`,
+                    {
+                      headers: {
+                        Authorization: `Bearer ${token}`
+                      }
+                    }
+                  );
+
+                  // Run the audit
+                  const response = await axios.get(
+                    `${APIURL}/Audit/RangeAudit?WhichDatabase=${database}&ProjectId=${ProjectId}`,
+                    {
+                      headers: {
+                        Authorization: `Bearer ${token}`
+                      }
+                    }
+                  );
+                  notification.success({
+                    message: 'Audit Completed Successfully',
+                    duration: 3,
+                  });
+                } catch (error) {
+                  notification.error({
+                    message: error.message,
+                    description: 'Failed to run the audit. Please try again.',
+                    duration: 3,
+                  });
+                }
+              }
+            });
+          }
         })
         .catch((error) => {
           setLoading(false);
