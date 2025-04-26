@@ -203,7 +203,7 @@ const FieldConfiguration = () => {
             onOk: async () => {
               try {
                 const response = await axios.get(
-                  `${baseUrl}/Audit/RangeAudit?WhichDatabase=${database}&ProjectId=${ProjectId}`,
+                  `${APIURL}/Audit/RangeAudit?WhichDatabase=${database}&ProjectId=${ProjectId}`,
                   {
                     headers: {
                       Authorization: `Bearer ${token}`
