@@ -5,7 +5,7 @@ import Card from '@/components/card';
 import { Iconify } from '@/components/icon';
 import { useUserInfo, useUserToken } from '@/store/UserDataStore';
 import { useThemeToken } from '@/theme/hooks';
-
+import {notification} from 'antd';
 import ProfileTab from './profile-tab';
 import SecurityTab from './security-tab';
 import useUserData from '@/CustomHooks/useUserData';
@@ -13,7 +13,7 @@ import useUserData from '@/CustomHooks/useUserData';
 const apiUrl = import.meta.env.VITE_API_URL;
 const baseUrl = import.meta.env.VITE_BASEAPI_URL;
 const UserProfile = () => {
-  const { userData, loading, error } = useUserData(); // Use the custom hook
+  const { userData, loading, error, refetchUserData } = useUserData(); // Use the custom hook
   const { avatar, username } = useUserInfo();
   const { colorTextBase } = useThemeToken();
   const [currentTabIndex, setcurrentTabIndex] = useState(0);
@@ -68,10 +68,17 @@ const UserProfile = () => {
 
         if (response.ok) {
           console.log('File uploaded successfully');
-          // Handle success (e.g., update UI, show notification)
+          notification.success({
+            message: 'All files uploaded successfully!',
+            duration: 3,
+          });
+          refetchUserData();
         } else {
           console.error('File upload failed');
-          // Handle error (e.g., show error message)
+          notification.error({
+            message: 'File Upload failed!',
+            duration: 3,
+          });
         }
       } catch (error) {
         console.error('Error uploading file:', error);
