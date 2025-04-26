@@ -16,6 +16,17 @@ const LoginRoute: AppRouteObject = {
   Component: lazy(() => import('@/pages/sys/login/Login')),
 };
 
+const PublicRoute: AppRouteObject = {
+  path: '/SubscriptionPage',
+  Component: lazy(() => import('@/pages/SubscriptionPage/SubscriptionPage')),
+};
+
+const RegistrationRoute: AppRouteObject = {
+  path: '/RegistrationPage',
+  Component: lazy(() => import('@/pages/RegistrationPage/RegistrationPage')),
+};
+
+
 const PAGE_NOT_FOUND_ROUTE: AppRouteObject = {
   path: '*',
   element: <Navigate to="/404" replace />,
@@ -37,7 +48,7 @@ export default function Router() {
     ],
   };
 
-  const routes = [LoginRoute, asyncRoutes, ErrorRoutes, PAGE_NOT_FOUND_ROUTE];
+  const routes = [PublicRoute,RegistrationRoute,LoginRoute, asyncRoutes, ErrorRoutes, PAGE_NOT_FOUND_ROUTE];
   const router = createHashRouter(routes as unknown as RouteObject[]);
 
   return <RouterProvider router={router} />;

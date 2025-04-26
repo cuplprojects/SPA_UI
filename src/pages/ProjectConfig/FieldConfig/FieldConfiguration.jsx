@@ -129,6 +129,7 @@ const FieldConfiguration = () => {
         message: 'Please fill in all fields!',
         duration: 3,
       });
+      setLoading(false)
       return;
     }
 
@@ -137,6 +138,7 @@ const FieldConfiguration = () => {
         message: 'Maximum range cannot be less than minimum range!',
         duration: 3,
       });
+      setLoading(false)
       return;
     }
 
@@ -146,6 +148,7 @@ const FieldConfiguration = () => {
           message: 'Number of blocks must match the length of the max range!',
           duration: 3,
         });
+        setLoading(false)
         return;
       }
     }
@@ -167,7 +170,7 @@ const FieldConfiguration = () => {
       ],
     };
 
-    console.log('Payload to be sent:', JSON.stringify(newConfig, null, 2));
+   
 
     let newConfigJson = JSON.stringify(newConfig);
     let encrypteddata = handleEncrypt(newConfigJson);

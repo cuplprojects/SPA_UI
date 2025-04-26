@@ -31,7 +31,7 @@ const dashboard: AppRouteObject = {
     {
       path: 'workbench',
       element: <HomePage />,
-      meta: { label: 'sys.menu.workbench', key: '/dashboard/workbench' },
+      meta: { label: 'sys.menu.workbench', key: '/dashboard' },
     },
     {
       path: 'analysis',

@@ -4,8 +4,8 @@
       "failedtoloaderror": "Failed to load roles. Please try again later."
     },
     "workbench":{
-      "welcome":"Welcome back 👋",
-      "welcomedata": "Welcome! Explore all the dashboard activities of CUPL SPA for detailed insights and updates on our latest features."
+      "welcome":"Welcome back👋",
+      "welcomedata": "Welcome! Explore all the dashboard activities of SPA for detailed insights and updates on our latest features."
     }
   }
 }

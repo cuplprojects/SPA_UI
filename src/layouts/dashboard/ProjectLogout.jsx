@@ -11,7 +11,7 @@ const ProjectLogout = () => {
 
   const onClickProjectLogout = () => {
     setProjectId(0); // Update the state
-    navigate('/dashboard/workbench'); // Navigate to the new route
+    navigate('/dashboard'); // Navigate to the new route
   };
 
   return (

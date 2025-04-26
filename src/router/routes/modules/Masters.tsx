@@ -35,53 +35,7 @@ const Master: AppRouteObject = {
       element: <MenuLevel title="fields" />,
       meta: { label: 'sys.menu.fields', key: '/Masters/Fields' },
     },
-    // {
-    //   path: 'menu_level_1b',
-    //   meta: { label: 'sys.menu.menulevel.1b.index', key: '/menu_level/menu_level_1b' },
-    //   children: [
-    //     {
-    //       index: true,
-    //       element: <Navigate to="menu_level_2a" replace />,
-    //     },
-    //     {
-    //       path: 'menu_level_2a',
-    //       element: <MenuLevel title="2a" />,
-    //       meta: {
-    //         label: 'sys.menu.menulevel.1b.2a',
-    //         key: '/menu_level/menu_level_1b/menu_level_2a',
-    //       },
-    //     },
-    //     {
-    //       path: 'menu_level_2b',
-    //       meta: {
-    //         label: 'sys.menu.menulevel.1b.2b.index',
-    //         key: '/menu_level/menu_level_1b/menu_level_2b',
-    //       },
-    //       children: [
-    //         {
-    //           index: true,
-    //           element: <Navigate to="menu_level_3a" replace />,
-    //         },
-    //         {
-    //           path: 'menu_level_3a',
-    //           element: <MenuLevel title="3a" />,
-    //           meta: {
-    //             label: 'sys.menu.menulevel.1b.2b.3a',
-    //             key: '/menu_level/menu_level_1b/menu_level_2b/menu_level_3a',
-    //           },
-    //         },
-    //         {
-    //           path: 'menu_level_3b',
-    //           element: <MenuLevel title="3b" />,
-    //           meta: {
-    //             label: 'sys.menu.menulevel.1b.2b.3b',
-    //             key: '/menu_level/menu_level_1b/menu_level_2b/menu_level_3b',
-    //           },
-    //         },
-    //       ],
-    //     },
-    //   ],
-    // },
+  
   ],
 };
 

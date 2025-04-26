@@ -1,9 +1,10 @@
-import { Button } from 'antd';
+import { Button, Popconfirm, Card, Space, Typography} from 'antd';
 import React, { useEffect, useState } from 'react';
 import { useProjectId } from '@/store/ProjectState';
 import { useDatabase } from '@/store/DatabaseStore';
 import { useUserToken } from '@/store/UserDataStore';
-
+import { DeleteOutlined } from '@ant-design/icons';
+const { Title, Text } = Typography;
 const Registration = ({
   handleFileUpload,
   handleRegistrationUpload,
@@ -13,7 +14,6 @@ const Registration = ({
   registrationMapping,
   handleRegistrationMappingChange,
   registrationCount,
-
   loading,
 }) => {
   const [isValidData, setIsValidData] = useState(false);
@@ -34,11 +34,17 @@ const Registration = ({
 
   return (
     <>
+    <Card style={{ margin: '20px auto', maxWidth: 900, padding: 20 }}>
+      <Title level={3} style={{ textAlign: 'center', marginBottom: 20 }}>
+        Upload Registration
+      </Title>
+      <Space direction="vertical" style={{ width: '100%' }}>
       <div className="tab-pane active d-flex align-items-center justify-content-around mt-5 py-3" id="registration">
         <h3 className="head fs-3 text-center">Upload Registration Data</h3>
         <div className="d-flex justify-content-center align-items-center">
           <input type="file" onChange={handleFileUpload} accept=".xlsx" />
-          {count > 0 &&
+          {registrationCount > 0 &&
+          
             <Popconfirm
               title="Are you sure you want to delete all Registration?"
               onConfirm={handleDeleteRegistration}
@@ -47,14 +53,14 @@ const Registration = ({
             >
               <Button danger >
                 <DeleteOutlined />
-                Delete Registration
+                Delete All Registration
               </Button>
             </Popconfirm>
           }
         </div>
         {count !== null ? (
           <p className="count-display text-center mt-4">
-            Current Registeration: {registrationCount}
+            Total Registeration: {registrationCount}
           </p>
         ) : (
           <p className="text-center mt-4">Loading count...</p>
@@ -105,7 +111,8 @@ const Registration = ({
           </button>
         )}
       </div>
-
+      </Space>
+      </Card>
     </>
   );
 };

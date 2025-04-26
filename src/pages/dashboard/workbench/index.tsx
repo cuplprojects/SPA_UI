@@ -1,8 +1,8 @@
-import { Col, Row, Space } from 'antd';
+import { Row } from 'antd';
 
 // import AreaDownload from './area-download';
-import BannerCard from './banner-card';
-import { Applications, Conversion } from './conversion_applications';
+//import BannerCard from './banner-card';
+//import { Applications, Conversion } from './conversion_applications';
 // import CurrentDownload from './current-download';
 // import NewInvoice from './new-invoice';
 // import TopAuthor from './top-authors';
@@ -18,7 +18,7 @@ function Workbench() {
   })
   return (
     <>
-      <Row gutter={[16, 16]} justify="center">
+      {/* <Row gutter={[16, 16]} justify="center">
         <Col span={24} md={16}>
           <BannerCard />
         </Col>
@@ -28,7 +28,7 @@ function Workbench() {
             <Applications />
           </Space>
         </Col>
-      </Row>
+      </Row> */}
 
       {/* <Row gutter={[16, 16]} className="mt-4" justify="center">
         <Col span={24} md={8}>

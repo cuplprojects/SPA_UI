@@ -1,0 +1,44 @@
+.subscription-page .hero {
+  background: linear-gradient(145deg, #141e30, #243b55);
+  color: white;
+  height: 60vh;
+  padding: 40px 0;
+}
+
+.plan-card {
+  transition: transform 0.3s, box-shadow 0.3s;
+  border-radius: 12px;
+  background-color: #fff;
+}
+
+.plan-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.card-title {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.card-body ul li {
+  margin-bottom: 0.5rem;
+}
+
+footer a {
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+.product-details li {
+  margin-bottom: 12px;
+  font-size: 1.05rem;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
