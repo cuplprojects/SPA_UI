@@ -48,9 +48,18 @@ const Scanned = ({
               <Row>
                 <Col md={12}>
                   <div className="d-flex justify-content-center align-items-center">
-                    <p>
-                      <input type="file" onChange={handleFileUpload} accept=".csv" />
-                    </p>
+                    <Upload
+                      accept=".csv"
+                      beforeUpload={(file) => {
+                        handleFileUpload({ target: { files: [file] } });
+                        return false; // Prevent automatic upload
+                      }}
+                      maxCount={1}
+                    >
+                      <Button icon={<UploadOutlined />} style={{ width: '100%' }}>
+                        Select CSV File
+                      </Button>
+                    </Upload>
                   </div>
                 </Col>
               </Row>
@@ -66,7 +75,7 @@ const Scanned = ({
                 </Col>
               </Row>
               <Row>
-                <Col md={12}>
+                <Col md={12} className='d-flex justify-content-center'>
                   {scannedCount > 0 &&
                     <Popconfirm
                       title="Are you sure you want to delete all absentee?"
@@ -96,11 +105,11 @@ const Scanned = ({
                   {Object.keys(fieldMappings).map((field) => (
                     <tr key={field}>
                       <td style={{ wordWrap: 'break-word' }}>{field}</td>
-                      <td style={{ wordWrap: 'break-word' }}>
+                      <td style={{ wordWrap: 'break-word', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         <select
                           value={fieldMappings[field]}
                           onChange={(e) => handleFieldMappingChange(e, field)}
-                          style={{ width: '100%' }}
+                          style={{ width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                         >
                           <option value="">Select Header</option>
                           {headers
@@ -109,7 +118,7 @@ const Scanned = ({
                                 !mappedHeaders.includes(header) || header === fieldMappings[field],
                             )
                             .map((header, index) => (
-                              <option key={index} value={header}>
+                              <option key={index} value={header} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {header}
                               </option>
                             ))}
