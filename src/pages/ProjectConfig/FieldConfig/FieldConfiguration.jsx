@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './FieldConfig.css';
-import { Button, Table, Input, Select, Space, Popconfirm, notification, Tooltip } from 'antd';
+import { Button, Table, Input, Select, Space, Popconfirm, notification, Tooltip, Modal } from 'antd';
 import { DeleteOutlined, RedoOutlined } from '@ant-design/icons';
 import { useThemeToken } from '@/theme/hooks';
 import { Col, Row } from 'react-bootstrap';
@@ -189,13 +189,39 @@ const FieldConfiguration = () => {
         )
         .then((response) => {
           getFieldConfig();
-          // updatedData[selectedFieldIndex] = { ...updatedData[selectedFieldIndex], ...newConfig };
-          // setSavedData(updatedData);
-          // setSelectedFieldIndex(-1);
           setLoading(false);
           notification.success({
             message: 'Field configuration updated successfully!',
             duration: 3,
+          });
+          
+          Modal.confirm({
+            title: 'Run Audit',
+            content: 'Would you like to run an audit after this configuration change?',
+            okText: 'Yes, Run Audit',
+            cancelText: 'No',
+            onOk: async () => {
+              try {
+                const response = await axios.get(
+                  `${baseUrl}/Audit/RangeAudit?WhichDatabase=${database}&ProjectId=${ProjectId}`,
+                  {
+                    headers: {
+                      Authorization: `Bearer ${token}`
+                    }
+                  }
+                );
+                notification.success({
+                  message: 'Audit Completed Successfully',
+                  duration: 3,
+                });
+              } catch (error) {
+                notification.error({
+                  message: 'Audit Failed',
+                  description: 'Failed to run the audit. Please try again.',
+                  duration: 3,
+                });
+              }
+            }
           });
         })
         .catch((error) => {
@@ -206,6 +232,7 @@ const FieldConfiguration = () => {
             duration: 3,
           });
         });
+        
     } else {
       axios
         .post(`${APIURL}/FieldConfigurations?WhichDatabase=${database}`, encrypteddatatosend, {
