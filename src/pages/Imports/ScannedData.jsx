@@ -44,8 +44,8 @@ const Scanned = ({
         </Title>
         <div style={{ width: '100%' }} className='container'>
           <Row>
-            <Col md={selectedFile ? 4 : 6}>
-              <Row>
+            <Col md={selectedFile ? 4 : 6} >
+              <Row >
                 <Col md={12}>
                   <div className="d-flex justify-content-center align-items-center">
                     <Upload
@@ -92,26 +92,26 @@ const Scanned = ({
                   </Col>
                 </Row>
               )}
-            {selectedFile && (
-              <Row>
-                <Col md={12} className='d-flex justify-content-center'>
-                  {scannedCount > 0 &&
-                    <Popconfirm
-                      title="Are you sure you want to delete all absentee?"
-                      onConfirm={handleDeleteScanned}
-                      okText="Yes"
-                      cancelText="No"
-                    >
-                      <Button danger>
-                        <DeleteOutlined />
-                        Delete All Records
-                      </Button>
-                    </Popconfirm>
-                  }
-                </Col>
-              </Row>
-            )}
-              
+              {selectedFile && (
+                <Row>
+                  <Col md={12} className='d-flex justify-content-center'>
+                    {scannedCount > 0 &&
+                      <Popconfirm
+                        title="Are you sure you want to delete all absentee?"
+                        onConfirm={handleDeleteScanned}
+                        okText="Yes"
+                        cancelText="No"
+                      >
+                        <Button danger>
+                          <DeleteOutlined />
+                          Delete All Records
+                        </Button>
+                      </Popconfirm>
+                    }
+                  </Col>
+                </Row>
+              )}
+
             </Col>
             {selectedFile ?
               <>
