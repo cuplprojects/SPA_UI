@@ -90,6 +90,8 @@ const Registration = ({
                   )}
                 </Col>
               </Row>
+
+              {/* Delete All Records Button */}
               <Row>
                 <Col md={12} className='d-flex justify-content-center'>
                   {registrationCount > 0 &&
@@ -107,6 +109,7 @@ const Registration = ({
                   }
                 </Col>
               </Row>
+              
             </Col>
 
 
@@ -151,7 +154,7 @@ const Registration = ({
 
           {/* Upload button */}
           <div className="d-flex justify-content-center mt-4">
-            {selectedFile && (
+            {selectedFile && ( 
               <Button
                 type="primary"
                 onClick={handleRegistrationUpload}
