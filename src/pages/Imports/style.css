@@ -27,3 +27,64 @@
   color: red;
   font-weight: bold;
 }
+
+/* Absentee page styles */
+.absentee-card {
+  transition: all 0.3s ease;
+}
+
+.upload-card, .status-card {
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.upload-card:hover, .status-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.mapping-table .ant-table-thead > tr > th {
+  background-color: #f0f7f4;
+  color: #00A76F;
+  font-weight: 600;
+}
+
+.ant-upload-drag {
+  border-color: #e6f7f1 !important;
+  background: #f0f7f4 !important;
+  transition: all 0.3s ease;
+}
+
+.ant-upload-drag:hover {
+  border-color: #00A76F !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .absentee-card {
+    margin: 10px;
+    padding: 16px !important;
+  }
+
+  .upload-card, .status-card {
+    margin-bottom: 16px;
+  }
+
+  .mapping-table {
+    font-size: 14px;
+  }
+
+  .mapping-table .ant-table-thead > tr > th,
+  .mapping-table .ant-table-tbody > tr > td {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 576px) {
+  .absentee-card {
+    padding: 12px !important;
+  }
+
+  .mapping-table .ant-select {
+    width: 100% !important;
+  }
+}

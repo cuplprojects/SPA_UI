@@ -1,129 +1,291 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Typography, message } from 'antd';
-import axios from 'axios';
-import { useLocation } from 'react-router-dom';
-import { useDatabase } from '@/store/DatabaseStore';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Card, Button, Form, ProgressBar, Badge } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import './RegistrationPage.css';
+import Footer from '@/components/wrapper/Footer';
+import NavbarComponent from '@/components/wrapper/Navbar';
+import BackButton from '@/components/wrapper/BackButton';
 
-const { Title, Text } = Typography;
-const apiurl = import.meta.env.VITE_API_URL;
 const RegisterPage = () => {
   const location = useLocation();
-  const [form] = Form.useForm();
+  const navigate = useNavigate();
   const selectedPlan = location.state?.selectedPlan || localStorage.getItem('selectedPlan');
   const [loading, setLoading] = useState(false);
-  const database = useDatabase();
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    organization: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [errors, setErrors] = useState({});
 
-  const validateName = (_, value) => {
-    if (!value || /^[a-zA-Z. ]*$/.test(value)) {
-      return Promise.resolve();
-    }
-    return Promise.reject('Please enter valid name.');
-  };
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setFormData({
+      ...formData,
+      [id]: value
+    });
 
-  const validateEmail = (_, value) => {
-    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!value || emailPattern.test(value)) {
-      return Promise.resolve();
-    }
-    return Promise.reject('Please enter a valid email address!');
-  };
-
-  const onFinish = async (values) => {
-    setLoading(true);
-    try {
-      const response = await axios.post(
-        `${apiurl}/Users/WithoutEncryption?WhichDatabase=${database}`,
-        {
-          ...values,
-          plan: selectedPlan,
-          tenantId: 0 // Always send tenantId: 0
-        },
-      );
-
-      localStorage.setItem('token', response.data.token);
-      localStorage.removeItem('selectedPlan');
-      form.resetFields(); // Reset form fields
-      notification.success({
-        message: 'User added successfully!',
-        duration: 3,
+    // Clear error when user types
+    if (errors[id]) {
+      setErrors({
+        ...errors,
+        [id]: null
       });
-      window.location.href = '/dashboard';
-    } catch (error) {
-      message.error('Registration failed. Please try again.');
-      console.error(error);
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Validate first name
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'First name is required';
+    } else if (!/^[a-zA-Z. ]*$/.test(formData.firstName)) {
+      newErrors.firstName = 'Please enter a valid name';
+    }
+
+    // Validate last name
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
+    } else if (!/^[a-zA-Z. ]*$/.test(formData.lastName)) {
+      newErrors.lastName = 'Please enter a valid name';
+    }
+
+    // Validate email
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    // Validate organization
+    if (!formData.organization.trim()) {
+      newErrors.organization = 'Organization name is required';
+    }
+
+    // Validate password
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+    }
+
+    // Validate confirm password
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (validateForm()) {
+      setLoading(true);
+
+      // Store user data in localStorage for demo purposes
+      localStorage.setItem('userData', JSON.stringify({
+        ...formData,
+        plan: selectedPlan
+      }));
+
+      // Simulate API call delay
+      setTimeout(() => {
+        setLoading(false);
+        navigate('/PaymentPage', { state: { selectedPlan } });
+      }, 1500);
+    }
+  };
+
+  const handlePrevious = () => {
+    navigate('/SubscriptionPage');
   };
 
   return (
-    <div style={{ maxWidth: 500, margin: '50px auto', padding: '24px', background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
-      <Title level={3}>Register Your Organization</Title>
+    <div className="registration-page">
+      <NavbarComponent/>
 
-      {selectedPlan && (
-        <Text type="secondary">Selected Plan: <strong>{selectedPlan}</strong></Text>
-      )}
-      <Form
-        form={form} // Attach the form instance
-        layout="vertical"
-        initialValues={{
-          firstName: '',
-          lastName: '',
-          email: '',
-          roleId: '1',
-          organization: '',
-          tenantId: 0,
-          plan: selectedPlan,
-          isActive: true, // Default value for isActive
-        }}
-        labelCol={{ span: 8 }}
-        style={{ marginTop: 24 }}
-        onFinish={onFinish} // Added onFinish event handler
-      >
-        <Form.Item
-          label="First Name"
-          name="firstName"
-          rules={[
-            { required: true, message: 'Please enter your first name!' },
-            { validator: validateName }
-          ]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label="Last Name"
-          name="lastName"
-          rules={[
-            { required: true, message: 'Please enter your last name!' },
-            { validator: validateName }
-          ]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label="Email"
-          name="email"
-          rules={[
-            { required: true, message: 'Please enter your email!' },
-            { validator: validateEmail }
-          ]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          label="Organization Name"
-          name="organization"
-          rules={[{ required: true, message: 'Please enter your organization name' }]}
-        >
-          <Input />
-        </Form.Item>
+      <div className="progress-container bg-light py-3">
+        <Container>
+          <ProgressBar now={66} className="registration-progress" />
+          <div className="d-flex justify-content-between mt-2">
+            <div className="progress-step active">Intro</div>
+            <div className="progress-step active">Select Plan</div>
+            <div className="progress-step active">Register</div>
+            <div className="progress-step">Payment</div>
+          </div>
+        </Container>
+      </div>
 
-        <Form.Item>
-          <Button type="primary" htmlType="submit" loading={loading} block>
-            Register & Subscribe
-          </Button>
-        </Form.Item>
-      </Form>
+      <Container className="my-5">
+        <BackButton />
+
+        <Row className="justify-content-center mb-5">
+          <Col md={10} lg={8} className="text-center">
+            <h2 className="display-5 fw-bold mb-3">Create Your Account</h2>
+            <p className="lead text-secondary mb-3">
+              Register to continue with your subscription
+            </p>
+            {selectedPlan && (
+              <div className="selected-plan-badge">
+                <Badge bg="success" className="px-3 py-2">
+                  Selected Plan: {selectedPlan}
+                </Badge>
+              </div>
+            )}
+          </Col>
+        </Row>
+
+        <Row className="justify-content-center mb-5">
+          <Col md={8} lg={6}>
+            <Card className="border-0 shadow">
+              <Card.Body className="p-4">
+                <Form onSubmit={handleSubmit}>
+                  <Row>
+                    <Col md={6} className="mb-3">
+                      <Form.Group>
+                        <Form.Label>First Name</Form.Label>
+                        <div className="input-group">
+                          <span className="input-group-text"><i className="bi bi-person"></i></span>
+                          <Form.Control
+                            type="text"
+                            id="firstName"
+                            placeholder="Enter first name"
+                            value={formData.firstName}
+                            onChange={handleChange}
+                            isInvalid={!!errors.firstName}
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {errors.firstName}
+                          </Form.Control.Feedback>
+                        </div>
+                      </Form.Group>
+                    </Col>
+                    <Col md={6} className="mb-3">
+                      <Form.Group>
+                        <Form.Label>Last Name</Form.Label>
+                        <div className="input-group">
+                          <span className="input-group-text"><i className="bi bi-person"></i></span>
+                          <Form.Control
+                            type="text"
+                            id="lastName"
+                            placeholder="Enter last name"
+                            value={formData.lastName}
+                            onChange={handleChange}
+                            isInvalid={!!errors.lastName}
+                          />
+                          <Form.Control.Feedback type="invalid">
+                            {errors.lastName}
+                          </Form.Control.Feedback>
+                        </div>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Email Address</Form.Label>
+                    <div className="input-group">
+                      <span className="input-group-text"><i className="bi bi-envelope"></i></span>
+                      <Form.Control
+                        type="email"
+                        id="email"
+                        placeholder="Enter email address"
+                        value={formData.email}
+                        onChange={handleChange}
+                        isInvalid={!!errors.email}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.email}
+                      </Form.Control.Feedback>
+                    </div>
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Organization Name</Form.Label>
+                    <div className="input-group">
+                      <span className="input-group-text"><i className="bi bi-building"></i></span>
+                      <Form.Control
+                        type="text"
+                        id="organization"
+                        placeholder="Enter organization name"
+                        value={formData.organization}
+                        onChange={handleChange}
+                        isInvalid={!!errors.organization}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.organization}
+                      </Form.Control.Feedback>
+                    </div>
+                  </Form.Group>
+                  {/* <Form.Group className="mb-3">
+                    <Form.Label>Password</Form.Label>
+                    <div className="input-group">
+                      <span className="input-group-text"><i className="bi bi-lock"></i></span>
+                      <Form.Control
+                        type="password"
+                        id="password"
+                        placeholder="Create a password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        isInvalid={!!errors.password}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.password}
+                      </Form.Control.Feedback>
+                    </div>
+                  </Form.Group>
+                  <Form.Group className="mb-4">
+                    <Form.Label>Confirm Password</Form.Label>
+                    <div className="input-group">
+                      <span className="input-group-text"><i className="bi bi-lock"></i></span>
+                      <Form.Control
+                        type="password"
+                        id="confirmPassword"
+                        placeholder="Confirm your password"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        isInvalid={!!errors.confirmPassword}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.confirmPassword}
+                      </Form.Control.Feedback>
+                    </div>
+                  </Form.Group> */}
+                  <div className="d-grid">
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      type="submit"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                          Processing...
+                        </>
+                      ) : (
+                        <>Continue to Payment <i className="bi bi-arrow-right ms-2"></i></>
+                      )}
+                    </Button>
+                  </div>
+                </Form>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+
+
+      </Container>
+
+      {/* Footer Component Here */}
+      <Footer />
     </div>
   );
 };
