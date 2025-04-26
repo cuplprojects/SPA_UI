@@ -194,8 +194,8 @@ const ImportOmr = () => {
   ];
 
   return (
-    <Card style={{ margin: '20px auto', maxWidth: 900, padding: 20 }}>
-      <Title level={3} style={{ textAlign: 'center', marginBottom: 20 }}>
+    <Card style={{ margin: '20px auto', maxWidth: 900, padding: 20 ,border:"1px solid #00A76F"}}>
+      <Title level={3} style={{ textAlign: 'center', marginBottom: 20,color:"#00A76F" }}>
         Upload OMR Images
       </Title>
 
