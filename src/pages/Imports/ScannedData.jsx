@@ -44,7 +44,7 @@ const Scanned = ({
         </Title>
         <div style={{ width: '100%' }} className='container'>
           <Row>
-            <Col md={4}>
+            <Col md={selectedFile ? 4 : 6}>
               <Row>
                 <Col md={12}>
                   <div className="d-flex justify-content-center align-items-center">
@@ -63,29 +63,36 @@ const Scanned = ({
                   </div>
                 </Col>
               </Row>
-              <Row>
-                <Col md={12}>
-                  {count !== null ? (
-                    <p className="count-display text-center mt-4 mb-2 font-bold">
-                      Total Scanned records: <br />
-                      <Badge
-                        count={scannedCount}
-                        showZero
-                        overflowCount={9999}
-                        style={{
-                          backgroundColor: '#00A76F',
-                          fontSize: '16px',
-                          padding: '0 12px',
-                          height: '28px',
-                          lineHeight: '28px'
-                        }}
-                      />
-                    </p>
-                  ) : (
-                    <p className="text-center mt-4">Loading count...</p>
-                  )}
-                </Col>
-              </Row>
+              {selectedFile && (
+                <Row>
+                  <Col md={12}>
+                    {count !== null ? (
+                      <p className="count-display text-center mt-4 mb-2 font-bold">
+                        Total Scanned records: <br />
+                        <Badge
+                          count={scannedCount}
+                          showZero
+                          overflowCount={9999}
+                          style={{
+                            backgroundColor: '#00A76F',
+                            fontSize: '16px',
+                            padding: '0 12px',
+                            height: '28px',
+                            lineHeight: '28px'
+                          }}
+                        />
+
+                      </p>
+                    ) : (
+                      <div>
+                        <p className="text-center mt-4">Loading count...</p>
+
+                      </div>
+                    )}
+                  </Col>
+                </Row>
+              )}
+            {selectedFile && (
               <Row>
                 <Col md={12} className='d-flex justify-content-center'>
                   {scannedCount > 0 &&
@@ -103,44 +110,98 @@ const Scanned = ({
                   }
                 </Col>
               </Row>
+            )}
+              
             </Col>
-
-            <Col md={8}>
-              <table className="table-bordered table" style={{ width: '100%', tableLayout: 'fixed' }}>
-                <thead>
-                  <tr>
-                    <th style={{ width: '50%' }}>Field</th>
-                    <th style={{ width: '50%' }}>CSV Header</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.keys(fieldMappings).map((field) => (
-                    <tr key={field}>
-                      <td style={{ wordWrap: 'break-word' }}>{field}</td>
-                      <td style={{ wordWrap: 'break-word', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        <select
-                          value={fieldMappings[field]}
-                          onChange={(e) => handleFieldMappingChange(e, field)}
-                          style={{ width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+            {selectedFile ?
+              <>
+                <Col md={8} className="d-flex justify-content-center">
+                  <table className="table-bordered table" style={{ width: '100%', tableLayout: 'fixed' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ width: '50%' }}>Field</th>
+                        <th style={{ width: '50%' }}>CSV Header</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.keys(fieldMappings).map((field) => (
+                        <tr key={field}>
+                          <td style={{ wordWrap: 'break-word' }}>{field}</td>
+                          <td style={{ wordWrap: 'break-word', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <select
+                              value={fieldMappings[field]}
+                              onChange={(e) => handleFieldMappingChange(e, field)}
+                              style={{ width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                            >
+                              <option value="">Select Header</option>
+                              {headers
+                                .filter(
+                                  (header) =>
+                                    !mappedHeaders.includes(header) || header === fieldMappings[field],
+                                )
+                                .map((header, index) => (
+                                  <option key={index} value={header} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {header}
+                                  </option>
+                                ))}
+                            </select>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {/* <div className="d-flex justify-content-center mt-4">
+                    {selectedFile && (
+                      <button
+                        className="btn btn-primary"
+                        onClick={handleScannedUpload}
+                        disabled={loading}
+                      >
+                        {loading ? 'Uploading...' : 'Upload'}
+                      </button>
+                    )}
+                  </div> */}
+                </Col>
+              </> :
+              <>
+                <Col md={6}>
+                  {count !== null ? (
+                    <p className="count-display text-center mt-4 mb-2 font-bold">
+                      Total Scanned records: <br />
+                      <Badge
+                        count={scannedCount}
+                        showZero
+                        overflowCount={9999}
+                        style={{
+                          backgroundColor: '#00A76F',
+                          fontSize: '16px',
+                          padding: '0 12px',
+                          height: '28px',
+                          lineHeight: '28px',
+                          marginBottom: '5px'
+                        }}
+                      />
+                      <br />
+                      {scannedCount > 0 &&
+                        <Popconfirm
+                          title="Are you sure you want to delete all absentee?"
+                          onConfirm={handleDeleteScanned}
+                          okText="Yes"
+                          cancelText="No"
                         >
-                          <option value="">Select Header</option>
-                          {headers
-                            .filter(
-                              (header) =>
-                                !mappedHeaders.includes(header) || header === fieldMappings[field],
-                            )
-                            .map((header, index) => (
-                              <option key={index} value={header} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {header}
-                              </option>
-                            ))}
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Col>
+                          <Button danger>
+                            <DeleteOutlined />
+                            Delete All Records
+                          </Button>
+                        </Popconfirm>
+                      }
+                    </p>
+                  ) : (
+                    <p className="text-center mt-4">Loading count...</p>
+                  )}
+                </Col>
+              </>}
+
           </Row>
 
           {/* Upload button */}
