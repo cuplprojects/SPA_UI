@@ -1,10 +1,14 @@
-import { Button, Popconfirm, Card, Space, Typography} from 'antd';
+import { Button, Popconfirm, Card, Space, Typography, Badge } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { useProjectId } from '@/store/ProjectState';
 import { useDatabase } from '@/store/DatabaseStore';
 import { useUserToken } from '@/store/UserDataStore';
-import { DeleteOutlined } from '@ant-design/icons';
+import { DeleteOutlined, UploadOutlined } from '@ant-design/icons';
+import { Upload } from '@/components/upload';
+import { Col, Row } from 'react-bootstrap';
+
 const { Title, Text } = Typography;
+
 const Registration = ({
   handleFileUpload,
   handleRegistrationUpload,
@@ -34,84 +38,180 @@ const Registration = ({
 
   return (
     <>
-    <Card style={{ margin: '20px auto', maxWidth: 900, padding: 20 }}>
-      <Title level={3} style={{ textAlign: 'center', marginBottom: 20 }}>
-        Upload Registration
-      </Title>
-      <Space direction="vertical" style={{ width: '100%' }}>
-      <div className="tab-pane active d-flex align-items-center justify-content-around mt-5 py-3" id="registration">
-        <h3 className="head fs-3 text-center">Upload Registration Data</h3>
-        <div className="d-flex justify-content-center align-items-center">
-          <input type="file" onChange={handleFileUpload} accept=".xlsx" />
-          {registrationCount > 0 &&
-          
-            <Popconfirm
-              title="Are you sure you want to delete all Registration?"
-              onConfirm={handleDeleteRegistration}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Button danger >
-                <DeleteOutlined />
-                Delete All Registration
-              </Button>
-            </Popconfirm>
-          }
-        </div>
-        {count !== null ? (
-          <p className="count-display text-center mt-4">
-            Total Registeration: {registrationCount}
-          </p>
-        ) : (
-          <p className="text-center mt-4">Loading count...</p>
-        )}
-        {headers.length > 0 && (
-          <div className="d-flex justify-content-center mt-4">
-            <table className="table-bordered table">
-              <thead>
-                <tr>
-                  <th>Application Fields</th>
-                  <th>Excel Header</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.keys(registrationMapping).map((field) => (
-                  <tr key={field}>
-                    <td>{field}</td>
-                    <td>
-                      <select
-                        value={registrationMapping[field]}
-                        onChange={(e) => handleRegistrationMappingChange(e, field)}
+      <Card style={{ margin: '20px auto', maxWidth: 900, padding: 20, border: "1px solid #00A76F" }}>
+        <Title level={3} style={{ textAlign: 'center', marginBottom: 20, color: "#00A76F" }}>
+          Upload Registration Records
+        </Title>
+        <div style={{ width: '100%' }} className='container'>
+          <Row>
+            <Col md={selectedFile ? 4 : 12}>
+              <Row>
+                <Col md={selectedFile ? 12 : 6}>
+                  <div className="d-flex justify-content-center align-items-center">
+                    <Upload
+                      accept=".xlsx"
+                      beforeUpload={(file) => {
+                        handleFileUpload({ target: { files: [file] } });
+                        return false;
+                      }}
+                      onRemove={() => {
+                        handleFileUpload({ target: { files: [] } });
+                        return true;
+                      }}
+                      maxCount={1}
+                    >
+                      <Button icon={<UploadOutlined />} style={{ width: '100%' }}>
+                        Select Excel File
+                      </Button>
+                    </Upload>
+                  </div>
+                </Col>
+
+                {!selectedFile && (
+                  <Col md={6} className='d-flex justify-content-center align-items-center flex-column'>
+                    {registrationCount !== null ? (
+                      <p className="count-display text-center mt-4 mb-2 font-bold">
+                        Total Registration records: <br />
+                        <Badge
+                          count={registrationCount}
+                          showZero
+                          overflowCount={9999}
+                          style={{
+                            backgroundColor: '#00A76F',
+                            fontSize: '16px',
+                            padding: '0 12px',
+                            height: '28px',
+                            lineHeight: '28px'
+                          }}
+                        />
+                      </p>
+                    ) : (
+                      <p className="text-center mt-4">Loading count...</p>
+                    )}
+                    {registrationCount > 0 &&
+                      <Popconfirm
+                        title="Are you sure you want to delete all Registration?"
+                        onConfirm={handleDeleteRegistration}
+                        okText="Yes"
+                        cancelText="No"
                       >
-                        <option value="">Select Header</option>
-                        {headers
-                          .filter(header => !mappedHeaders.includes(header) || header === registrationMapping[field])
-                          .map((header, index) => (
-                            <option key={index} value={header}>
-                              {header}
-                            </option>
-                          ))}
-                      </select>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <Button danger>
+                          <DeleteOutlined />
+                          Delete All Records
+                        </Button>
+                      </Popconfirm>
+                    }
+                  </Col>
+                )}
+
+
+
+              </Row>
+              {selectedFile && (
+                <Row>
+                  <Col md={12} className='d-flex justify-content-center flex-column'>
+                    {registrationCount !== null ? (
+                      <p className="count-display text-center mt-4 mb-2 font-bold">
+                        Total Registration records: <br />
+                        <Badge
+                          count={registrationCount}
+                          showZero
+                          overflowCount={9999}
+                          style={{
+                            backgroundColor: '#00A76F',
+                            fontSize: '16px',
+                            padding: '0 12px',
+                            height: '28px',
+                            lineHeight: '28px'
+                          }}
+                        />
+                      </p>
+                    ) : (
+                      <p className="text-center mt-4">Loading count...</p>
+                    )}
+                    {registrationCount > 0 &&
+                      <Popconfirm
+                        title="Are you sure you want to delete all Registration?"
+                        onConfirm={handleDeleteRegistration}
+                        okText="Yes"
+                        cancelText="No"
+                      >
+                        <Button danger>
+                          <DeleteOutlined />
+                          Delete All Records
+                        </Button>
+                      </Popconfirm>
+                    }
+                  </Col>
+                </Row>
+              )}
+
+
+              {/* Delete All Records Button */}
+              {/* <Row>
+                <Col md={12} className='d-flex justify-content-center'>
+                  
+                </Col>
+              </Row> */}
+
+            </Col>
+
+            {selectedFile && (
+              <Col md={8}>
+                <table className="table-bordered table" style={{ width: '100%', tableLayout: 'fixed' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: '50%' }}>Field</th>
+                      <th style={{ width: '50%' }}>Excel Header</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.keys(registrationMapping).map((field) => (
+                      <tr key={field}>
+                        <td style={{ wordWrap: 'break-word' }}>{field}</td>
+                        <td style={{ wordWrap: 'break-word', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <select
+                            value={registrationMapping[field]}
+                            onChange={(e) => handleRegistrationMappingChange(e, field)}
+                            style={{ width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                          >
+                            <option value="">Select Header</option>
+                            {headers
+                              .filter(
+                                (header) =>
+                                  !Object.values(registrationMapping).includes(header) || header === registrationMapping[field],
+                              )
+                              .map((header, index) => (
+                                <option key={index} value={header}>
+                                  {header}
+                                </option>
+                              ))}
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Col>
+            )}
+
+
+          </Row>
+
+          {/* Upload button */}
+          <div className="d-flex justify-content-center mt-4">
+            {selectedFile && (
+              <Button
+                type="primary"
+                onClick={handleRegistrationUpload}
+                disabled={loading}
+                icon={<UploadOutlined />}
+              >
+                {loading ? 'Uploading...' : 'Upload'}
+              </Button>
+            )}
           </div>
-        )}
-      </div>
-      <div className="d-flex justify-content-center mt-4">
-        {selectedFile && (
-          <button
-            className="btn btn-primary m-auto"
-            onClick={handleRegistrationUpload}
-            disabled={loading}
-          >
-            {loading ? 'Uploading...' : 'Upload'}
-          </button>
-        )}
-      </div>
-      </Space>
+        </div>
       </Card>
     </>
   );
