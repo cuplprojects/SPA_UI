@@ -46,7 +46,7 @@ const Registration = ({
           <Row>
             <Col md={selectedFile ? 4 : 12}>
               <Row>
-                <Col md={12}>
+                <Col md={selectedFile ? 12 : 6}>
                   <div className="d-flex justify-content-center align-items-center">
                     <Upload
                       accept=".xlsx"
@@ -66,49 +66,93 @@ const Registration = ({
                     </Upload>
                   </div>
                 </Col>
+
+                {!selectedFile && (
+                  <Col md={6} className='d-flex justify-content-center align-items-center flex-column'>
+                    {registrationCount !== null ? (
+                      <p className="count-display text-center mt-4 mb-2 font-bold">
+                        Total Registration records: <br />
+                        <Badge
+                          count={registrationCount}
+                          showZero
+                          overflowCount={9999}
+                          style={{
+                            backgroundColor: '#00A76F',
+                            fontSize: '16px',
+                            padding: '0 12px',
+                            height: '28px',
+                            lineHeight: '28px'
+                          }}
+                        />
+                      </p>
+                    ) : (
+                      <p className="text-center mt-4">Loading count...</p>
+                    )}
+                    {registrationCount > 0 &&
+                      <Popconfirm
+                        title="Are you sure you want to delete all Registration?"
+                        onConfirm={handleDeleteRegistration}
+                        okText="Yes"
+                        cancelText="No"
+                      >
+                        <Button danger>
+                          <DeleteOutlined />
+                          Delete All Records
+                        </Button>
+                      </Popconfirm>
+                    }
+                  </Col>
+                )}
+
+
+
               </Row>
-              <Row>
-                <Col md={12}>
-                  {registrationCount !== null ? (
-                    <p className="count-display text-center mt-4 mb-2 font-bold">
-                      Total Registration records: <br />
-                      <Badge
-                        count={registrationCount}
-                        showZero
-                        overflowCount={9999}
-                        style={{
-                          backgroundColor: '#00A76F',
-                          fontSize: '16px',
-                          padding: '0 12px',
-                          height: '28px',
-                          lineHeight: '28px'
-                        }}
-                      />
-                    </p>
-                  ) : (
-                    <p className="text-center mt-4">Loading count...</p>
-                  )}
-                </Col>
-              </Row>
+              {selectedFile && (
+                <Row>
+                  <Col md={12} className='d-flex justify-content-center flex-column'>
+                    {registrationCount !== null ? (
+                      <p className="count-display text-center mt-4 mb-2 font-bold">
+                        Total Registration records: <br />
+                        <Badge
+                          count={registrationCount}
+                          showZero
+                          overflowCount={9999}
+                          style={{
+                            backgroundColor: '#00A76F',
+                            fontSize: '16px',
+                            padding: '0 12px',
+                            height: '28px',
+                            lineHeight: '28px'
+                          }}
+                        />
+                      </p>
+                    ) : (
+                      <p className="text-center mt-4">Loading count...</p>
+                    )}
+                    {registrationCount > 0 &&
+                      <Popconfirm
+                        title="Are you sure you want to delete all Registration?"
+                        onConfirm={handleDeleteRegistration}
+                        okText="Yes"
+                        cancelText="No"
+                      >
+                        <Button danger>
+                          <DeleteOutlined />
+                          Delete All Records
+                        </Button>
+                      </Popconfirm>
+                    }
+                  </Col>
+                </Row>
+              )}
+
 
               {/* Delete All Records Button */}
-              <Row>
+              {/* <Row>
                 <Col md={12} className='d-flex justify-content-center'>
-                  {registrationCount > 0 &&
-                    <Popconfirm
-                      title="Are you sure you want to delete all Registration?"
-                      onConfirm={handleDeleteRegistration}
-                      okText="Yes"
-                      cancelText="No"
-                    >
-                      <Button danger>
-                        <DeleteOutlined />
-                        Delete All Records
-                      </Button>
-                    </Popconfirm>
-                  }
+                  
                 </Col>
-              </Row>
+              </Row> */}
 
             </Col>
 
