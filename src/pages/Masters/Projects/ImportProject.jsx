@@ -16,11 +16,11 @@ const ImportProject = () => {
   const [importImageConfigsState, setImportImageConfigsState] = useState(false);
   const [importFieldConfigsState, setImportFieldConfigsState] = useState(false);
   const [importResponseConfigsState, setImportResponseConfigsState] = useState(false);
-  const [projectsWithConfigs, setProjectsWithConfigs] = useState([]);
-  const [projectsWithoutConfigs, setProjectsWithoutConfigs] = useState([]);
   const [loading, setLoading] = useState(false);
   const database = useDatabase();
   const token = useUserToken();
+  const [withConfigs, setWithConfigs] = useState([]);
+  const [withoutConfigs, setWithoutConfigs] = useState([]);
 
   useEffect(() => {
     fetchProjects();
@@ -29,26 +29,14 @@ const ImportProject = () => {
   const fetchProjects = async () => {
     setLoading(true);
     try {
-      const url = `${apiurl}/Projects?WhichDatabase=${database}`;
+      const url = `${apiurl}/Projects/GetFromToProject`;
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const allProjects = response.data;
-      const withConfigs = [];
-      const withoutConfigs = [];
+      setWithConfigs(allProjects.fromProject);
+      setWithoutConfigs(allProjects.toProject);
 
-      for (const project of allProjects) {
-        const hasConfigs = await checkProjectConfigs(project.projectId);
-
-        if (hasConfigs) {
-          withConfigs.push(project);
-        } else {
-          withoutConfigs.push(project);
-        }
-      }
-
-      setProjectsWithConfigs(withConfigs);
-      setProjectsWithoutConfigs(withoutConfigs);
     } catch (error) {
       console.error('Error fetching projects:', error);
       notification.error({ message: 'Failed to fetch projects', duration: 3 });
@@ -57,34 +45,7 @@ const ImportProject = () => {
     }
   };
 
-  const checkProjectConfigs = async (projectId) => {
-    try {
-      const [fieldConfigsRes, responseConfigsRes, imageConfigsRes] = await Promise.all([
-        axios.get(
-          `${apiurl}/FieldConfigurations/GetByProjectId/${projectId}?WhichDatabase=${database}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        ),
-        axios.get(`${apiurl}/ResponseConfigs/byproject/${projectId}?WhichDatabase=${database}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get(`${apiurl}/ImageConfigs/ByProjectId/${projectId}?WhichDatabase=${database}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
 
-      const fieldConfigs = fieldConfigsRes.data;
-      const responseConfigs = responseConfigsRes.data;
-      const imageConfigs = JSON.parse(handleDecrypt(imageConfigsRes.data));
-
-      return fieldConfigs.length > 0 && responseConfigs.length > 0 && imageConfigs.length > 0;
-    } catch (error) {
-      console.error(`Error fetching configs for Project ${projectId}:`, error);
-      // Assuming that if fetching configs fails, the project should be treated as having no configs
-      return false;
-    }
-  };
 
   const handleImportFromChange = (value) => {
     setImportFrom(value);
@@ -128,11 +89,26 @@ const ImportProject = () => {
 
       notification.success({ message: 'Data imported successfully', duration: 3 });
       setOpen(false);
+      setImportFrom();
+      setImportTo();
+      setImportFieldConfigsState();
+      setImportImageConfigsState();
+      setImportResponseConfigsState();
     } catch (error) {
       console.error('Error importing data:', error);
       notification.error({ message: 'Failed to import data', duration: 3 });
+      setImportFrom();
+      setImportTo();
+      setImportFieldConfigsState();
+      setImportImageConfigsState();
+      setImportResponseConfigsState();
     } finally {
       setConfirmLoading(false);
+      setImportFrom();
+      setImportTo();
+      setImportFieldConfigsState();
+      setImportImageConfigsState();
+      setImportResponseConfigsState();
     }
   };
 
@@ -263,7 +239,7 @@ const ImportProject = () => {
                 onChange={handleImportFromChange}
                 placeholder="Select project to import from"
               >
-                {projectsWithConfigs.map((project) => (
+                {withConfigs.map((project) => (
                   <Option key={project.projectId} value={project.projectId}>
                     {project.projectName}
                   </Option>
@@ -278,7 +254,7 @@ const ImportProject = () => {
                 onChange={handleImportToChange}
                 placeholder="Select project to import to"
               >
-                {projectsWithoutConfigs.map((project) => (
+                {withoutConfigs.map((project) => (
                   <Option key={project.projectId} value={project.projectId}>
                     {project.projectName}
                   </Option>
