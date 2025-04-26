@@ -1,4 +1,4 @@
-import { Button, Card, Popconfirm, Space, Typography } from 'antd';
+import { Badge, Button, Card, Popconfirm, Space, Typography } from 'antd';
 import React, { useState, useEffect } from 'react';
 import { useProjectId } from '@/store/ProjectState';
 import { useDatabase } from '@/store/DatabaseStore';
@@ -66,8 +66,20 @@ const Scanned = ({
               <Row>
                 <Col md={12}>
                   {count !== null ? (
-                    <p className="count-display text-center mt-4">
-                      Total Scanned records: {scannedCount}
+                    <p className="count-display text-center mt-4 mb-2 font-bold">
+                      Total Scanned records: <br />
+                      <Badge
+                        count={scannedCount}
+                        showZero
+                        overflowCount={9999}
+                        style={{
+                          backgroundColor: '#00A76F',
+                          fontSize: '16px',
+                          padding: '0 12px',
+                          height: '28px',
+                          lineHeight: '28px'
+                        }}
+                      />
                     </p>
                   ) : (
                     <p className="text-center mt-4">Loading count...</p>
