@@ -44,7 +44,7 @@ const Registration = ({
         </Title>
         <div style={{ width: '100%' }} className='container'>
           <Row>
-            <Col md={4}>
+            <Col md={selectedFile ? 4 : 12}>
               <Row>
                 <Col md={12}>
                   <div className="d-flex justify-content-center align-items-center">
@@ -109,52 +109,54 @@ const Registration = ({
                   }
                 </Col>
               </Row>
-              
+
             </Col>
 
-
-            <Col md={8}>
-              <table className="table-bordered table" style={{ width: '100%', tableLayout: 'fixed' }}>
-                <thead>
-                  <tr>
-                    <th style={{ width: '50%' }}>Field</th>
-                    <th style={{ width: '50%' }}>Excel Header</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.keys(registrationMapping).map((field) => (
-                    <tr key={field}>
-                      <td style={{ wordWrap: 'break-word' }}>{field}</td>
-                      <td style={{ wordWrap: 'break-word', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        <select
-                          value={registrationMapping[field]}
-                          onChange={(e) => handleRegistrationMappingChange(e, field)}
-                          style={{ width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                        >
-                          <option value="">Select Header</option>
-                          {headers
-                            .filter(
-                              (header) =>
-                                !Object.values(registrationMapping).includes(header) || header === registrationMapping[field],
-                            )
-                            .map((header, index) => (
-                              <option key={index} value={header}>
-                                {header}
-                              </option>
-                            ))}
-                        </select>
-                      </td>
+            {selectedFile && (
+              <Col md={8}>
+                <table className="table-bordered table" style={{ width: '100%', tableLayout: 'fixed' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: '50%' }}>Field</th>
+                      <th style={{ width: '50%' }}>Excel Header</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Col>
+                  </thead>
+                  <tbody>
+                    {Object.keys(registrationMapping).map((field) => (
+                      <tr key={field}>
+                        <td style={{ wordWrap: 'break-word' }}>{field}</td>
+                        <td style={{ wordWrap: 'break-word', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <select
+                            value={registrationMapping[field]}
+                            onChange={(e) => handleRegistrationMappingChange(e, field)}
+                            style={{ width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                          >
+                            <option value="">Select Header</option>
+                            {headers
+                              .filter(
+                                (header) =>
+                                  !Object.values(registrationMapping).includes(header) || header === registrationMapping[field],
+                              )
+                              .map((header, index) => (
+                                <option key={index} value={header}>
+                                  {header}
+                                </option>
+                              ))}
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Col>
+            )}
+
 
           </Row>
 
           {/* Upload button */}
           <div className="d-flex justify-content-center mt-4">
-            {selectedFile && ( 
+            {selectedFile && (
               <Button
                 type="primary"
                 onClick={handleRegistrationUpload}
