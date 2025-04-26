@@ -1,6 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { Select, Button, Table, Spin, Input, Space, Dropdown, Menu, notification } from 'antd';
-import { DownOutlined, SaveOutlined } from '@ant-design/icons';
+import {
+  Select,
+  Button,
+  Table,
+  Spin,
+  Input,
+  Space,
+  Dropdown,
+  Menu,
+  notification,
+  Card,
+  Typography,
+  Divider,
+  Row,
+  Col,
+  Tag,
+  Statistic
+} from 'antd';
+import {
+  DownOutlined,
+  SaveOutlined,
+  FileSearchOutlined,
+  EyeOutlined,
+  EyeInvisibleOutlined,
+  TeamOutlined,
+  DownloadOutlined,
+  DatabaseOutlined,
+  OrderedListOutlined,
+  FilePdfOutlined,
+  FileExcelOutlined,
+  UserAddOutlined,
+  InfoCircleOutlined
+} from '@ant-design/icons';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -11,6 +42,7 @@ import { useUserInfo, useUserToken } from '@/store/UserDataStore';
 import useProject from '@/CustomHooks/useProject';
 
 const { Option } = Select;
+const { Title, Text, Paragraph } = Typography;
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const fieldTitleMapping = {
@@ -40,11 +72,11 @@ const ReportForm = () => {
   const [existingReportId, setExistingReportId] = useState(0)
   const token = useUserToken()
 
-  
+
 
   useEffect(() => {
-    if (selectedFields.length > 0 || fieldOrder.length > 0) {
-      handleFieldChange(selectedFields.length > 0 ? selectedFields : fieldOrder);
+    if (selectedFields.length > 0) {
+      handleFieldChange(selectedFields);
     }
   }, [selectedFields]);
 
@@ -63,7 +95,7 @@ const ReportForm = () => {
           setAssignedUsers([]);
         }
       };
-  
+
       fetchAssignedUsers();
     }
   }, [projectId, token]);
@@ -119,7 +151,7 @@ const ReportForm = () => {
 
             // Optionally parse omrData if you need it, otherwise leave it out
             const omrParsed = omrData ? JSON.parse(omrData) : {}; // Parse omrData if it's a string
-            
+
             // Return the desired structure
             return {
                 ...rest, // Spread the remaining fields
@@ -142,59 +174,98 @@ const ReportForm = () => {
 
 
 const handleFieldChange = (fields) => {
+  // Update the field order to only include fields that are still selected
   const updatedFieldOrder = fieldOrder.filter(field => fields.includes(field));
-  setFieldOrder(updatedFieldOrder);  //if there is any remove in the selected fields then only call
 
-  const orderedFields = updatedFieldOrder.length > 0 ? updatedFieldOrder : fields;
-  const dynamicColumns = orderedFields.map((field) => ({
-    title: fieldTitleMapping[field] || field,
-    dataIndex: field,
-    key: field,
-    sorter: (a, b) => {
-      if (typeof a[field] === 'string' && typeof b[field] === 'string') {
-        return a[field].localeCompare(b[field]);
-      } else if (typeof a[field] === 'number' && typeof b[field] === 'number') {
-        return a[field] - b[field];
-      }
-      return 0;
-    },
-    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-      <div style={{ padding: 8 }}>
-        <Input
-          placeholder={`Search ${fieldTitleMapping[field] || field}`}
-          value={selectedKeys[0]}
-          onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-          onPressEnter={() => confirm()}
-          style={{ marginBottom: 8, display: 'block' }}
-        />
-        <Space>
-          <Button
-            type="primary"
-            onClick={() => confirm()}
-            icon="search"
-            size="small"
-            style={{ width: 90 }}
-          >
-            Search
-          </Button>
-          <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
-            Reset
-          </Button>
-        </Space>
-      </div>
-    ),
-    filterIcon: (filtered) => <span style={{ color: filtered ? '#1890ff' : undefined }} />,
-    onFilter: (value, record) =>
-      record[field].toString().toLowerCase().includes(value.toLowerCase()),
-  }));
+  // Only update fieldOrder if it has changed
+  if (JSON.stringify(updatedFieldOrder) !== JSON.stringify(fieldOrder)) {
+    setFieldOrder(updatedFieldOrder);
+  }
+
+  // Create a map of all selected fields
+  const fieldsMap = {};
+  fields.forEach(field => {
+    fieldsMap[field] = true;
+  });
+
+  // Create columns based on the field order first, then add any remaining selected fields
+  let orderedFields = [];
+
+  // First add fields that are in the order
+  updatedFieldOrder.forEach(field => {
+    if (fieldsMap[field]) {
+      orderedFields.push(field);
+      // Remove from map to track which ones we've added
+      delete fieldsMap[field];
+    }
+  });
+
+  // Then add any remaining selected fields that aren't in the order
+  fields.forEach(field => {
+    if (fieldsMap[field]) {
+      orderedFields.push(field);
+    }
+  });
+
+  // Create the columns in the correct order
+  const dynamicColumns = orderedFields.map((field) => {
+    return {
+      title: fieldTitleMapping[field] || field,
+      dataIndex: field,
+      key: field,
+      sorter: (a, b) => {
+        if (typeof a[field] === 'string' && typeof b[field] === 'string') {
+          return a[field].localeCompare(b[field]);
+        } else if (typeof a[field] === 'number' && typeof b[field] === 'number') {
+          return a[field] - b[field];
+        }
+        return 0;
+      },
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder={`Search ${fieldTitleMapping[field] || field}`}
+            value={selectedKeys[0]}
+            onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: 'block' }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Search
+            </Button>
+            <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      onFilter: (value, record) =>
+        record[field]?.toString().toLowerCase().includes(value.toLowerCase()),
+    };
+  });
+
   setColumns(dynamicColumns);
   setSortableFields(fields);
 };
 
-  
+
 
   const handleFieldOrderChange = (order) => {
+    // Update the field order state
     setFieldOrder(order);
+
+    // Get the current selected fields
+    const currentFields = selectedFields.length > 0 ? [...selectedFields] : [];
+
+    // Immediately update the columns to reflect the new order
+    // This ensures the table updates instantly when the order changes
+    handleFieldChange(currentFields);
   };
 
   const handleSaveOrder = async () => {
@@ -250,12 +321,30 @@ const handleFieldChange = (fields) => {
 
 
   const sortData = (data) => {
-    if (fieldOrder.length === 0) return data;
+    if (!data || data.length === 0 || fieldOrder.length === 0) return data;
 
     return [...data].sort((a, b) => {
       for (const field of fieldOrder) {
-        if (a[field] < b[field]) return -1;
-        if (a[field] > b[field]) return 1;
+        // Skip if field doesn't exist in either record
+        if (a[field] === undefined || b[field] === undefined) continue;
+
+        // Handle string comparison
+        if (typeof a[field] === 'string' && typeof b[field] === 'string') {
+          const comparison = a[field].localeCompare(b[field]);
+          if (comparison !== 0) return comparison;
+        }
+        // Handle number comparison
+        else if (typeof a[field] === 'number' && typeof b[field] === 'number') {
+          if (a[field] < b[field]) return -1;
+          if (a[field] > b[field]) return 1;
+        }
+        // Handle mixed types or other cases
+        else {
+          const aStr = String(a[field]);
+          const bStr = String(b[field]);
+          if (aStr < bStr) return -1;
+          if (aStr > bStr) return 1;
+        }
       }
       return 0;
     });
@@ -351,111 +440,306 @@ const handleFieldChange = (fields) => {
     link.click();
   };
 
-  const menu = (
-    <Menu>
-      <Menu.Item key="1">
-        <Button type="primary" onClick={downloadPDF} style={{ width: '100%' }}>
-          Download PDF
-        </Button>
-      </Menu.Item>
-      <Menu.Item key="2">
-        <Button type="primary" onClick={downloadExcel} style={{ width: '100%' }}>
-          Download Excel
-        </Button>
-      </Menu.Item>
-    </Menu>
-  );
+  // Menu items for the export dropdown
+  const exportMenu = {
+    items: [
+      {
+        key: '1',
+        icon: <FilePdfOutlined style={{ fontSize: '18px', color: '#ff4d4f' }} />,
+        label: <span onClick={downloadPDF}>Download PDF</span>
+      },
+      {
+        key: '2',
+        icon: <FileExcelOutlined style={{ fontSize: '18px', color: '#52c41a' }} />,
+        label: <span onClick={downloadExcel}>Download Excel</span>
+      }
+    ]
+  };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <Button type="primary" onClick={fetchReportData} style={{ marginRight: '10px' }}>
-          Fetch Report Data
-        </Button>
+    <div style={{ padding: '24px', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+      <Card
+        style={{
+          marginBottom: '24px',
+          borderRadius: '8px',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+        }}
+      >
+        <Row gutter={[24, 16]} align="middle">
+          <Col xs={24} md={12}>
 
-        <Button
-          type="primary"
-          onClick={() => setShowData(!showData)}
-        >
-          {showData ? 'Hide Data' : 'Show Data'}
-        </Button>
+            <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+              Generate and customize reports for project: <Text strong>{projectName}</Text>
+            </Paragraph>
+          </Col>
+          <Col xs={24} md={12} style={{ textAlign: 'right' }}>
+            {assignedUsers.length > 0 && (
+              <div style={{ backgroundColor: '#f0f7ff', padding: '5px', borderRadius: '2px', border: '1px solid #d6e4ff' }}>
+                <Text strong style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', color: '#4b5563' }}>
 
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1 }}>
-          {
-            assignedUsers.length > 0 && (
-              <>
-                <div style={{ marginRight: '8px', fontWeight: 'bold' }}>Worked by:</div>
-                <p>{assignedUsers.map(user => user.fullName).join(', ')}</p>
-              </>
+                  <div style={{
+                    backgroundColor: '#1890ff',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: '28px',
+                    height: '28px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: '10px',
+                    position: 'relative'
+                  }}>
+                    <TeamOutlined style={{ fontSize: '18px' }} />
+
+                    <div style={{
+                      position: 'absolute',
+                      top: '-8px',
+                      right: '-8px',
+                      backgroundColor: '#ff4d4f',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: '20px',
+                      height: '20px',
+                      fontSize: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 'bold'
+                    }}>
+                      {assignedUsers.length}
+                    </div>
+                  </div>
+                  Assigned Users:
+                </Text>
+                <div>
+                  {assignedUsers.map((user, index) => {
+                    // Use a limited set of professional colors
+                    const colors = ['blue', 'cyan', 'green', 'geekblue', 'purple'];
+                    const colorIndex = index % colors.length;
+
+                    return (
+                      <Tag
+                        color={colors[colorIndex]}
+                        key={index}
+                        style={{
+                          margin: '0 4px 8px 0',
+                          padding: '4px 10px',
+                          borderRadius: '2px',
+                          fontSize: '13px',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                        }}
+
+                        icon={<UserAddOutlined style={{ marginRight: '4px' }} />}
+                      >
+                        {user.fullName}
+                      </Tag>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </Col>
+        </Row>
+      </Card>
+
+      <Row gutter={[24, 24]}>
+        <Col xs={24}>
+          <Card
+            title={
+              <span style={{ display: 'flex', alignItems: 'center' }}>
+                <FileSearchOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
+                Data Controls
+              </span>
+            }
+            style={{
+              borderRadius: '8px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+              marginBottom: '24px'
+            }}
+            extra={
+              <Space>
+                <Button
+                  type="primary"
+                  icon={<FileSearchOutlined />}
+                  onClick={fetchReportData}
+                >
+                  Fetch Data
+                </Button>
+                <Button
+                  type={showData ? "default" : "primary"}
+                  icon={showData ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+                  onClick={() => setShowData(!showData)}
+                >
+                  {showData ? 'Hide Data' : 'Show Data'}
+                </Button>
+                <Dropdown menu={exportMenu} trigger={['click']}>
+                  <Button
+                    type="primary"
+                    icon={<DownloadOutlined style={{ fontSize: '16px' }} />}
+                    style={{ display: 'flex', alignItems: 'center' }}
+                  >
+                    Export <DownOutlined style={{ fontSize: '12px', marginLeft: '4px' }} />
+                  </Button>
+                </Dropdown>
+              </Space>
+            }
+          >
+            <Row gutter={[24, 24]}>
+              <Col xs={24} lg={12}>
+                <Text strong style={{ display: 'block', marginBottom: '12px', color: '#4b5563' }}>
+                  <EyeOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
+                  Select Fields to Display
+                </Text>
+                <Select
+                  mode="multiple"
+                  style={{ width: '100%' }}
+                  placeholder="Select fields to show"
+                  value={selectedFields}
+                  onChange={setSelectedFields}
+                  optionFilterProp="children"
+                  showSearch
+                  allowClear
+                  maxTagCount={5}
+                >
+                  {dataKeys.map((key) => (
+                    <Option key={key} value={key}>
+                      {fieldTitleMapping[key] || key}
+                    </Option>
+                  ))}
+                </Select>
+              </Col>
+              <Col xs={24} lg={12}>
+                <Text strong style={{ display: 'block', marginBottom: '12px', color: '#4b5563' }}>
+                  <OrderedListOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
+                  Select Fields to Order By
+                </Text>
+                <Select
+                  mode="multiple"
+                  style={{ width: '100%' }}
+                  placeholder="Select fields to order"
+                  value={fieldOrder}
+                  onChange={handleFieldOrderChange}
+                  optionFilterProp="children"
+                  showSearch
+                  allowClear
+                  maxTagCount={5}
+                  tagRender={(props) => {
+                    const { label, value, closable, onClose } = props;
+                    const index = fieldOrder.indexOf(value) + 1;
+                    return (
+                      <Tag
+                        color="blue"
+                        closable={closable}
+                        onClose={onClose}
+                        style={{ marginRight: 3 }}
+                      >
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center'
+                        }}>
+                          <span style={{
+                            backgroundColor: '#1890ff',
+                            color: 'white',
+                            borderRadius: '50%',
+                            width: '18px',
+                            height: '18px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginRight: '5px',
+                            fontSize: '12px',
+                            fontWeight: 'bold'
+                          }}>
+                            {index}
+                          </span>
+                          {label}
+                        </span>
+                      </Tag>
+                    );
+                  }}
+                >
+                  {selectedFields.map((key) => (
+                    <Option key={key} value={key}>
+                      {fieldTitleMapping[key] || key}
+                    </Option>
+                  ))}
+                </Select>
+                <Text type="secondary" style={{ display: 'block', marginTop: '8px', fontSize: '12px' }}>
+                  <InfoCircleOutlined style={{ marginRight: '5px', color: '#1890ff' }} />
+                  The order of selection determines the sorting priority. Table data will be sorted by these fields in the order shown.
+                </Text>
+              </Col>
+              <Col xs={24} style={{ textAlign: 'right', marginTop: '16px' }}>
+                <Button
+                  type="primary"
+                  icon={<SaveOutlined />}
+                  onClick={handleSaveOrder}
+                >
+                  {isOrderAlready ? 'Update Configuration' : 'Save Configuration'}
+                </Button>
+              </Col>
+            </Row>
+          </Card>
+        </Col>
+
+        <Col xs={24}>
+          {loading ? (
+            <Card
+              style={{
+                textAlign: 'center',
+                padding: '40px',
+                borderRadius: '8px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+              }}
+            >
+              <Spin tip="Loading report data..." />
+            </Card>
+          ) : (
+            showData && reportData.length > 0 && (
+              <Card
+                title={
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <DatabaseOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
+                    Report Data ({reportData.length} records)
+                  </span>
+                }
+                style={{
+                  borderRadius: '8px',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+                }}
+                styles={{ body: { padding: 0 } }}
+                extra={
+                  <Dropdown menu={exportMenu} trigger={['click']}>
+                    <Button
+                      type="text"
+                      icon={<DownloadOutlined style={{ fontSize: '20px', color: '#1890ff' }} />}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    />
+                  </Dropdown>
+                }
+              >
+                <Table
+                  columns={columns}
+                  dataSource={sortData(reportData)}
+                  rowKey={(record, index) => index} // Use index as key to avoid issues with missing id
+                  bordered
+                  size="middle"
+                  scroll={{ x: 'max-content' }}
+                  pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
+                    showQuickJumper: true,
+                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`
+                  }}
+                  rowClassName={(record, index) => index % 2 === 0 ? '' : 'ant-table-row-light'}
+                />
+              </Card>
             )
-          }
-        </div>
-
-        <Dropdown overlay={menu} trigger={['click']} style={{ marginLeft: 'auto' }}>
-          <Button type="primary">
-            Export <DownOutlined />
-          </Button>
-        </Dropdown>
-      </div>
-
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-        <Select
-          mode="multiple"
-          style={{ flex: '1 1 300px', minWidth: '300px' }}
-          placeholder="Select fields to show"
-          value={selectedFields}
-          onChange={setSelectedFields}
-        >
-          {dataKeys.map((key) => (
-            <Option key={key} value={key}>
-              {fieldTitleMapping[key] || key}
-            </Option>
-          ))}
-        </Select>
-
-        <Select
-          mode="multiple"
-          style={{ flex: '1 1 300px', minWidth: '300px' }}
-          placeholder="Select fields to order"
-          value={fieldOrder}
-          onChange={handleFieldOrderChange}
-        >
-          {sortableFields.map((key) => (
-            <Option key={key} value={key}>
-              {fieldTitleMapping[key] || key}
-            </Option>
-          ))}
-        </Select>
-
-        <Button
-          type="primary"
-          icon={<SaveOutlined />}
-          onClick={handleSaveOrder}
-          style={{ flex: '1 1 20px', minWidth: '20px' }}
-        >
-          Save as configuration
-        </Button>
-      </div>
-
-      {loading ? (
-        <Spin tip="Loading..." style={{ marginTop: '20px' }} />
-      ) : (
-        showData && (
-          <Table
-            columns={columns}
-            dataSource={sortData(reportData)}
-            rowKey="id" // Ensure you have a unique key for each row
-            style={{ marginTop: '20px' }}
-            bordered
-          />
-        )
-      )}
+          )}
+        </Col>
+      </Row>
     </div>
   );
 };
 
 export default ReportForm;
-
-
-
-

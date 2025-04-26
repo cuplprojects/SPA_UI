@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Progress, Checkbox } from 'antd';
+import { Card, Button, Progress, Checkbox, Typography, Statistic, Space, Divider } from 'antd';
 import { Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useProjectActions, useProjectId } from '@/store/ProjectState';
@@ -13,18 +13,31 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  BarChart,
+  Bar,
+  Cell,
 } from 'recharts';
-import { CheckCircleOutlined } from '@ant-design/icons'; // Import Ant Design icon
+import {
+  CheckCircleOutlined,
+  WarningOutlined,
+  ExclamationCircleOutlined,
+  ProjectOutlined,
+  ImportOutlined,
+  AuditOutlined,
+  SettingOutlined,
+  FileTextOutlined
+} from '@ant-design/icons';
 import useFlags from '@/CustomHooks/useFlag';
 import { handleDecrypt } from '@/Security/Security';
 import { useDatabase } from '@/store/DatabaseStore';
 import axios from 'axios';
 import { useUserToken } from '@/store/UserDataStore';
+import Color from 'color';
 
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-const ProjectDashboard = () => { 
+const ProjectDashboard = () => {
   // State variables
   const [projectName, setProjectName] = useState('');
   const projectId = useProjectId();
@@ -33,7 +46,7 @@ const ProjectDashboard = () => {
   const { colorPrimary } = useThemeToken();
   const { totalCount, corrected, remaining, getFlags } = useFlags(projectId);
   const [dataCounts, setDataCounts] = useState([]);
-  const [progress, setProgress] = useState(0); 
+  const [progress, setProgress] = useState(0);
   const [fcName, setFCName] = useState('');
   const [recName, setRECName] = useState('');
   const [imcName, setIMCName] = useState('');
@@ -82,7 +95,7 @@ const ProjectDashboard = () => {
         headers:{
         Authorization : `Bearer ${token}`
       }});
-      
+
       setDataCounts([
         { name: 'OMR Images', count: AllCount?.data?.omrImages},
         { name: 'Scanned Data', count: AllCount.data?.scannedData },
@@ -94,7 +107,7 @@ const ProjectDashboard = () => {
       console.error('Error fetching counts:', error);
     }
   };
-  
+
   // Helper function to fetch count from an API endpoint
   const fetchCount = async (url) => {
     try {
@@ -140,120 +153,236 @@ const ProjectDashboard = () => {
   };
 
   return (
-    <div>
-      <div className="d-flex align-items-center justify-content-between">
-        <div className="fs-1 ml-3">
-          <p>
-            <strong>
+    <div style={{ padding: '16px', height: '100%' }}>
+      <Card
+        style={{
+          marginBottom: '24px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
+          border: '1px solid #d9d9d9',
+        }}
+      >
+        <div className="d-flex align-items-center justify-content-between">
+          <Space align="center">
+            <ProjectOutlined style={{ fontSize: '28px', color: colorPrimary }} />
+            <Typography.Title level={3} style={{ margin: 0 }}>
               {projectId}. {projectName}
-            </strong>
-          </p>
+            </Typography.Title>
+          </Space>
+          {/* <div className="text-end">
+            <Button
+              onClick={onClickProjectLogout}
+              type="primary"
+              icon={<LogoutOutlined />}
+            >
+              Project Logout
+            </Button>
+          </div> */}
         </div>
-        {/* <div className="text-end">
-          <Button
-            onClick={onClickProjectLogout}
-            style={{ backgroundColor: colorPrimary, color: 'white' }}
-          >
-            Project Logout
-          </Button>
-        </div> */}
-      </div>
+        <div className="mt-0">
+        <Card
+          title={
+            <Space>
+              <SettingOutlined style={{ color: colorPrimary }} />
+              <Typography.Title level={4} style={{ margin: 0 }}>Project Configuration Status</Typography.Title>
+            </Space>
+          }
+          style={{
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
+            border: '1px solid #d9d9d9',
+          }}
+        >
+          <Progress
+            percent={progress}
+            status={progress === 100 ? 'success' : 'active'}
+            strokeColor={colorPrimary}
+            strokeWidth={12}
+            style={{ marginBottom: '20px' }}
+          />
 
-      <div className="mt-4">
-        <div>
-          <Row>
-            <Col>
-              <Row gutter={16}>
-                <Col span={24}>
-                  <Card>
-                    <div className="fs-4 text-center">Import Status</div>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={dataCounts}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Line
-                          type="monotone"
-                          dataKey="count"
-                          stroke="#8884d8"
-                          activeDot={{ r: 8 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </Card>
-                </Col>
-              </Row>
-            </Col>
-            <Col>
-              <Card>
-                <p className="fs-3 text-center">Audit Report</p>
-                <Card
-                  className="d-flex align-items-center fs-4 justify-content-between mb-1 mr-3 mt-3 "
-                  style={{ height: '60px', backgroundColor: '#F9D9D3' }}
-                >
-                  <div className="">
-                    <h2 className="text-center">Error Counts: {totalCount}</h2>
-                  </div>
-                </Card>
+          <Divider style={{ margin: '16px 0' }} />
 
-                <Card
-                  className="d-flex align-items-center fs-4 justify-content between mb-1 mr-3 mt-3"
-                  style={{ height: '60px', backgroundColor: '#CCEAE0' }}
-                >
-                  <div className="">
-                    <h2 className="text-center ">Corrected Counts: {corrected}</h2>
-                  </div>
-                </Card>
-
-                <Card
-                  className="d-flex align-items-center fs-4 justify-content between mb-1 mr-3 mt-3"
-                  style={{ height: '60px', backgroundColor: '#CCEDF3' }}
-                >
-                  <div className="">
-                    <h2 className="text-center ">Remaining Counts: {remaining}</h2>
-                  </div>
-                </Card>
+          <div className="d-flex flex-wrap justify-content-around align-items-center">
+            {fcName && (
+              <Card
+                style={{
+                  margin: '8px',
+                  borderRadius: '8px',
+                  border: `2px solid ${colorPrimary}`,
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  minWidth: '200px'
+                }}
+              >
+                <Space>
+                  <FileTextOutlined style={{ color: colorPrimary, fontSize: '18px' }} />
+                  <span style={{ fontWeight: 500 }}>{fcName}</span>
+                  <CheckCircleOutlined style={{ color: '#52c41a', fontSize: '18px' }} />
+                </Space>
               </Card>
-            </Col>
-          </Row>
-        </div>
-      </div>
+            )}
 
-      <div className="mt-4">
-        <Card>
-          <div className="fs-4 text-center">Project Configuration Status</div>
-          <Progress percent={progress} status={progress === 100 ? 'success' : 'normal'} />
+            {recName && (
+              <Card
+                style={{
+                  margin: '8px',
+                  borderRadius: '8px',
+                  border: `2px solid ${colorPrimary}`,
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  minWidth: '200px'
+                }}
+              >
+                <Space>
+                  <FileTextOutlined style={{ color: colorPrimary, fontSize: '18px' }} />
+                  <span style={{ fontWeight: 500 }}>{recName}</span>
+                  <CheckCircleOutlined style={{ color: '#52c41a', fontSize: '18px' }} />
+                </Space>
+              </Card>
+            )}
 
-          <div className="mt-2">
-            <span className="mr-5">
-              {fcName && (
-                <span>
-                  {fcName}
-                  <Checkbox checked={true} style={{ marginRight: 5, marginLeft: 5 }} />
-                </span>
-              )}
-            </span>
-            <span className="mr-5">
-              {recName && (
-                <span>
-                  {recName}
-                  <Checkbox checked={true} style={{ marginRight: 5, marginLeft: 5 }} />
-                </span>
-              )}
-            </span>
-            <span>
-              {imcName && (
-                <span>
-                  {imcName}
-                  <Checkbox checked={true} style={{ marginRight: 5, marginLeft: 5 }} />
-                </span>
-              )}
-            </span>
+            {imcName && (
+              <Card
+                style={{
+                  margin: '8px',
+                  borderRadius: '8px',
+                  border: `2px solid ${colorPrimary}`,
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  minWidth: '200px'
+                }}
+              >
+                <Space>
+                  <FileTextOutlined style={{ color: colorPrimary, fontSize: '18px' }} />
+                  <span style={{ fontWeight: 500 }}>{imcName}</span>
+                  <CheckCircleOutlined style={{ color: '#52c41a', fontSize: '18px' }} />
+                </Space>
+              </Card>
+            )}
           </div>
         </Card>
       </div>
+      </Card>
+      
+
+      <Row>
+        <Col md={7} className="pe-md-3">
+          <Card
+            title={
+              <Space>
+                <AuditOutlined style={{ color: colorPrimary }} />
+                <Typography.Title level={4} style={{ margin: 0 }}>Audit Report</Typography.Title>
+              </Space>
+            }
+            style={{
+              height: '100%',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
+              border: '2px solid #d9d9d9',
+            }}
+          >
+            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+              <Card
+                bordered={true}
+                style={{
+                  borderRadius: '8px',
+                  border: '1px solid #ff4d4f',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  backgroundColor: '#fff1f0'
+                }}
+              >
+                <Statistic
+                  title="Error Counts"
+                  value={totalCount}
+                  valueStyle={{ color: '#cf1322' }}
+                  prefix={<ExclamationCircleOutlined />}
+                  suffix={<span style={{ fontSize: '14px', color: '#666' }}>issues</span>}
+                />
+              </Card>
+
+              <Card
+                bordered={true}
+                style={{
+                  borderRadius: '8px',
+                  border: '1px solid #52c41a',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  backgroundColor: '#f6ffed'
+                }}
+              >
+                <Statistic
+                  title="Corrected Counts"
+                  value={corrected}
+                  valueStyle={{ color: '#3f8600' }}
+                  prefix={<CheckCircleOutlined />}
+                  suffix={<span style={{ fontSize: '14px', color: '#666' }}>fixed</span>}
+                />
+              </Card>
+
+              <Card
+                bordered={true}
+                style={{
+                  borderRadius: '8px',
+                  border: '1px solid #1677ff',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                  backgroundColor: '#e6f4ff'
+                }}
+              >
+                <Statistic
+                  title="Remaining Counts"
+                  value={remaining}
+                  valueStyle={{ color: '#1677ff' }}
+                  prefix={<WarningOutlined />}
+                  suffix={<span style={{ fontSize: '14px', color: '#666' }}>pending</span>}
+                />
+              </Card>
+            </Space>
+          </Card>
+        </Col>
+
+        <Col md={5} className="mt-2 mt-md-0 pe-md-3">
+          <Card
+            title={
+              <Space>
+                <ImportOutlined style={{ color: colorPrimary }} />
+                <Typography.Title level={4} style={{ margin: 0 }}>Import Status</Typography.Title>
+              </Space>
+            }
+            style={{
+              height: '100%',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
+              border: '1px solid #d9d9d9',
+            }}
+          >
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={dataCounts} layout="vertical" margin={{ left: 20, right: 20, top: 10, bottom: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                <XAxis type="number" />
+                <YAxis dataKey="name" type="category" width={100} />
+                <Tooltip
+                  formatter={(value) => [`${value} items`, 'Count']}
+                  contentStyle={{
+                    borderRadius: '4px',
+                    border: `2px solid ${colorPrimary}`,
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+                  }}
+                />
+                <Bar
+                  dataKey="count"
+                  barSize={20}
+                  radius={[0, 4, 4, 0]}
+                >
+                  {dataCounts.map((entry, index) => {
+                    // Array of vibrant colors
+                    const colors = ['#1677ff', '#52c41a', '#fa8c16', '#722ed1', '#eb2f96'];
+                    return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                  })}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        </Col>
+      </Row>
+
+      
     </div>
   );
 };

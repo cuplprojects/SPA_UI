@@ -1,9 +1,10 @@
 import { useProjectId } from '@/store/ProjectState';
-import { Button, notification } from 'antd';
+import { Button, notification, Tooltip } from 'antd';
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useDatabase } from '@/store/DatabaseStore';
 import { useUserToken } from '@/store/UserDataStore';
+import { SearchOutlined } from '@ant-design/icons';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -30,7 +31,7 @@ const AuditMissingRollNo = ({ getFlags }) => {
     } catch (error) {
       notification.error({
         message: 'Error',
-        description: 'Failed To Audit Missiing Roll No.',
+        description: 'Failed To Audit Missing Roll No.',
         duration: 2,
       });
     } finally {
@@ -39,16 +40,21 @@ const AuditMissingRollNo = ({ getFlags }) => {
   };
 
   return (
-    <div>
+    <Tooltip title="Find missing roll numbers in the dataset">
       <Button
         type="primary"
         onClick={AuditMissingRoll}
-        loading={loading} // Show loading spinner
-        disabled={loading} // Disable button while loading
+        loading={loading}
+        disabled={loading}
+        icon={<SearchOutlined />}
+        style={{
+          borderRadius: '4px',
+          boxShadow: '0 2px 0 rgba(0, 0, 0, 0.045)'
+        }}
       >
         {loading ? 'Auditing Missing Roll No...' : 'Audit Missing Roll No.'}
       </Button>
-    </div>
+    </Tooltip>
   );
 };
 
