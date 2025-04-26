@@ -144,7 +144,7 @@ const Absentee = ({
               accept=".xlsx"
               showUploadList={false}
               customRequest={customUpload}
-              // style={{ padding: '20px 0' }}
+            // style={{ padding: '20px 0' }}
             >
               <p className="ant-upload-drag-icon">
                 <FileExcelOutlined style={{ fontSize: 38, color: '#00A76F' }} />
@@ -153,14 +153,14 @@ const Absentee = ({
               <p className="ant-upload-hint">
                 Support for .xlsx files only
               </p>
-            {selectedFile && (
-              <Alert
-                message={`Selected file: ${selectedFile.name}`}
-                type="success"
-                showIcon
-                style={{ marginTop: 16 }}
-              />
-            )}
+              {selectedFile && (
+                <Alert
+                  message={`Selected file: ${selectedFile.name}`}
+                  type="success"
+                  showIcon
+                  style={{ marginTop: 16 }}
+                />
+              )}
             </Upload.Dragger>
 
           </Card>
@@ -217,17 +217,16 @@ const Absentee = ({
           </Card>
         </Col>
         <Col xs={24} lg={8} xl={8}>
-              <Table
-
-                columns={columns}
-                dataSource={tableData}
-                pagination={false}
-                size="middle"
-                bordered
-                className="mapping-table"
-                style={{ marginBottom: 14 }}
-              />
-            </Col>
+          <Table
+            columns={columns}
+            dataSource={tableData}
+            pagination={false}
+            size="middle"
+            bordered
+            className="mapping-table"
+            style={{ marginBottom: 14 }}
+          />
+        </Col>
       </Row>
 
       {/* {headers.length > 0 && (
