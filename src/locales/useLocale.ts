@@ -27,13 +27,13 @@ export const LANGUAGE_MAP: Record<Locale, Language> = {
   [LocalEnum.hi_IN]: { // Mapping for Hindi (India)
     locale: LocalEnum.hi_IN,
     label: 'हिंदी', // Label in Hindi
-    icon: 'ic-locale_hi_IN', // Icon for Hindi
+    icon: '', // Icon for Hindi
     antdLocal: hi_IN, // Ant Design locale for Hindi (India)
   },
   [LocalEnum.en_US]: { // Mapping for English (US)
     locale: LocalEnum.en_US,
     label: 'English', // Label in English
-    icon: 'ic-locale_en_US', // Icon for English
+    icon: '', // Icon for English
     antdLocal: en_US, // Ant Design locale for English (US)
   },
 };

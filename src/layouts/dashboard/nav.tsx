@@ -183,7 +183,7 @@ export default function Nav(props: Props) {
           {themeLayout !== ThemeLayout.Mini && (
             <m.div variants={slideInLeft}>
               <span className="ml-2 text-xl font-bold" style={{ color: colorPrimary }}>
-                CUPL SPA
+                SPA
               </span>
             </m.div>
           )}

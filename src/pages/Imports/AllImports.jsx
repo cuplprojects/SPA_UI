@@ -493,11 +493,11 @@ const Import = () => {
           })
         } finally {
           setLoading(false);
-
           setSelectedFile(null); // Reset selected file after upload
         }
       };
       reader.readAsText(selectedFile);
+      setSelectedFile(null)
     } else {
       console.error('No file selected.');
       notification.warning({
@@ -506,6 +506,7 @@ const Import = () => {
       })
       setLoading(false);
     }
+    setSelectedFile(null);
   };
 
   const handleRegistrationMappingChange = (e, field) => {
@@ -652,6 +653,7 @@ const Import = () => {
     };
 
     reader.readAsArrayBuffer(selectedFile); // Read file as ArrayBuffer
+    setSelectedFile(null)
   };
 
   const handleMappingChange = (e, property) => {

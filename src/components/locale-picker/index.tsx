@@ -31,7 +31,11 @@ export default function LocalePicker() {
       menu={{ items: localeList, onClick: (e) => setLocale(e.key as Locale) }}
     >
       <IconButton className="h-10 w-10 hover:scale-105">
-          <SvgIcon icon={`ic-locale_${locale}`} size="24" className="rounded-md" />
+       <p>
+
+        {locale === 'en_US'? 'EN':'HIN'}
+       </p>
+          {/* <p icon={`ic-locale_${locale}`} size="24" className="rounded-md" /> */}
       </IconButton>
     </Dropdown>
   );

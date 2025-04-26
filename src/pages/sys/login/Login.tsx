@@ -39,7 +39,7 @@ function Login() {
           background: bg,
         }}
       >
-        <div className="text-3xl font-bold leading-normal lg:text-4xl xl:text-5xl">CUPL SPA</div>
+        <div className="text-3xl font-bold leading-normal lg:text-4xl xl:text-5xl">SPA</div>
         <img className="max-w-[480px] xl:max-w-[560px]" src={LoginImg} alt="" />
       </div>
 

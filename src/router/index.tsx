@@ -16,6 +16,33 @@ const LoginRoute: AppRouteObject = {
   Component: lazy(() => import('@/pages/sys/login/Login')),
 };
 
+const PublicRoute: AppRouteObject = {
+  path: '/SubscriptionPage',
+  Component: lazy(() => import('@/pages/SubscriptionPage/SubscriptionPage')),
+};
+
+const RegistrationRoute: AppRouteObject = {
+  path: '/RegistrationPage',
+  Component: lazy(() => import('@/pages/RegistrationPage/RegistrationPage')),
+};
+
+const PaymentRoute: AppRouteObject = {
+  path: '/PaymentPage',
+  Component: lazy(() => import('@/pages/PaymentPage/PaymentPage')),
+};
+
+const SuccessRoute: AppRouteObject = {
+  path: '/SuccessPage',
+  Component: lazy(() => import('@/pages/SuccessPage/SuccessPage')),
+};
+
+// Root route for the subscription flow
+const RootRoute: AppRouteObject = {
+  path: '/',
+  element: <Navigate to="/SubscriptionPage" replace />,
+};
+
+
 const PAGE_NOT_FOUND_ROUTE: AppRouteObject = {
   path: '*',
   element: <Navigate to="/404" replace />,
@@ -37,7 +64,7 @@ export default function Router() {
     ],
   };
 
-  const routes = [LoginRoute, asyncRoutes, ErrorRoutes, PAGE_NOT_FOUND_ROUTE];
+  const routes = [RootRoute, PublicRoute, RegistrationRoute, PaymentRoute, SuccessRoute, LoginRoute, asyncRoutes, ErrorRoutes, PAGE_NOT_FOUND_ROUTE];
   const router = createHashRouter(routes as unknown as RouteObject[]);
 
   return <RouterProvider router={router} />;
