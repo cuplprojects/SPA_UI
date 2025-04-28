@@ -367,7 +367,7 @@ const Flagreport = () => {
   };
 
   return (
-    <div style={{ padding: '24px', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+    <div >
       <Spin spinning={loading} tip="Loading data...">
         <Card
           title={
@@ -379,7 +379,8 @@ const Flagreport = () => {
           style={{
             width: '100%',
             borderRadius: '8px',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            border: '1px solid #d9d9d9',
           }}
         >
           <Row gutter={[24, 16]} style={{ marginBottom: 16 }}>
@@ -492,7 +493,8 @@ const Flagreport = () => {
               style={{
                 marginTop: 16,
                 borderRadius: '8px',
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                border: '1px solid #d9d9d9',
               }}
               styles={{ body: { padding: 0 } }}
               extra={

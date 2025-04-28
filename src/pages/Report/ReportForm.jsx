@@ -457,15 +457,16 @@ const handleFieldChange = (fields) => {
   };
 
   return (
-    <div style={{ padding: '24px', backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+    <div style={{ padding: '24px', minHeight: '100vh' }}>
       <Card
         style={{
           marginBottom: '24px',
           borderRadius: '8px',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+          border: '1px solid #d9d9d9',
         }}
       >
-        <Row gutter={[24, 16]} align="middle">
+        <Row gutter={[24, 16]} align="left">
           <Col xs={24} md={12}>
 
             <Paragraph type="secondary" style={{ marginBottom: 0 }}>
@@ -474,8 +475,9 @@ const handleFieldChange = (fields) => {
           </Col>
           <Col xs={24} md={12} style={{ textAlign: 'right' }}>
             {assignedUsers.length > 0 && (
-              <div style={{ backgroundColor: '#f0f7ff', padding: '5px', borderRadius: '2px', border: '1px solid #d6e4ff' }}>
+              <div style={{ backgroundColor: '#f0f7ff', padding: '20px', borderRadius: '2px', border: '1px solid #d6e4ff' }}>
                 <Text strong style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', color: '#4b5563' }}>
+                  
 
                   <div style={{
                     backgroundColor: '#1890ff',
@@ -490,6 +492,7 @@ const handleFieldChange = (fields) => {
                     position: 'relative'
                   }}>
                     <TeamOutlined style={{ fontSize: '18px' }} />
+                    
 
                     <div style={{
                       position: 'absolute',
@@ -554,6 +557,7 @@ const handleFieldChange = (fields) => {
             style={{
               borderRadius: '8px',
               boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+              border: '1px solid #d9d9d9',
               marginBottom: '24px'
             }}
             extra={
@@ -705,7 +709,8 @@ const handleFieldChange = (fields) => {
                 }
                 style={{
                   borderRadius: '8px',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                  border: '1px solid #d9d9d9',
                 }}
                 styles={{ body: { padding: 0 } }}
                 extra={
