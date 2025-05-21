@@ -29,10 +29,18 @@ const SubscriptionPage = () => {
 
   const plans = [
     {
+      title: 'Free Plan',
+      duration: '1 Day',
+      price: '$0',
+      features: ['Process up to 100 response sheets', 'Access to premium support', 'Basic analytics'],
+      plan: '1-Day',
+      recommended: false
+    },
+    {
       title: '6-Month Plan',
       duration: '6 months',
       price: '$29.99',
-      features: ['Process up to 1000 response sheets', 'Access to premium support', 'Basic analytics'],
+      features: ['Process up to 8000 response sheets', '10 Projects allowed','Access to premium support', 'Basic analytics'],
       plan: '6-Month',
       recommended: false
     },
@@ -40,7 +48,7 @@ const SubscriptionPage = () => {
       title: '1-Year Plan',
       duration: '12 months',
       price: '$49.99',
-      features: ['Process up to 2000 sheets', 'Premium support', 'Priority batch processing', 'Advanced analytics'],
+      features: ['Process up to 20000 sheets', 'Premium support','30 Projects allowed', 'Priority batch processing', 'Advanced analytics'],
       plan: '1-Year',
       recommended: true
     }
