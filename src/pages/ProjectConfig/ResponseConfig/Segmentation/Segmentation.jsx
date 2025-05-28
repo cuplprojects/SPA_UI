@@ -25,7 +25,6 @@ const apiurl = import.meta.env.VITE_API_URL;
 
 const Segmentation = () => {
   const [selectedCourse, setSelectedCourse] = useState('');
-  const [hasSections, setHasSections] = useState(false);
   const [totalQuestions, setTotalQuestions] = useState('');
   const [questionFrom, setQuestionFrom] = useState('');
   const [questionTo, setQuestionTo] = useState('');
@@ -47,14 +46,6 @@ const Segmentation = () => {
 
   const handleCourseChange = (value) => {
     setSelectedCourse(value);
-  };
-
-  const handleCheckboxChange = (e) => {
-    setHasSections(e.target.checked);
-    if (!e.target.checked) {
-      // Reset sections if checkbox is unchecked
-      setSections([]);
-    }
   };
 
   const handleCoursesRetrieved = (courses) => {
@@ -163,7 +154,7 @@ const Segmentation = () => {
     try {
       // Step 1: Fetch existing responses for the given project ID
       const response = await fetch(
-        `${apiurl}/ResponseConfigs/byproject/${projectId}?WhichDatabase=${database}`,
+        `${apiurl}onfigs/byproject/${projectId}?WhichDatabase=${database}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -240,7 +231,6 @@ const Segmentation = () => {
 
       // Reset form and loading state
       setSelectedCourse('');
-      setHasSections(false);
       setTotalQuestions('');
       setQuestionFrom('');
       setQuestionTo('');
@@ -264,7 +254,7 @@ const Segmentation = () => {
 
   // Function that needs to be async
   useEffect(() => {
-    if (!hasSections) {
+   
       setSections([
         {
           name: '',
@@ -276,7 +266,7 @@ const Segmentation = () => {
           marksForWrongAnswer: marksForWrongOption,
         },
       ]);
-    }
+    
   }, [
     totalQuestions,
     questionFrom,
@@ -328,16 +318,7 @@ const Segmentation = () => {
       return;
     }
   
-    if (hasSections) {
-      // If sections are enabled, we validate sections-related fields
-      if (!sections || sections.length === 0) {
-        notification.error({
-          message: 'At least one section is required',
-          duration: 3,
-        });
-        return;
-      }
-    } else {
+    if (!sections || sections.length === 0) {
       // If sections are not enabled, validate fields that are required for submission
       if (!totalQuestions || totalQuestions <= 0) {
         notification.error({
@@ -412,7 +393,6 @@ const Segmentation = () => {
           duration: 3,
         });
         setSelectedCourse('');
-        setHasSections(false);
         setTotalQuestions('');
         setQuestionFrom('');
         setQuestionTo('');
@@ -513,18 +493,8 @@ const Segmentation = () => {
                 )}
               </Form.Item>
             </Col>
-            <Col>
-              {selectedCourse && (
-                <Form.Item>
-                  <Checkbox checked={hasSections} onChange={handleCheckboxChange}>
-                    Does this course have sections?
-                  </Checkbox>
-                </Form.Item>
-              )}
-            </Col>
           </Row>
-
-          {hasSections ? (
+          {(selectedCourse &&
             <>
               {sections.map((section, index) => (
                 <div key={index}>
@@ -647,95 +617,7 @@ const Segmentation = () => {
                 </Button>
               </Form.Item>
             </>
-          ) : (
-            !hasSections &&
-            selectedCourse && (
-              <>
-                <Row>
-                  <Col>
-                    <Form.Item label="Total Questions">
-                      <InputNumber
-                        min={1}
-                        onChange={(value) => setTotalQuestions(value)}
-                        style={{ width: '100%' }}
-                        onKeyPress={handleKeyPress}
-                        rules={[{ required: true, message: 'Please enter total questions' }]}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col>
-                    <Form.Item label="Question From">
-                      <Input
-                      rules={[{ required: true, message: 'Please enter question from' }]} onChange={(e) => setQuestionFrom(e.target.value)}  onKeyPress={handleKeyPress} />
-                    </Form.Item>
-                  </Col>
-                </Row>
-
-                <Row>
-                  <Col>
-                    <Form.Item label="Question To">
-                      <Input  
-                      rules={[{ required: true, message: 'Please enter question to' }]}
-                        onChange={(e) => setQuestionTo(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col>
-                    <Form.Item label="Marks Per Correct Question">
-                      <InputNumber
-                        min={0}
-                        onChange={(value) => setMarksPerQuestion(value)}
-                        style={{ width: '100%' }}
-                        onKeyPress={handleKeyPress}
-                        rules={[{ required: true, message: 'Please enter marks per correct question' }]} 
-                      />
-                    </Form.Item>
-                  </Col>
-                </Row>
-
-                <Row>
-                  <Col>
-                    <Form.Item label="Is there negative marking?">
-                      <Radio.Group
-                        onChange={(e) => setNegativeMarking(e.target.value)}
-                        value={negativeMarking}
-                      >
-                        <Radio value="yes">Yes</Radio>
-                        <Radio value="no">No</Radio>
-                      </Radio.Group>
-                    </Form.Item>
-                  </Col>
-                  <Col>
-                    <Form.Item label="Total Marks">
-                      <Input
-                        readOnly
-                        value={calculateTotalMarks(marksPerQuestion, totalQuestions)}
-                        onKeyPress={handleKeyPress}
-                      />
-                    </Form.Item>
-                  </Col>
-                </Row>
-                {negativeMarking === 'yes' && (
-                  <Form.Item
-                    label="Marks Deduction for Wrong Answer"
-                    status={error ? 'error' : ''}
-                    help={error}
-                  >
-                    <InputNumber
-                    min='0'
-                    step=".1"
-                      prefix="-"
-                      value={marksForWrongOption}
-                      onChange={handleNumberChange}
-                      onKeyPress={handleKeyPress}
-                      style={{ width: '100%' }}
-                    />
-                  </Form.Item>
-                )}
-              </>
-            )
-          )}
+        )}
         </div>
 
 

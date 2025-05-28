@@ -147,7 +147,8 @@ const AuditButton = () => {
       RegistrationAudit: 'RegistrationAudit',
       DuplicateRollNumberAudit: 'DuplicateRollNumberAudit',
       ContainsCharacterAudit: 'ContainsCharacterAudit',
-      MissingRollNumbers: 'MissingRollNumbers'
+      MissingRollNumbers: 'MissingRollNumbers',
+      MismatchedWithExtracted: 'MismatchedWithExtracted'
     };
 
     const selectedApi = apiEndpoints[eventKey];
@@ -206,6 +207,8 @@ const AuditButton = () => {
          <Dropdown.Item eventKey="DuplicateRollNumberAudit">Duplicate Roll Number Audit</Dropdown.Item>  
         <Dropdown.Item eventKey="RegistrationAudit" disabled={regData <= 1}>Registration Audit</Dropdown.Item>       
         <Dropdown.Item eventKey="MissingRollNumbers" disabled={regData <= 1}>Missing Roll Numbers</Dropdown.Item>
+        <Dropdown.Item eventKey="MismatchedWithExtracted">Mismatched With Software</Dropdown.Item>
+        
       </Dropdown.Menu>
     </Dropdown>
         </div>

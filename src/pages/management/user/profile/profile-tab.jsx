@@ -12,6 +12,7 @@ import {
   Pagination,
   Select,
   App,
+  Tag,
 } from 'antd';
 import { fakeAvatars } from '@/_mock/utils';
 import Card from '@/components/card';
@@ -26,7 +27,7 @@ const ProfileTab = () => {
   const { username } = useUserInfo();
   const theme = useThemeToken();
   const { userData, loading, error } = useUserData(); // Use the custom hook
-
+console.log(userData)
   // Timeline pagination state
   const [timelineItems, setTimelineItems] = useState([]);
   const [timelinePage, setTimelinePage] = useState(1);
@@ -119,12 +120,26 @@ const ProfileTab = () => {
     {
       icon: <Iconify icon="eos-icons:role-binding" size={18} />,
       label: 'Role',
-      val: userData ? 'Developer' : 'Loading...',
+      val: userData ? `${userData.roleName}` : 'Loading...',
     },
     {
       icon: <Iconify icon="ic:baseline-email" size={18} />,
       label: 'Email',
       val: userData ? userData.email : 'Loading...',
+    },
+    {
+      icon: <Iconify icon="ic:round-subscriptions" size={18} />,
+      label: 'Plan',
+      val: userData && userData.tenantId ? (
+        <div className="flex flex-col">
+          <ProTag color="success">{userData.organizationName}</ProTag>
+          <span className="text-xs opacity-70 mt-1">
+            {`Valid from ${new Date(userData.startedDate).toLocaleDateString()} to ${new Date(userData.endDate).toLocaleDateString()}`}
+          </span>
+        </div>
+      ) : (
+        <Tag color="default">No active plan</Tag>
+      ),
     },
   ];
 
@@ -220,72 +235,7 @@ const ProfileTab = () => {
             </div>
           </Card>
         </Col>
-
-        {/* <Col span={24} md={12} lg={16}>
-          <Card className="flex-col !items-start">
-            <Typography.Title level={5}>Activity Timeline</Typography.Title>
-            <Timeline className="!mt-4 w-full" items={paginatedTimelineItems} />
-            <div className="mt-4 flex items-center justify-between">
-              <Select
-                value={timelineItemsPerPage}
-                onChange={handleTimelineItemsPerPageChange}
-                options={[
-                  { label: '2', value: 2 },
-                  { label: '5', value: 5 },
-                  { label: '10', value: 10 },
-                  { label: '15', value: 15 },
-                ]}
-                style={{ width: 120 }}
-              />
-              <Pagination
-                current={timelinePage}
-                pageSize={timelineItemsPerPage}
-                total={timelineItems.length}
-                onChange={handleTimelinePageChange}
-                showSizeChanger={false}
-              />
-            </div>
-          </Card>
-        </Col> */}
       </Row>
-
-      {/* <Row gutter={[16, 16]} className="mt-4">
-        <Col span={24}>
-          <Card className="flex-col !items-start">
-            <div className="mt-4 flex items-center justify-between">
-              <Typography.Title level={5}>Projects</Typography.Title>
-              <Select
-                value={projectItemsPerPage}
-                onChange={handleProjectItemsPerPageChange}
-                options={[
-                  { label: '5', value: 5 },
-                  { label: '10', value: 10 },
-                  { label: '15', value: 15 },
-                ]}
-                style={{ width: 120 }}
-              />
-            </div>
-            <div className="!mt-4 w-full">
-              <Scrollbar>
-                <Table
-                  columns={ProjectColumns}
-                  dataSource={paginatedProjectData}
-                  pagination={false}
-                  bordered
-                />
-              </Scrollbar>
-
-              <Pagination
-                current={projectPage}
-                pageSize={projectItemsPerPage}
-                total={projectData.length}
-                onChange={handleProjectPageChange}
-                showSizeChanger={false}
-              />
-            </div>
-          </Card>
-        </Col>
-      </Row> */}
     </>
   );
 };

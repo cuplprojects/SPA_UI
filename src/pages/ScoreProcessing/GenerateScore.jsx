@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { LoadingOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { Upload, Button, Table, notification, Modal } from 'antd';
 import { useProjectId } from '@/store/ProjectState';
-
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 import ViewScore from './ViewScore';
 import axios from 'axios';
 import { useDatabase } from '@/store/DatabaseStore';
@@ -31,9 +32,12 @@ const GenerateScore = () => {
   const navigate = useNavigate(); // Initialize useNavigate
   const token = useUserToken();
   const [globalFile, setGlobalFile] = useState(null);
+  const [sectionNames, setSectionNames] = useState([]);
+  const [fieldnames, setFieldnames] = useState([]);
 
   useEffect(() => {
     getdata();
+    fetchSections();
   }, [ProjectId]); // Run these effects whenever ProjectId changes
 
   const getdata = () => {
@@ -206,6 +210,84 @@ const GenerateScore = () => {
       }));
     }
   };
+
+  const fetchSections = async () => {
+    try {
+      const response = await fetch(
+        `${apiurl}/ResponseConfigs/SectionName?projectId=${ProjectId}&courseName=UTET&WhichDatabase=${database}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const result = await response.json();
+      setSectionNames(result.sectionNames);
+      setFieldnames(result.fieldnames);
+
+    } catch (error) {
+      notification.error({
+        message: 'Failed to fetch data!',
+        duration: 3,
+      });
+
+    }
+  };
+
+
+
+  const downloadExcelTemplate = (sectionNames, fieldnames) => {
+    if (!sectionNames.length || !fieldnames.length) return;
+
+    const fieldValues = fieldnames[0].split(','); // ['A', 'B', 'C', 'D']
+
+    // First row (merged section headers)
+    const headerRow = [];
+    sectionNames.forEach((section) => {
+      for (let i = 0; i < fieldValues.length; i++) {
+        headerRow.push(i === 0 ? section : null); // only put section name in first of 4 columns
+      }
+    });
+
+    // Second row (field names)
+    const secondRow = [];
+    sectionNames.forEach(() => {
+      secondRow.push(...fieldValues); // A, B, C, D
+    });
+
+    const data = [headerRow, secondRow];
+
+    // Create worksheet and merges
+    const ws = XLSX.utils.aoa_to_sheet(data);
+
+    // Add merges for section headers
+    const merges = [];
+    let colIndex = 0;
+    sectionNames.forEach(() => {
+      merges.push({
+        s: { r: 0, c: colIndex }, // start cell (row 0, col X)
+        e: { r: 0, c: colIndex + fieldValues.length - 1 }, // end cell (row 0, col X+3)
+      });
+      colIndex += fieldValues.length;
+    });
+    ws['!merges'] = merges;
+
+    // Create workbook and export
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Key Template');
+
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([excelBuffer], {
+      type: 'application/octet-stream',
+    });
+    saveAs(blob, 'keytemplate.xlsx');
+  };
+
+
 
   const handleClick = (courseName) => {
     setSelectedCourse(courseName); // Set selected course for modal display
@@ -498,11 +580,13 @@ const GenerateScore = () => {
     <div>
       <div>
         <div className="d-flex align-items-center justify-content-between mb-4">
-          <a href="/keytemplate.xlsx">
-            <Button type="primary" disabled={loading}>
-              Download Key Template
-            </Button>
-          </a>
+          <Button
+            type="primary"
+            onClick={() => downloadExcelTemplate(sectionNames, fieldnames)}
+            disabled={!sectionNames.length || !fieldnames.length}
+          >
+            Download Key Template
+          </Button>
           {courseNames.length > 1 && (
             <div>
               <Upload
