@@ -302,19 +302,20 @@ const GenerateScore = () => {
       });
       return;
     }
-
+    const sections = await fetchSections(courseName);
+    const subjectRanges = buildSubjectRanges(sections);
     const formData = new FormData();
     formData.append('file', updateFile.file);
     formData.append('courseName', courseName);
-
+   formData.append('subjectRanges', JSON.stringify(subjectRanges));
     // Show confirmation modal
     Modal.confirm({
       title: 'Update Key',
       content: 'Are you sure you want to update the key for ambiguity?',
       onOk: async () => {
         try {
-          const response = await axios.put(
-            `${apiurl}/Key/updatekey?courseName=${courseName}&ProjectId=${ProjectId}&WhichDatabase=${database}`,
+          const response = await axios.post(
+            `${apiurl}/Key/upload?courseName=${courseName}&ProjectId=${ProjectId}&WhichDatabase=${database}`,
             formData,
             {
               headers: {
