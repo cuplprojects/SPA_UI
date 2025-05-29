@@ -211,10 +211,10 @@ const GenerateScore = () => {
     }
   };
 
-  const fetchSections = async () => {
+  const fetchSections = async (courseName) => {
     try {
       const response = await fetch(
-        `${apiurl}/ResponseConfigs/SectionName?projectId=${ProjectId}&courseName=UTET&WhichDatabase=${database}`,
+        `${apiurl}/ResponseConfigs/SectionName?projectId=${ProjectId}&courseName=${encodeURIComponent(courseName)}&WhichDatabase=${database}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -228,13 +228,13 @@ const GenerateScore = () => {
       const result = await response.json();
       setSectionNames(result.sectionNames);
       setFieldnames(result.fieldnames);
-
+      return result.sectionNames;
     } catch (error) {
       notification.error({
         message: 'Failed to fetch data!',
         duration: 3,
       });
-
+      return [];
     }
   };
 
@@ -243,13 +243,13 @@ const GenerateScore = () => {
   const downloadExcelTemplate = (sectionNames, fieldnames) => {
     if (!sectionNames.length || !fieldnames.length) return;
 
-    const fieldValues = fieldnames[0].split(','); // ['A', 'B', 'C', 'D']
-
+    const fieldValues = fieldnames; // ['A', 'B', 'C', 'D']
+    console.log(fieldValues)
     // First row (merged section headers)
     const headerRow = [];
     sectionNames.forEach((section) => {
       for (let i = 0; i < fieldValues.length; i++) {
-        headerRow.push(i === 0 ? section : null); // only put section name in first of 4 columns
+        headerRow.push(i === 0 ? section.name : null); // only put section name in first of 4 columns
       }
     });
 
@@ -394,6 +394,19 @@ const GenerateScore = () => {
     });
   };
 
+  const buildSubjectRanges = (sections) => {
+    const result = {};
+    console.log(sections)
+    sections.forEach(section => {
+      result[section.name] = {
+        start: section.startQuestion,
+        end: section.endQuestion,
+      };
+    });
+    return result;
+  };
+
+
   const handleUpload = async (courseName) => {
     if (!file || file.courseName !== courseName) {
       notification.error({
@@ -402,10 +415,12 @@ const GenerateScore = () => {
       });
       return;
     }
-
+    const sections = await fetchSections(courseName);
+    const subjectRanges = buildSubjectRanges(sections);
     const formData = new FormData();
     formData.append('file', file.file);
     formData.append('courseName', courseName);
+    formData.append('subjectRanges', JSON.stringify(subjectRanges));
 
     try {
       setLoading(true);
@@ -465,6 +480,24 @@ const GenerateScore = () => {
       title: 'Course Name',
       dataIndex: 'courseName',
       key: 'courseName',
+      width: '30%',
+    },
+    {
+      title: 'Download Template',
+      dataIndex: 'template',
+      key: 'template',
+      render: (text, record) => (
+        <Button
+          type="primary"
+          onClick={async () => {
+            await fetchSections(record.courseName);
+            downloadExcelTemplate(sectionNames, fieldnames);
+          }}
+          disabled={!record.courseName}
+        >
+          Download Key Template
+        </Button>
+      ),
       width: '30%',
     },
     {
@@ -580,13 +613,6 @@ const GenerateScore = () => {
     <div>
       <div>
         <div className="d-flex align-items-center justify-content-between mb-4">
-          <Button
-            type="primary"
-            onClick={() => downloadExcelTemplate(sectionNames, fieldnames)}
-            disabled={!sectionNames.length || !fieldnames.length}
-          >
-            Download Key Template
-          </Button>
           {courseNames.length > 1 && (
             <div>
               <Upload
