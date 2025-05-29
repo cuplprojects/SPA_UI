@@ -17,16 +17,18 @@ const MarksAllotmentForm = () => {
     const [formState, setFormState] = useState({
         numberOfAmbiguousQuestions: '',
         optionsJumbled: '',
-        setCode: '',
+        setCode: '', // Will be auto-populated from API
         ambiguousQuestions: {},
         markingLogic: '',
         selectedCourse: '',
+        questionSections: {}, // New state to track sections per question group
     });
 
     const [setCodes, setSetCodes] = useState([]);
     const [markingRules, setMarkingRules] = useState([]);
     const [ambfetchdata, setAmbfetchdata] = useState([]);
     const [courseNames, setCourseNames] = useState([]);
+    const [sections, setSections] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -49,6 +51,36 @@ const MarksAllotmentForm = () => {
         } catch (error) {
             notification.error({
                 message: 'Failed to fetch course names!',
+                duration: 3,
+            });
+        }
+    };
+
+    const fetchSections = async (courseName) => {
+        if (!courseName) return;
+        try {
+            const response = await axios.get(
+                `${APIURL}/ResponseConfigs/SectionName?projectId=${projectId}&courseName=${courseName}&WhichDatabase=${database}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (response.data) {
+                setSections(response.data.sectionNames);
+                // Auto-set the setCode from fieldnames[0]
+                if (response.data.fieldnames && response.data.fieldnames.length > 0) {
+                    setFormState(prevState => ({
+                        ...prevState,
+                        setCode: response.data.fieldnames[0]
+                    }));
+                }
+            }
+        } catch (error) {
+            notification.error({
+                message: 'Failed to fetch sections!',
                 duration: 3,
             });
         }
@@ -88,6 +120,14 @@ const MarksAllotmentForm = () => {
 
         fetchCourseNames();
     }, []);
+
+    useEffect(() => {
+        if (formState.selectedCourse) {
+            fetchSections(formState.selectedCourse);
+        } else {
+            setSections([]);
+        }
+    }, [formState.selectedCourse]);
 
     const getAmbiguity = async () => {
         try {
@@ -137,16 +177,33 @@ const MarksAllotmentForm = () => {
         });
     };
 
+    const handleSectionChange = (questionGroup, value) => {
+        setFormState(prevState => ({
+            ...prevState,
+            questionSections: {
+                ...prevState.questionSections,
+                [questionGroup]: value
+            }
+        }));
+    };
+
     const handleSubmit = async () => {
         setIsSubmitting(true);
-        const dataToSubmit = renderTableData().map(row => ({
-            projectId,
-            markingId: formState.markingLogic,
-            setCode: row.setCode.split(' ')[1],
-            questionNumber: row.questionNumber.props.value || null,
-            option: row.option ? row.option.props.value || null : null,
-            courseName: formState.selectedCourse
-        }));
+        const dataToSubmit = renderTableData().map(row => {
+            // Extract the question group number from the key (format: "questionNumber-setIndex")
+            const [questionNum] = row.key.split('-');
+            const questionGroup = `group_${questionNum}`;
+            
+            return {
+                projectId,
+                markingId: formState.markingLogic,
+                setCode: row.setCode.split(' ')[1],
+                questionNumber: row.questionNumber.props.value || null,
+                option: row.option ? row.option.props.value || null : null,
+                courseName: formState.selectedCourse,
+                section: formState.questionSections[questionGroup] // Use section from the question group
+            };
+        });
 
         try {
             const response = await axios.post(`${APIURL}/Ambiguity/allot-marks?WhichDatabase=${database}`, dataToSubmit, {
@@ -262,7 +319,10 @@ const MarksAllotmentForm = () => {
                 // For each question, create 4 rows with consecutive letters starting from setCode
                 for (let j = 0; j < 4; j++) {
                     const currentSetLetter = String.fromCharCode(setCode.charCodeAt(0) + j);
+                    const isSetA = j === 0; // Check if this is Set A
+                    const questionGroup = `group_${i}`; // Group identifier for ABCD sets
                     const isDisabled = formState.optionsJumbled === "No" && j > 0;
+                    
                     const questionNumberInput = (
                         <Input
                             type="number"
@@ -272,6 +332,21 @@ const MarksAllotmentForm = () => {
                             style={{ borderRadius: '0' }}
                         />
                     );
+
+                    const sectionSelect = isSetA ? (
+                        <Select
+                            value={formState.questionSections[questionGroup]}
+                            onChange={(value) => handleSectionChange(questionGroup, value)}
+                            style={{ width: '100%' }}
+                            disabled={!formState.selectedCourse}
+                        >
+                            {sections.map(section => (
+                                <Select.Option key={section} value={section}>
+                                    {section}
+                                </Select.Option>
+                            ))}
+                        </Select>
+                    ) : null;
 
                     const optionInput = (
                         <Input
@@ -288,6 +363,7 @@ const MarksAllotmentForm = () => {
                         key: `${i}-${j}`,
                         setCode: `Set ${currentSetLetter}`,
                         questionNumber: questionNumberInput,
+                        section: sectionSelect,
                         ...(markingLogic && markingRules.slice(0, 3).some(rule => rule.markingId === markingLogic) ? {} : { option: optionInput })
                     });
                 }
@@ -307,6 +383,11 @@ const MarksAllotmentForm = () => {
             title: 'Question Number',
             dataIndex: 'questionNumber',
             key: 'questionNumber',
+        },
+        {
+            title: 'Section',
+            dataIndex: 'section',
+            key: 'section',
         },
         ...(markingRules.slice(0, 3).some(rule => rule.markingId === formState.markingLogic) ? [] : [{
             title: 'Option',
@@ -346,20 +427,7 @@ const MarksAllotmentForm = () => {
                         />
                     </Form.Item>
                 </Col>
-
-                <Col span={6}>
-                    <Form.Item label={<span style={{ fontWeight: 'bold', color: '#ff0000' }}>Set Code</span>}>
-                        <Input
-                            name="setCode"
-                            value={formState.setCode}
-                            onChange={handleChange}
-                            style={{ borderRadius: '0' }}
-                            pattern="[A-Za-z]"
-                            maxLength={1}
-                            placeholder="Enter a single alphabet"
-                        />
-                    </Form.Item>
-                </Col>
+                
                 <Col className="d-flex justify-content-center" span={6}>
                     <Form.Item label="Options Jumbled?">
                         <Radio.Group
