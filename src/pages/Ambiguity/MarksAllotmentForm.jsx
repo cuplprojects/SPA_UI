@@ -69,7 +69,7 @@ const MarksAllotmentForm = () => {
             );
 
             if (response.data) {
-                setSections(response.data.sectionNames);
+                setSections(response.data.sectionNames.map(n=>n.name));
                 // Auto-set the setCode from fieldnames[0]
                 if (response.data.fieldnames && response.data.fieldnames.length > 0) {
                     setFormState(prevState => ({
