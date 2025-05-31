@@ -457,12 +457,13 @@ const FieldConfiguration = () => {
         <form onSubmit={handleSave} className="config-form mb-2 rounded border p-2">
           <Row>
             <Col xs={12} md={6}>
-              <label htmlFor="field">Field:</label>
+              <label htmlFor="field" >Field<span style={{ color: 'red' }}>*</span></label>
               <Select
                 id="field"
                 value={fieldName}
                 onChange={setFieldName}
                 style={{ width: '100%' }}
+                
               >
                 {fields.map((field) => (
                   <Option key={field.fieldName} value={field.fieldName}>
@@ -472,7 +473,7 @@ const FieldConfiguration = () => {
               </Select>
             </Col>
             <Col xs={12} md={6}>
-              <label htmlFor="minRange">Min Range:</label>
+              <label htmlFor="minRange">Min Range</label>
               <Input
                 type="number"
                 id="minRange"
@@ -483,7 +484,7 @@ const FieldConfiguration = () => {
           </Row>
           <Row>
             <Col xs={12} md={6}>
-              <label htmlFor="maxRange">Max Range:</label>
+              <label htmlFor="maxRange">Max Range</label>
               <Input
                 type="number"
                 id="maxRange"
@@ -492,7 +493,7 @@ const FieldConfiguration = () => {
               />
             </Col>
             <Col xs={12} md={6}>
-              <label htmlFor="responses">Preferred Responses:</label>
+              <label htmlFor="responses">Preferred Responses</label>
               <Input
                 id="responses"
                 value={formData.responses}
@@ -509,7 +510,7 @@ const FieldConfiguration = () => {
           </Row>
           <Row className="align-items-center">
             <Col xs={12} md={6}>
-              <label htmlFor="numberOfBlocks">Number of Blocks:</label>
+              <label htmlFor="numberOfBlocks">Number of Blocks<span style={{ color: 'red' }}>*</span></label>
               <Input
                 type="number"
                 id="numberOfBlocks"

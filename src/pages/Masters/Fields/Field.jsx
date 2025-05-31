@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Button, Form, Input, InputNumber, Modal, Popconfirm, Table, Typography,message } from 'antd';
+import { Button, Form, Input, InputNumber, Modal, Popconfirm, Table, Typography, message } from 'antd';
 import Draggable from 'react-draggable';
 import './../Projects/Project.css';
 import { useDatabase } from '@/store/DatabaseStore';
@@ -61,21 +61,33 @@ const Field = () => {
   const draggleRef = useRef(null);
   const database = useDatabase();
   const token = useUserToken();
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const isEditing = (record) => record.key === editingKey;
 
   useEffect(() => {
     fetchData();
   }, []);
 
+  const handlePaginationChange = (page, pageSize) => {
+    setCurrentPage(page);
+    setPageSize(pageSize);
+  };
+
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   const fetchData = async () => {
     try {
-      const response = await fetch(`${apiurl}/Fields?WhichDatabase=${database}`,{
-        headers:{
-        Authorization : `Bearer ${token}`
-      }});
+      const response = await fetch(`${apiurl}/Fields?WhichDatabase=${database}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       const data = await response.json();
-     const formattedData = data.map((item, index) => ({ ...item, key: index.toString(), serialNo: index + 1 }));
+      const formattedData = data.map((item, index) => ({ ...item, key: index.toString(), serialNo: index + 1 }));
       setData(formattedData);
       setFilteredData(formattedData);
     } catch (error) {
@@ -109,7 +121,7 @@ const Field = () => {
       const row = await form.validateFields();
       const newData = [...data];
       const index = newData.findIndex((item) => key === item.key);
-  
+
       if (index > -1) {
         // Editing existing row
         const isDuplicate = newData.some((item, idx) => idx !== index && item.fieldName === row.fieldName);
@@ -117,7 +129,7 @@ const Field = () => {
           message.error('Field name already exists. Please enter a unique name.');
           return;
         }
-  
+
         const item = newData[index];
         if (item.method === 'POST') {
           await fetchData();
@@ -132,11 +144,11 @@ const Field = () => {
           message.error('Field name already exists. Please enter a unique name.');
           return;
         }
-  
+
         await addRow(row);
         newData.push(row);
       }
-  
+
       setData(newData); // Update state with new data
       setFilteredData(newData)
       setEditingKey('');
@@ -145,7 +157,7 @@ const Field = () => {
       console.log('Validate Failed:', errInfo);
     }
   };
-  
+
 
   const updateRow = async (updatedRow) => {
     try {
@@ -153,7 +165,7 @@ const Field = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization : `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(updatedRow),
       });
@@ -173,7 +185,7 @@ const Field = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization : `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(newRow),
       });
@@ -324,6 +336,7 @@ const Field = () => {
           value={searchTerm}
           onChange={handleSearchChange}
           style={{ width: 100, marginRight: 8 }}
+          allowClear
         />
 
       </div>
@@ -335,11 +348,15 @@ const Field = () => {
             },
           }}
           bordered
-          dataSource={filteredData}
+          dataSource={paginatedData}
           columns={mergedColumns}
           rowClassName="editable-row"
           pagination={{
-            onChange: cancel,
+            current: currentPage,
+            pageSize: pageSize,
+            onChange: handlePaginationChange, // Handle page change
+            showSizeChanger: true,
+            pageSizeOptions: ['5', '10', '20', '50'],
           }}
           onChange={handleChange}
         />

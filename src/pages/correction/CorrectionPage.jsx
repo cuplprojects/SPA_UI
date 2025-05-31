@@ -80,12 +80,6 @@ const CorrectionPage = () => {
     fetchFlagData();
   }, [projectId, selectedField, flagData]);
 
-  // useEffect(() => {
-  //  if (flagData[currentIndex].isCorrected) {
-  //   console.log(flagData[currentIndex])
-  //   setCurrentIndex(currentIndex+1)
-  //  }
-  // }, [currentIndex]);
 
   useEffect(() => {
     const selectedfield = localStorage.getItem('selectedField');
@@ -157,9 +151,9 @@ const CorrectionPage = () => {
                 fieldNameValue: '',
                 imageUrl: '',
               }),
-            );     
-            
-           
+            );
+
+
             // Find the annotation for the current flag's field name
             const annotation = parsedAnnotations.find(
               (annotation) => annotation.FieldName === flag.field,
@@ -177,7 +171,7 @@ const CorrectionPage = () => {
               barCode: flag.barCode,
               projectId: projectId,
               isCorrected: true,
-              imageUrl : `${baseapiurl}${flag.imagePath}` || noomrimg,
+              imageUrl: `${baseapiurl}${flag.imagePath}` || noomrimg,
               noChangeRequired: false,
               fieldConfig, // Adding the field configuration to the flag data
             };
@@ -238,15 +232,15 @@ const CorrectionPage = () => {
     }
 
     // Check for blank data
-  if (currentData.fieldNameValue.trim() === '') {
-    notification.error({
-      message: 'Error',
-      description: 'Blank data is not accepted. Please fill in the required field.',
-      duration: 3,
-    });
-    return;
-  }
-  
+    if (currentData.fieldNameValue.trim() === '') {
+      notification.error({
+        message: 'Error',
+        description: 'Blank data is not accepted. Please fill in the required field.',
+        duration: 3,
+      });
+      return;
+    }
+
     if (unchangedata === currentData.fieldNameValue && !noChangeRequired) {
       console.log('Data has not changed:', unchangedata);
       notification.error({
@@ -262,9 +256,11 @@ const CorrectionPage = () => {
         setCurrentIndex(currentIndex + 1);
         getFlags();
         setUnchangeData(data[currentIndex + 1]?.fieldNameValue);
+        setIsViewRegData(false);
       } else {
         // fetchFlagData();
         clearFlags();
+        setIsViewRegData(false);
       }
     }
   };
@@ -321,8 +317,8 @@ const CorrectionPage = () => {
   };
 
 
-  
-  
+
+
   // get student filterd data
   const handleSubmitFilter = async (e) => {
     try {
@@ -421,7 +417,7 @@ const CorrectionPage = () => {
       return null;
     }
   };
-  
+
 
   const showNextReg = () => {
     setCurrentRegIndex((prevIndex) => prevIndex + 1);
@@ -534,7 +530,7 @@ const CorrectionPage = () => {
               <div>
                 {parsedData ? (
                   <>
-                    <p className="text-danger m-2 text-center">{regData.length} Resultes Found</p>
+                    <p className="text-danger m-2 text-center">{regData.length} Results Found</p>
                     <table className="table-bordered table-striped mr-0 table">
                       <thead>
                         <tr>
@@ -551,25 +547,29 @@ const CorrectionPage = () => {
                         ))}
                       </tbody>
                     </table>
-                    <p className="fs-6 m-3 text-center">
-                      Showing {currentRegIndex + 1} of {regData.length}
-                    </p>
-                    <div className="d-flex align-items-center justify-content-between mb-3">
-                      <button
-                        className="btn btn-primary btn-sm"
-                        disabled={currentRegIndex === 0}
-                        onClick={showPreviousReg}
-                      >
-                        Previous
-                      </button>
-                      <button
-                        className="btn btn-primary btn-sm"
-                        disabled={currentRegIndex === regData.length - 1}
-                        onClick={showNextReg}
-                      >
-                        Next
-                      </button>
-                    </div>
+                    {regData.length > 0 && (
+                      <>
+                        <p className="fs-6 m-3 text-center">
+                          Showing {currentRegIndex + 1} of {regData.length}
+                        </p>
+                        <div className="d-flex align-items-center justify-content-between mb-3">
+                          <button
+                            className="btn btn-primary btn-sm"
+                            disabled={currentRegIndex === 0}
+                            onClick={showPreviousReg}
+                          >
+                            Previous
+                          </button>
+                          <button
+                            className="btn btn-primary btn-sm"
+                            disabled={currentRegIndex === regData.length - 1}
+                            onClick={showNextReg}
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </>
                 ) : (
                   <p>No data available</p>
@@ -594,6 +594,7 @@ const CorrectionPage = () => {
                   )
                 }
                 onNext={handleNext}
+                setIsViewRegData={setIsViewRegData}
               />
             ) : (
               <ZoomedImage
@@ -605,18 +606,12 @@ const CorrectionPage = () => {
                   )
                 }
                 onNext={handleNext}
+                setIsViewRegData={setIsViewRegData}
               />
             )
           ) : (
             <div className="text-center">
               <p className="fs-3">All assigned Flags corrected</p>
-              {/* {remaining ? (
-                <>
-                  <p className="fs-3">Total Remaining: {remaining}</p>
-                </>
-              ) : (
-                <></>
-              )} */}
             </div>
           )}
         </div>{' '}
@@ -625,7 +620,7 @@ const CorrectionPage = () => {
             <Button type="primary" onClick={handlePrevious} disabled={currentIndex === 0}>
               Previous
             </Button>
-            <Button type="primary" onClick={handleNext} disabled={allDataCorrected}>
+            <Button type="primary" onClick={handleNext} disabled={allDataCorrected || !noChangeRequired}>
               Next
             </Button>
           </div>

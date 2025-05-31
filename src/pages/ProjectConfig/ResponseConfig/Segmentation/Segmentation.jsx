@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+
 import {
   Select,
   Checkbox,
@@ -110,7 +111,7 @@ const Segmentation = () => {
   const handleNumberChange = (value) => {
     if (typeof value === 'number' && !isNaN(value) || typeof value === 'string' && !isNaN(parseFloat(value))) {
       if (parseFloat(value) > marksPerQuestion) {
-        setError(`Value must be less than or equal to ${marksPerQuestion? marksPerQuestion: 'Marks Per Correct Question'}`);
+        setError(`Value must be less than or equal to ${marksPerQuestion ? marksPerQuestion : 'Marks Per Correct Question'}`);
       } else {
         setError(null);
       }
@@ -254,19 +255,18 @@ const Segmentation = () => {
 
   // Function that needs to be async
   useEffect(() => {
-   
-      setSections([
-        {
-          name: '',
-          totalQuestions,
-          questionFrom,
-          questionTo,
-          marksPerQuestion,
-          negativeMarking, // Added field for negative marking
-          marksForWrongAnswer: marksForWrongOption,
-        },
-      ]);
-    
+    setSections([
+      {
+        name: '',
+        totalQuestions,
+        questionFrom,
+        questionTo,
+        marksPerQuestion,
+        negativeMarking, // Added field for negative marking
+        marksForWrongAnswer: marksForWrongOption,
+      },
+    ]);
+
   }, [
     totalQuestions,
     questionFrom,
@@ -317,39 +317,61 @@ const Segmentation = () => {
       });
       return;
     }
-  
-    if (!sections || sections.length === 0) {
-      // If sections are not enabled, validate fields that are required for submission
-      if (!totalQuestions || totalQuestions <= 0) {
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i];
+
+      // Check required fields
+      if (!section.name) {
         notification.error({
-          message: 'Total questions is required',
+          message: `Section ${i + 1}: Section Name is required`,
           duration: 3,
         });
         return;
       }
-  
-    if (!questionFrom || !questionTo || !marksPerQuestion) {
-      notification.error({
-        message: 'All fields for question range and marks are required',
-        duration: 3,
-      });
-      return;
+
+      if (
+        !section.totalQuestions ||
+        section.totalQuestions <= 0
+      ) {
+        notification.error({
+          message: `Section ${i + 1}: Total Questions must be greater than 0`,
+          duration: 3,
+        });
+        return;
+      }
+
+      if (
+        !section.questionFrom ||
+        !section.questionTo
+      ) {
+        notification.error({
+          message: `Section ${i + 1}: Question range is required (From and To)`,
+          duration: 3,
+        });
+        return;
+      }
+
+      if (!section.marksPerQuestion && section.marksPerQuestion !== 0) {
+        notification.error({
+          message: `Section ${i + 1}: Marks per correct question is required`,
+          duration: 3,
+        });
+        return;
+      }
+
+      if (section.negativeMarking === 'yes' && !section.marksForWrongAnswer && section.marksForWrongAnswer !== 0) {
+        notification.error({
+          message: `Section ${i + 1}: Marks deduction for wrong answers is required`,
+          duration: 3,
+        });
+        return;
+      }
     }
 
-    if (negativeMarking === 'yes' && !marksForWrongOption) {
-      notification.error({
-        message: 'Marks deduction for wrong answers is required when negative marking is enabled',
-        duration: 3,
-      });
-      return;
-    }
-  }
+
     if (!error) {
       setLoading(true);
       try {
-        // Ensure numBlocks is defined or set a default value // Initialize this value as needed
-
-        // Prepare data to match API expected structure
         const dataToSubmit = {
           responseId: 0, // Adjust this as needed
           sectionsJson: '', // Assuming this is not used; set as needed
@@ -415,7 +437,7 @@ const Segmentation = () => {
         // Ensure loading state is reset even if an error occurs
         setLoading(false);
       }
-    }else{
+    } else {
       notification.error({
         message: error
       })
@@ -461,6 +483,7 @@ const Segmentation = () => {
                       onCoursesRetrieved={handleCoursesRetrieved}
                       data={data}
                       fetchData={fetchData}
+                      onCancel={closeModal}
                     />
                   )}
                 </Modal>
@@ -469,9 +492,10 @@ const Segmentation = () => {
           </div>
 
           <Row>
-
             <Col>
-              <Form.Item label="Select Course">
+              <Form.Item label={<span>
+                Course <span style={{ color: 'red' }}>*</span>
+              </span>}>
                 {courseOptions && courseOptions.length > 0 ? (
                   <Select
                     placeholder="Select a course"
@@ -494,135 +518,153 @@ const Segmentation = () => {
               </Form.Item>
             </Col>
           </Row>
-          {(selectedCourse &&
-            <>
-              {sections.map((section, index) => (
-                <div key={index}>
-                  <Divider orientation="left">Section {index + 1}</Divider>
+         {selectedCourse && (
+  <>
+    {sections.map((section, index) => (
+      <div
+        key={index}
+        style={{
+          marginBottom: '24px',
+          padding: '16px',
+          border: '1px solid #f0f0f0',
+          borderRadius: '8px',
+          background: '#fafafa',
+        }}
+      >
+        <Divider orientation="left">Section {index + 1}</Divider>
 
-                  <Row>
-                    <Col>
-                      <Form.Item label="Section Name">
-                        <Input
-                          value={section.name}
-                          onChange={(e) => handleSectionChange(index, 'name', e.target.value)}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col>
-                      <Form.Item label="Total Questions">
-                        <InputNumber
-                          min={1}
-                          value={section.totalQuestions}
-                          onChange={(value) => handleSectionChange(index, 'totalQuestions', value)}
-                          style={{ width: '100%' }}
-                          onKeyPress={handleKeyPress}
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
+        <Row gutter={[24, 16]}>
+          <Col span={8}>
+            <Form.Item required>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ width: 200 }}>Section Name<span style={{ color: 'red' }}>*</span></div>
+                <Input
+                  value={section.name}
+                  onChange={(e) => handleSectionChange(index, 'name', e.target.value)}
+                />
+              </div>
+            </Form.Item>
+          </Col>
 
-                  <Row>
-                    <Col>
-                      <Form.Item label="Question From">
-                        <Input
-                          value={section.questionFrom}
-                          onChange={(e) =>
-                            handleSectionChange(index, 'questionFrom', e.target.value)
-                          }
-                          onKeyPress={handleKeyPress}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col>
-                      <Form.Item label="Question To">
-                        <Input
-                          value={section.questionTo}
-                          onChange={(e) => handleSectionChange(index, 'questionTo', e.target.value)}
-                          onKeyPress={handleKeyPress}
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
+          <Col span={8}>
+            <Form.Item required>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ width: 200 }}>Total Questions<span style={{ color: 'red' }}>*</span></div>
+                <InputNumber
+                  min={1}
+                  value={section.totalQuestions}
+                  onChange={(value) => handleSectionChange(index, 'totalQuestions', value)}
+                  style={{ width: '100%' }}
+                  onKeyPress={handleKeyPress}
+                />
+              </div>
+            </Form.Item>
+          </Col>
 
-                  <Row>
-                    <Col>
-                      <Form.Item label="Marks Per Correct Question">
-                        <InputNumber
-                          min={0}
-                          value={section.marksPerQuestion}
-                          onChange={(value) =>
-                            handleSectionChange(index, 'marksPerQuestion', value)
-                          }
-                          style={{ width: '100%' }}
-                          onKeyPress={handleKeyPress}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col>
-                      <Form.Item label="Is there negative marking?">
-                        <Radio.Group
-                          onChange={(e) =>
-                            handleSectionChange(index, 'negativeMarking', e.target.value)
-                          }
-                          value={section.negativeMarking}
-                        >
-                          <Radio value="yes">Yes</Radio>
-                          <Radio value="no">No</Radio>
-                        </Radio.Group>
-                      </Form.Item>
-                    </Col>
-                  </Row>
+          <Col span={8}>
+            <Form.Item required>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ width: 200 }}>Question From<span style={{ color: 'red' }}>*</span></div>
+                <Input
+                  value={section.questionFrom}
+                  onChange={(e) => handleSectionChange(index, 'questionFrom', e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+              </div>
+            </Form.Item>
+          </Col>
 
-                  <Row>
-                    <Col>
-                      <Form.Item label="Total Marks">
-                        <Input
-                          readOnly
-                          value={calculateTotalMarks(
-                            section.marksPerQuestion,
-                            section.totalQuestions,
-                          )}
-                          onKeyPress={handleKeyPress}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col>
-                      {section.negativeMarking === 'yes' && (
-                        <Form.Item label="Marks Deduction  for Wrong Answer">
-                          <InputNumber
-                            min={0}
-                            value={section.marksForWrongAnswer}
-                            onChange={(value) =>
-                              handleSectionChange(index, 'marksForWrongAnswer', value)
-                            }
-                            style={{ width: '100%' }}
-                            onKeyPress={handleKeyPress}
-                          />
-                        </Form.Item>
-                      )}
-                    </Col>
-                  </Row>
+          <Col span={8}>
+            <Form.Item required>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ width: 200 }}>Question To<span style={{ color: 'red' }}>*</span></div>
+                <Input
+                  value={section.questionTo}
+                  onChange={(e) => handleSectionChange(index, 'questionTo', e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+              </div>
+            </Form.Item>
+          </Col>
 
-                  <Form.Item>
-                    <Button type="dashed" onClick={() => handleRemoveSection(index)}>
-                      Remove Section
-                    </Button>
-                  </Form.Item>
-                </div>
-              ))}
+          <Col span={8}>
+            <Form.Item required>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ width: 200 }}>Marks Per Correct Question<span style={{ color: 'red' }}>*</span></div>
+                <InputNumber
+                  min={0}
+                  value={section.marksPerQuestion}
+                  onChange={(value) => handleSectionChange(index, 'marksPerQuestion', value)}
+                  style={{ width: '100%' }}
+                  onKeyPress={handleKeyPress}
+                />
+              </div>
+            </Form.Item>
+          </Col>
+
+          <Col span={8}>
+            <Form.Item required>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ width: 200 }}>Negative Marking?<span style={{ color: 'red' }}>*</span></div>
+                <Radio.Group
+                  onChange={(e) => handleSectionChange(index, 'negativeMarking', e.target.value)}
+                  value={section.negativeMarking}
+                >
+                  <Radio value="yes">Yes</Radio>
+                  <Radio value="no">No</Radio>
+                </Radio.Group>
+              </div>
+            </Form.Item>
+          </Col>
+
+          {section.negativeMarking === 'yes' && (
+            <Col span={8}>
               <Form.Item>
-                <Button type="dashed" onClick={handleAddSection}>
-                  Add Section
-                </Button>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <div style={{ width: 200 }}>Marks Deduction (Wrong)</div>
+                  <InputNumber
+                    min={0}
+                    value={section.marksForWrongAnswer}
+                    onChange={(value) => handleSectionChange(index, 'marksForWrongAnswer', value)}
+                    style={{ width: '100%' }}
+                    onKeyPress={handleKeyPress}
+                  />
+                </div>
               </Form.Item>
-            </>
-        )}
+            </Col>
+          )}
+
+          <Col span={8}>
+            <Form.Item label="Total Marks">
+              <Input
+                readOnly
+                value={calculateTotalMarks(section.marksPerQuestion, section.totalQuestions)}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Form.Item>
+          <Button type="dashed" danger onClick={() => handleRemoveSection(index)}>
+            Remove Section
+          </Button>
+        </Form.Item>
+      </div>
+    ))}
+
+    <Form.Item>
+      <Button type="dashed" onClick={handleAddSection}>
+        Add Section
+      </Button>
+    </Form.Item>
+  </>
+)}
+
         </div>
 
 
         <div>
-          <ResponseConfig numBlocks = {numBlocks} setNumBlocks = {setNumBlocks} responseOption = {responseOption} setResponseOption = {setResponseOption} />
+          <ResponseConfig numBlocks={numBlocks} setNumBlocks={setNumBlocks} responseOption={responseOption} setResponseOption={setResponseOption} />
         </div>
         <div className="mt-3 text-center">
           <Form.Item>
@@ -631,7 +673,7 @@ const Segmentation = () => {
             </Button>
           </Form.Item>
         </div>
-      </Form>
+      </Form >
     </>
 
   );

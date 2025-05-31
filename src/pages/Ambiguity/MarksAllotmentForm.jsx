@@ -424,6 +424,7 @@ const MarksAllotmentForm = () => {
                             onChange={handleChange}
                             style={{ borderRadius: '0' }}
                             placeholder=''
+                             min="0"
                         />
                     </Form.Item>
                 </Col>

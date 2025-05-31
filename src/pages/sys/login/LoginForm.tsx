@@ -40,7 +40,6 @@ function LoginForm() {
         name="login"
         size="large"
         initialValues={{
-          remember: true,
           username: '',
           password: '',
         }}
@@ -60,11 +59,7 @@ function LoginForm() {
         </Form.Item>
         <Form.Item>
           <Row>
-            <Col span={12}>
-              <Form.Item name="remember" valuePropName="checked" noStyle>
-                <Checkbox>{t('sys.login.rememberMe')}</Checkbox>
-              </Form.Item>
-            </Col>
+          
             <Col span={12} className="text-right">
               <button className="!underline" onClick={() => setLoginState(LoginStateEnum.RESET_PASSWORD)}>
                 {t('sys.login.forgetPassword')}

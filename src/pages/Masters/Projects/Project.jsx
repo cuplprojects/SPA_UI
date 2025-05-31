@@ -84,11 +84,23 @@ function Project() {
   const database = useDatabase();
   const [filteredData, setFilteredData] = useState([]);
   const token = useUserToken();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     fetchData();
     fetchUsers();
   }, []);
+
+  const handlePaginationChange = (page, pageSize) => {
+    setCurrentPage(page);
+    setPageSize(pageSize);
+  };
+
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   const fetchData = async () => {
     try {
@@ -330,8 +342,8 @@ function Project() {
       userAssigned: [],
       method: 'POST',
     };
-    setData([newData,...data]);
-    setFilteredData([newData,...data]);
+    setData([newData, ...data]);
+    setFilteredData([newData, ...data]);
     setEditingKey(newRowKey.toString());
     setHasUnsavedChanges(true);
   };
@@ -412,8 +424,8 @@ function Project() {
           col.dataIndex === 'serialNo'
             ? 'number'
             : col.dataIndex === 'userAssigned'
-            ? 'select'
-            : 'text',
+              ? 'select'
+              : 'text',
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record),
@@ -444,6 +456,7 @@ function Project() {
           value={searchTerm}
           onChange={handleSearchChange}
           style={{ width: 150, marginRight: 8 }}
+          allowClear
         />
       </div>
       <Form form={form} component={false}>
@@ -454,10 +467,16 @@ function Project() {
             },
           }}
           bordered
-          dataSource={filteredData}
+          dataSource={paginatedData}
           columns={mergedColumns}
           rowClassName="editable-row"
-          pagination={{ onChange: cancel }}
+          pagination={{
+            current: currentPage,
+            pageSize: pageSize,
+            onChange: handlePaginationChange, // Handle page change
+            showSizeChanger: true,
+            pageSizeOptions: ['5', '10', '20', '50'],
+          }}
           onChange={handleChange}
         />
       </Form>

@@ -354,43 +354,9 @@ const GenerateScore = () => {
         }
       },
       onCancel: async () => {
-        try {
-          const response = await axios.put(
-            `${apiurl}/Key/updatekey?courseName=${courseName}&ProjectId=${ProjectId}&WhichDatabase=${database}`,
-            formData,
-            {
-              headers: {
-                'Content-Type': 'multipart/form-data',
-                Authorization: `Bearer ${token}`,
-              },
-            },
-          );
-
-          if (response.status === 200) {
-            fetchKeyCounts();
-            notification.success({
-              message: `Key updated successfully for course ${courseName}!`,
-              duration: 3,
-            });
-            setUpdateFile(null); // Reset file after successful update
-            setFileInfo((prev) => ({
-              ...prev,
-              [courseName]: { name: '' }, // Reset file info after successful update
-            }));
-          } else {
-            notification.error({
-              message: `Error updating key for course ${courseName}!`,
-              duration: 3,
-            });
-          }
-        } catch (error) {
-          notification.error({
-            message: `Error updating key for course ${courseName}`,
-            duration: 3,
-          });
-        } finally {
-          setUpdateLoading((prev) => ({ ...prev, [courseName]: false }));
-        }
+       console.log('Update cancelled');
+       setFile()
+       setFileInfo({})
       },
     });
   };
@@ -600,7 +566,7 @@ const GenerateScore = () => {
                 className="ms-2"
                 type="primary"
                 onClick={() => handleUpdateClick(record.courseName)}
-                disabled={updateLoading[record.courseName]}
+                disabled={updateLoading[record.courseName] || !fileInfo[record.courseName]?.name}
               >
                 {updateLoading[record.courseName] ? 'Updating...' : 'Update Key'}
               </Button>
