@@ -457,146 +457,117 @@ const handleFieldChange = (fields) => {
   };
 
   return (
-    <div style={{ padding: '24px', minHeight: '100vh' }}>
-      <Card
-        style={{
-          marginBottom: '24px',
-          borderRadius: '8px',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-          border: '1px solid #d9d9d9',
-        }}
-      >
-        <Row gutter={[24, 16]} align="left">
-          <Col xs={24} md={12}>
+    <div >
+      {/* Single Main Container with Simple Border */}
+      <div style={{
+        border: '2px solid silver',
+        borderRadius: '8px',
+        backgroundColor: 'white',
+        padding: '24px',
+        maxWidth: '1400px',
+        margin: '0 auto'
+      }}>
 
-            <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-              Generate and customize reports for project: <Text strong>{projectName}</Text>
-            </Paragraph>
-          </Col>
-          <Col xs={24} md={12} style={{ textAlign: 'right' }}>
-            {assignedUsers.length > 0 && (
-              <div style={{ backgroundColor: '#f0f7ff', padding: '20px', borderRadius: '2px', border: '1px solid #d6e4ff' }}>
-                <Text strong style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', color: '#4b5563' }}>
-                  
-
-                  <div style={{
-                    backgroundColor: '#1890ff',
-                    color: 'white',
-                    borderRadius: '50%',
-                    width: '28px',
-                    height: '28px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginRight: '10px',
-                    position: 'relative'
-                  }}>
-                    <TeamOutlined style={{ fontSize: '18px' }} />
-                    
-
-                    <div style={{
-                      position: 'absolute',
-                      top: '-8px',
-                      right: '-8px',
-                      backgroundColor: '#ff4d4f',
-                      color: 'white',
-                      borderRadius: '50%',
-                      width: '20px',
-                      height: '20px',
-                      fontSize: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 'bold'
-                    }}>
-                      {assignedUsers.length}
-                    </div>
+        {/* Header Section */}
+        <div style={{
+          borderBottom: '1px solid #e8e8e8',
+          paddingBottom: '20px',
+          marginBottom: '24px'
+        }}>
+          <Row gutter={[24, 16]} align="middle">
+            <Col xs={24} lg={16}>
+              
+              <Text type="secondary" style={{ fontSize: '16px' }}>
+                Generate and customize reports for project: <Text strong style={{ color: '#1890ff' }}>{projectName}</Text>
+              </Text>
+            </Col>
+            <Col xs={24} lg={6}>
+              {assignedUsers.length > 0 && (
+                <div style={{
+                  textAlign: 'right',
+                  padding: '12px',
+                  backgroundColor: '#f0f7ff',
+                  borderRadius: '6px',
+                  border: '1px solid #d6e4ff'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: '8px' }}>
+                    <TeamOutlined style={{ fontSize: '18px', color: '#1890ff', marginRight: '8px' }} />
+                    <Text strong style={{ color: '#1890ff' }}>
+                      Assigned Users ({assignedUsers.length})
+                    </Text>
                   </div>
-                  Assigned Users:
-                </Text>
-                <div>
-                  {assignedUsers.map((user, index) => {
-                    // Use a limited set of professional colors
-                    const colors = ['blue', 'cyan', 'green', 'geekblue', 'purple'];
-                    const colorIndex = index % colors.length;
-
-                    return (
-                      <Tag
-                        color={colors[colorIndex]}
-                        key={index}
-                        style={{
-                          margin: '0 4px 8px 0',
-                          padding: '4px 10px',
-                          borderRadius: '2px',
-                          fontSize: '13px',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                        }}
-
-                        icon={<UserAddOutlined style={{ marginRight: '4px' }} />}
-                      >
-                        {user.fullName}
-                      </Tag>
-                    );
-                  })}
+                  <div style={{ textAlign: 'right' }}>
+                    {assignedUsers.map((user, index) => {
+                      const colors = ['blue', 'cyan', 'green', 'geekblue', 'purple'];
+                      const colorIndex = index % colors.length;
+                      return (
+                        <Tag
+                          color={colors[colorIndex]}
+                          key={index}
+                          style={{
+                            margin: '2px',
+                            fontSize: '12px'
+                          }}
+                          icon={<UserAddOutlined />}
+                        >
+                          {user.fullName}
+                        </Tag>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
-          </Col>
-        </Row>
-      </Card>
+              )}
+            </Col>
+          </Row>
+        </div>
 
-      <Row gutter={[24, 24]}>
-        <Col xs={24}>
-          <Card
-            title={
-              <span style={{ display: 'flex', alignItems: 'center' }}>
-                <FileSearchOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
-                Data Controls
-              </span>
-            }
-            style={{
-              borderRadius: '8px',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-              border: '1px solid #d9d9d9',
-              marginBottom: '24px'
-            }}
-            extra={
-              <Space>
+        {/* Controls Section */}
+        <div style={{
+          borderBottom: '1px solid #e8e8e8',
+          paddingBottom: '24px',
+          marginBottom: '24px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+           
+            <Space size="middle">
+              <Button
+                type="primary"
+                icon={<FileSearchOutlined style={{ color: 'white' }} />}
+                onClick={fetchReportData}
+                size="large"
+              >
+                Fetch Data
+              </Button>
+              <Button
+                type={showData ? "default" : "primary"}
+                icon={showData ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+                onClick={() => setShowData(!showData)}
+                size="large"
+              >
+                {showData ? 'Hide Data' : 'Show Data'}
+              </Button>
+              <Dropdown menu={exportMenu} trigger={['click']}>
                 <Button
                   type="primary"
-                  icon={<FileSearchOutlined />}
-                  onClick={fetchReportData}
+                  icon={<DownloadOutlined style={{ fontSize: '16px', color: 'white' }} />}
+                  size="large"
+                  style={{ display: 'flex', alignItems: 'center' }}
                 >
-                  Fetch Data
+                  Export <DownOutlined style={{ fontSize: '12px', marginLeft: '4px' }} />
                 </Button>
-                <Button
-                  type={showData ? "default" : "primary"}
-                  icon={showData ? <EyeInvisibleOutlined /> : <EyeOutlined />}
-                  onClick={() => setShowData(!showData)}
-                >
-                  {showData ? 'Hide Data' : 'Show Data'}
-                </Button>
-                <Dropdown menu={exportMenu} trigger={['click']}>
-                  <Button
-                    type="primary"
-                    icon={<DownloadOutlined style={{ fontSize: '16px' }} />}
-                    style={{ display: 'flex', alignItems: 'center' }}
-                  >
-                    Export <DownOutlined style={{ fontSize: '12px', marginLeft: '4px' }} />
-                  </Button>
-                </Dropdown>
-              </Space>
-            }
-          >
-            <Row gutter={[24, 24]}>
-              <Col xs={24} lg={12}>
-                <Text strong style={{ display: 'block', marginBottom: '12px', color: '#4b5563' }}>
-                  <EyeOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
+              </Dropdown>
+            </Space>
+          </div>
+          <Row gutter={[24, 24]}>
+            <Col xs={24} lg={8}>
+              <div style={{ marginBottom: '20px' }}>
+                <Text strong style={{ display: 'block', marginBottom: '12px', color: '#1890ff', fontSize: '16px' }}>
+                  <EyeOutlined style={{ marginRight: '8px' }} />
                   Select Fields to Display
                 </Text>
                 <Select
                   mode="multiple"
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', minHeight: '40px' }}
                   placeholder="Select fields to show"
                   value={selectedFields}
                   onChange={setSelectedFields}
@@ -604,6 +575,7 @@ const handleFieldChange = (fields) => {
                   showSearch
                   allowClear
                   maxTagCount={5}
+                  size="large"
                 >
                   {dataKeys.map((key) => (
                     <Option key={key} value={key}>
@@ -611,15 +583,17 @@ const handleFieldChange = (fields) => {
                     </Option>
                   ))}
                 </Select>
-              </Col>
-              <Col xs={24} lg={12}>
-                <Text strong style={{ display: 'block', marginBottom: '12px', color: '#4b5563' }}>
-                  <OrderedListOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
+              </div>
+            </Col>
+            <Col xs={24} lg={8}>
+              <div style={{ marginBottom: '20px' }}>
+                <Text strong style={{ display: 'block', marginBottom: '12px', color: '#1890ff', fontSize: '16px' }}>
+                  <OrderedListOutlined style={{ marginRight: '8px' }} />
                   Select Fields to Order By
                 </Text>
                 <Select
                   mode="multiple"
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', minHeight: '40px' }}
                   placeholder="Select fields to order"
                   value={fieldOrder}
                   onChange={handleFieldOrderChange}
@@ -627,6 +601,7 @@ const handleFieldChange = (fields) => {
                   showSearch
                   allowClear
                   maxTagCount={5}
+                  size="large"
                   tagRender={(props) => {
                     const { label, value, closable, onClose } = props;
                     const index = fieldOrder.indexOf(value) + 1;
@@ -668,81 +643,82 @@ const handleFieldChange = (fields) => {
                     </Option>
                   ))}
                 </Select>
-                <Text type="secondary" style={{ display: 'block', marginTop: '8px', fontSize: '12px' }}>
-                  <InfoCircleOutlined style={{ marginRight: '5px', color: '#1890ff' }} />
-                  The order of selection determines the sorting priority. Table data will be sorted by these fields in the order shown.
-                </Text>
-              </Col>
-              <Col xs={24} style={{ textAlign: 'right', marginTop: '16px' }}>
-                <Button
-                  type="primary"
-                  icon={<SaveOutlined />}
-                  onClick={handleSaveOrder}
-                >
-                  {isOrderAlready ? 'Update Configuration' : 'Save Configuration'}
-                </Button>
-              </Col>
-            </Row>
-          </Card>
-        </Col>
-
-        <Col xs={24}>
-          {loading ? (
-            <Card
-              style={{
-                textAlign: 'center',
-                padding: '40px',
-                borderRadius: '8px',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
-              }}
-            >
-              <Spin tip="Loading report data..." />
-            </Card>
-          ) : (
-            showData && reportData.length > 0 && (
-              <Card
-                title={
-                  <span style={{ display: 'flex', alignItems: 'center' }}>
-                    <DatabaseOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
-                    Report Data ({reportData.length} records)
-                  </span>
-                }
-                style={{
-                  borderRadius: '8px',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-                  border: '1px solid #d9d9d9',
-                }}
-                styles={{ body: { padding: 0 } }}
-                extra={
-                  <Dropdown menu={exportMenu} trigger={['click']}>
-                    <Button
-                      type="text"
-                      icon={<DownloadOutlined style={{ fontSize: '20px', color: '#1890ff' }} />}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    />
-                  </Dropdown>
-                }
+                
+              </div>
+            </Col>
+            <Col xs={24} lg={4} style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '20px' }}>
+              <Button
+                type="primary"
+                icon={<SaveOutlined />}
+                onClick={handleSaveOrder}
+                size="large"
+                style={{ width: '100%', minHeight: '40px' }}
               >
+                {isOrderAlready ? 'Update' : 'Save'}
+              </Button>
+            </Col>
+          </Row>
+        </div>
+
+        {/* Data Display Section */}
+        {loading ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '60px 20px',
+            backgroundColor: '#fafafa',
+            borderRadius: '6px',
+            border: '1px dashed #d9d9d9'
+          }}>
+            <Spin size="large" tip="Loading report data..." />
+          </div>
+        ) : (
+          showData && reportData.length > 0 && (
+            <div>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '16px',
+                paddingBottom: '12px',
+                borderBottom: '1px solid #e8e8e8'
+              }}>
+                <Title level={4} style={{ margin: 0, color: '#1890ff' }}>
+                  <DatabaseOutlined style={{ marginRight: '8px' }} />
+                  Report Data
+                  <Tag color="blue" style={{ marginLeft: '12px', fontSize: '14px' }}>
+                    {reportData.length} records
+                  </Tag>
+                </Title>
+               
+              </div>
+
+              <div style={{
+                border: '1px solid #e8e8e8',
+                borderRadius: '6px',
+                overflow: 'hidden'
+              }}>
                 <Table
                   columns={columns}
                   dataSource={sortData(reportData)}
-                  rowKey={(record, index) => index} // Use index as key to avoid issues with missing id
-                  bordered
+                  rowKey={(record, index) => index}
+                  bordered={false}
                   size="middle"
                   scroll={{ x: 'max-content' }}
                   pagination={{
-                    pageSize: 10,
+                    pageSize: 15,
                     showSizeChanger: true,
                     showQuickJumper: true,
-                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`
+                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                    style: { padding: '16px', backgroundColor: '#fafafa' }
                   }}
-                  rowClassName={(record, index) => index % 2 === 0 ? '' : 'ant-table-row-light'}
+                  style={{ backgroundColor: 'white' }}
                 />
-              </Card>
-            )
-          )}
-        </Col>
-      </Row>
+              </div>
+            </div>
+          )
+        )}
+
+      </div>
     </div>
   );
 };
