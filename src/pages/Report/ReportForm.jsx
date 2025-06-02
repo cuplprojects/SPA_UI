@@ -165,8 +165,20 @@ const ReportForm = () => {
 
         setReportData(structuredData);
         setDataKeys(Object.keys(structuredData[0] || {})); // Update dataKeys here
+
+        // Show success notification
+        notification.success({
+          message: 'Success',
+          description: `Report  fetched successfully! `,
+         
+        });
     } catch (error) {
         console.error('Error fetching report data:', error);
+        notification.error({
+          message: 'Error',
+          description: 'Failed to fetch report data. Please try again.',
+          icon: <InfoCircleOutlined style={{ color: '#ff4d4f' }} />
+        });
     }
     setLoading(false);
 };
@@ -445,13 +457,13 @@ const handleFieldChange = (fields) => {
     items: [
       {
         key: '1',
-        icon: <FilePdfOutlined style={{ fontSize: '18px', color: '#ff4d4f' }} />,
-        label: <span onClick={downloadPDF}>Download PDF</span>
+        icon: <FilePdfOutlined style={{ fontSize: '30px', color: '#ff4d4f' }} />,
+        label: <span onClick={downloadPDF}></span>
       },
       {
         key: '2',
-        icon: <FileExcelOutlined style={{ fontSize: '18px', color: '#52c41a' }} />,
-        label: <span onClick={downloadExcel}>Download Excel</span>
+        icon: <FileExcelOutlined style={{ fontSize: '30px', color: '#52c41a' }} />,
+        label: <span onClick={downloadExcel}></span>
       }
     ]
   };
@@ -478,17 +490,17 @@ const handleFieldChange = (fields) => {
             <Col xs={24} lg={16}>
               
               <Text type="secondary" style={{ fontSize: '16px' }}>
-                Generate and customize reports for project: <Text strong style={{ color: '#1890ff' }}>{projectName}</Text>
+                Generate and customize reports for project: <Text >{projectName}</Text>
               </Text>
             </Col>
-            <Col xs={24} lg={6}>
+            <Col xs={24} lg={8}>
               {assignedUsers.length > 0 && (
                 <div style={{
                   textAlign: 'right',
-                  padding: '12px',
+                  padding: '6px',
                   backgroundColor: '#f0f7ff',
-                  borderRadius: '6px',
-                  border: '1px solid #d6e4ff'
+                  borderRadius: '5px',
+                  border: '2px solid #d6e4ff'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: '8px' }}>
                     <TeamOutlined style={{ fontSize: '18px', color: '#1890ff', marginRight: '8px' }} />
@@ -528,7 +540,6 @@ const handleFieldChange = (fields) => {
           marginBottom: '24px'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-           
             <Space size="middle">
               <Button
                 type="primary"
@@ -546,22 +557,31 @@ const handleFieldChange = (fields) => {
               >
                 {showData ? 'Hide Data' : 'Show Data'}
               </Button>
-              <Dropdown menu={exportMenu} trigger={['click']}>
-                <Button
-                  type="primary"
-                  icon={<DownloadOutlined style={{ fontSize: '16px', color: 'white' }} />}
-                  size="large"
-                  style={{ display: 'flex', alignItems: 'center' }}
-                >
-                  Export <DownOutlined style={{ fontSize: '12px', marginLeft: '4px' }} />
-                </Button>
-              </Dropdown>
+              <Button
+                type="primary"
+                icon={<SaveOutlined />}
+                onClick={handleSaveOrder}
+                size="large"
+              >
+                {isOrderAlready ? 'save' : 'Update'}
+              </Button>
             </Space>
+
+            <Dropdown menu={exportMenu} trigger={['click']}>
+              <Button
+                type="primary"
+                icon={<DownloadOutlined style={{ fontSize: '16px', color: 'white' }} />}
+                size="large"
+                style={{ display: 'flex', alignItems: 'center' }}
+              >
+                Export <DownOutlined style={{ fontSize: '12px', marginLeft: '4px' }} />
+              </Button>
+            </Dropdown>
           </div>
           <Row gutter={[24, 24]}>
-            <Col xs={24} lg={8}>
+            <Col xs={24} lg={6}>
               <div style={{ marginBottom: '20px' }}>
-                <Text strong style={{ display: 'block', marginBottom: '12px', color: '#1890ff', fontSize: '16px' }}>
+                <Text strong style={{ display: 'block', marginBottom: '12px',  fontSize: '16px' }}>
                   <EyeOutlined style={{ marginRight: '8px' }} />
                   Select Fields to Display
                 </Text>
@@ -585,9 +605,9 @@ const handleFieldChange = (fields) => {
                 </Select>
               </div>
             </Col>
-            <Col xs={24} lg={8}>
+            <Col xs={24} lg={6}>
               <div style={{ marginBottom: '20px' }}>
-                <Text strong style={{ display: 'block', marginBottom: '12px', color: '#1890ff', fontSize: '16px' }}>
+                <Text strong style={{ display: 'block', marginBottom: '12px',  fontSize: '16px' }}>
                   <OrderedListOutlined style={{ marginRight: '8px' }} />
                   Select Fields to Order By
                 </Text>
@@ -643,19 +663,7 @@ const handleFieldChange = (fields) => {
                     </Option>
                   ))}
                 </Select>
-                
               </div>
-            </Col>
-            <Col xs={24} lg={4} style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '20px' }}>
-              <Button
-                type="primary"
-                icon={<SaveOutlined />}
-                onClick={handleSaveOrder}
-                size="large"
-                style={{ width: '100%', minHeight: '40px' }}
-              >
-                {isOrderAlready ? 'Update' : 'Save'}
-              </Button>
             </Col>
           </Row>
         </div>

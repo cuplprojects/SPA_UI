@@ -355,13 +355,13 @@ const Flagreport = () => {
     items: [
       {
         key: '1',
-        icon: <FilePdfOutlined style={{ fontSize: '18px', color: '#ff4d4f' }} />,
-        label: <span onClick={handlePDFAction} style={{ color: '#262626', fontWeight: 500 }}>Download PDF</span>
+        icon: <FilePdfOutlined style={{ fontSize: '30px', color: '#ff4d4f' }} />,
+        label: <span onClick={handlePDFAction} style={{ color: '#262626', fontWeight: 500 }}></span>
       },
       {
         key: '2',
-        icon: <FileExcelOutlined style={{ fontSize: '18px', color: '#52c41a' }} />,
-        label: <span onClick={handleExcelAction} style={{ color: '#262626', fontWeight: 500 }}>Download Excel</span>
+        icon: <FileExcelOutlined style={{ fontSize: '30px', color: '#52c41a' }} />,
+        label: <span onClick={handleExcelAction} style={{ color: '#262626', fontWeight: 500 }}></span>
       }
     ]
   };
@@ -386,14 +386,9 @@ const Flagreport = () => {
           <Row gutter={[24, 16]} style={{ marginBottom: 16 }}>
             <Col xs={24} md={12}>
               <Paragraph type="secondary" style={{ marginBottom: 8 }}>
-                Generate and view flag reports for project: <Text strong>{projectName}</Text>
+                Generate and customize reports for project: <Text strong>{projectName}</Text>
               </Paragraph>
-              <Input
-                value={projectName}
-                style={{ width: '100%' }}
-                disabled
-                prefix={<DatabaseOutlined style={{ color: '#1890ff' }} />}
-              />
+              
             </Col>
             <Col xs={24} md={12} style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
               <Space>
@@ -441,7 +436,7 @@ const Flagreport = () => {
 
           {flagData.length > 0 && (
             <Row gutter={[24, 24]} style={{ marginBottom: 16 }}>
-              <Col xs={24} lg={12}>
+              <Col xs={24} lg={6}>
                 <Text strong style={{ display: 'block', marginBottom: '12px', color: '#4b5563' }}>
                   <EyeOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
                   Select Fields to Display
@@ -459,7 +454,7 @@ const Flagreport = () => {
                   allowClear
                 />
               </Col>
-              <Col xs={24} lg={12}>
+              <Col xs={24} lg={6}>
                 <Text strong style={{ display: 'block', marginBottom: '12px', color: '#4b5563' }}>
                   <OrderedListOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
                   Sort Fields
@@ -496,16 +491,7 @@ const Flagreport = () => {
                 boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
                 border: '1px solid #d9d9d9',
               }}
-              styles={{ body: { padding: 0 } }}
-              extra={
-                <Dropdown menu={exportMenu} trigger={['click']}>
-                  <Button
-                    type="text"
-                    icon={<DownloadOutlined style={{ fontSize: '20px', color: '#1890ff' }} />}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  />
-                </Dropdown>
-              }
+             
             >
               <Table
                 dataSource={data}
