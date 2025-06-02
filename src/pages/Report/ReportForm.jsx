@@ -120,7 +120,7 @@ const ReportForm = () => {
         setFieldOrder(savedSortOrder);
         setSelectedFields(savedSortOrder)
         setIsOrderAlready(true)
-        fetchReportData()
+        fetchReportData(false) // Don't show success message on automatic load
       }
     } catch (error) {
       console.error('Error fetching saved sort order:', error);
@@ -128,7 +128,7 @@ const ReportForm = () => {
   };
 
 
-  const fetchReportData = async () => {
+  const fetchReportData = async (showSuccessMessage = false) => {
     setLoading(true);
     try {
         const postdata = {
@@ -166,12 +166,14 @@ const ReportForm = () => {
         setReportData(structuredData);
         setDataKeys(Object.keys(structuredData[0] || {})); // Update dataKeys here
 
-        // Show success notification
-        notification.success({
-          message: 'Success',
-          description: `Report  fetched successfully! `,
-         
-        });
+        // Show success notification only when explicitly requested
+        if (showSuccessMessage) {
+          notification.success({
+            message: 'Success',
+            description: `Report fetched successfully!`,
+
+          });
+        }
     } catch (error) {
         console.error('Error fetching report data:', error);
         notification.error({
@@ -363,93 +365,158 @@ const handleFieldChange = (fields) => {
   };
 
   const downloadPDF = () => {
-    const doc = new jsPDF();
-    const totalPagesExp = '{total_pages_count_string}';
-
-    doc.setFontSize(12);
-    doc.setFont('Helvetica', 'normal');
-
-    const text = `Report For Group ${projectName}`;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const textWidth = doc.getStringUnitWidth(text) * doc.internal.scaleFactor;
-    const xPosition = (pageWidth - textWidth) / 2;
-
-    doc.text(text, xPosition, 20);
-
-    const sortedData = sortData(reportData);
-
-    const tableColumn = ['Serial No.', ...columns.map((col) => col.title)];
-    const tableRows = sortedData.map((data, index) => [
-      index + 1,
-      ...selectedFields.map((field) => data[field]),
-    ]);
-
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 30,
-      styles: {
-        fontSize: 6,
-        cellPadding: 2,
-        lineColor: [44, 62, 80],
-        lineWidth: 0.2,
-        textColor: [0, 0, 0],
-      },
-      headStyles: {
-        fontSize: 8,
-        fillColor: [22, 160, 133],
-        textColor: [255, 255, 255],
-        lineColor: [44, 62, 80],
-        lineWidth: 0.2,
-        halign: 'center',
-        valign: 'middle',
-      },
-      theme: 'striped',
-      margin: { top: 20 },
-      didDrawPage: (data) => {
-        const pageCount = doc.internal.getNumberOfPages();
-        const pageSize = doc.internal.pageSize;
-        const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
-        const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth();
-
-        doc.setFontSize(8);
-        const pageNumberText = `Page ${data.pageNumber} of ${totalPagesExp}`;
-        const textWidth = doc.getStringUnitWidth(pageNumberText) * doc.internal.scaleFactor;
-        const xPosition = pageWidth - textWidth - 10;
-        const yPosition = pageHeight - 10;
-
-        doc.text(pageNumberText, xPosition, yPosition);
-      },
-    });
-
-    if (typeof doc.putTotalPages === 'function') {
-      doc.putTotalPages(totalPagesExp);
+    // Validation
+    if (!reportData || reportData.length === 0) {
+      notification.warning({
+        message: 'No Data',
+        description: 'Please fetch data first before exporting to PDF.',
+      });
+      return;
     }
 
-    doc.save(`report_${projectName}.pdf`);
+    if (!selectedFields || selectedFields.length === 0) {
+      notification.warning({
+        message: 'No Fields Selected',
+        description: 'Please select fields to display before exporting to PDF.',
+      });
+      return;
+    }
+
+    try {
+      const doc = new jsPDF();
+      const totalPagesExp = '{total_pages_count_string}';
+
+      doc.setFontSize(12);
+      doc.setFont('Helvetica', 'normal');
+
+      const text = `Report For Group ${projectName}`;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const textWidth = doc.getStringUnitWidth(text) * doc.internal.scaleFactor;
+      const xPosition = (pageWidth - textWidth) / 2;
+
+      doc.text(text, xPosition, 20);
+
+      const sortedData = sortData(reportData);
+
+      const tableColumn = ['Serial No.', ...columns.map((col) => col.title)];
+      const tableRows = sortedData.map((data, index) => [
+        index + 1,
+        ...selectedFields.map((field) => data[field]),
+      ]);
+
+      doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 30,
+        styles: {
+          fontSize: 6,
+          cellPadding: 2,
+          lineColor: [44, 62, 80],
+          lineWidth: 0.2,
+          textColor: [0, 0, 0],
+        },
+        headStyles: {
+          fontSize: 8,
+          fillColor: [22, 160, 133],
+          textColor: [255, 255, 255],
+          lineColor: [44, 62, 80],
+          lineWidth: 0.2,
+          halign: 'center',
+          valign: 'middle',
+        },
+        theme: 'striped',
+        margin: { top: 20 },
+        didDrawPage: (data) => {
+          const pageCount = doc.internal.getNumberOfPages();
+          const pageSize = doc.internal.pageSize;
+          const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+          const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth();
+
+          doc.setFontSize(8);
+          const pageNumberText = `Page ${data.pageNumber} of ${totalPagesExp}`;
+          const textWidth = doc.getStringUnitWidth(pageNumberText) * doc.internal.scaleFactor;
+          const xPosition = pageWidth - textWidth - 10;
+          const yPosition = pageHeight - 10;
+
+          doc.text(pageNumberText, xPosition, yPosition);
+        },
+      });
+
+      if (typeof doc.putTotalPages === 'function') {
+        doc.putTotalPages(totalPagesExp);
+      }
+
+      doc.save(`report_${projectName}.pdf`);
+
+      // Show success notification
+      notification.success({
+        message: 'Success',
+        description: 'PDF exported successfully!',
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      notification.error({
+        message: 'Export Error',
+        description: 'Failed to export PDF. Please try again.',
+      });
+    }
   };
 
   const downloadExcel = () => {
-    const sortedData = sortData(reportData);
-
-    const filteredData = sortedData.map((data) => {
-      const rowData = {};
-      selectedFields.forEach((field) => {
-        rowData[fieldTitleMapping[field] || field] = data[field];
+    // Validation
+    if (!reportData || reportData.length === 0) {
+      notification.warning({
+        message: 'No Data',
+        description: 'Please fetch data first before exporting to Excel.',
       });
-      return rowData;
-    });
+      return;
+    }
 
-    const ws = XLSX.utils.json_to_sheet(filteredData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Report');
-    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `report_${projectName}.xlsx`;
-    link.click();
+    if (!selectedFields || selectedFields.length === 0) {
+      notification.warning({
+        message: 'No Fields Selected',
+        description: 'Please select fields to display before exporting to Excel.',
+      });
+      return;
+    }
+
+    try {
+      const sortedData = sortData(reportData);
+
+      const filteredData = sortedData.map((data) => {
+        const rowData = {};
+        selectedFields.forEach((field) => {
+          rowData[fieldTitleMapping[field] || field] = data[field];
+        });
+        return rowData;
+      });
+
+      const ws = XLSX.utils.json_to_sheet(filteredData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Report');
+      const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `report_${projectName}.xlsx`;
+      link.click();
+
+      // Clean up the URL object
+      URL.revokeObjectURL(url);
+
+      // Show success notification
+      notification.success({
+        message: 'Success',
+        description: 'Excel file exported successfully!',
+      });
+    } catch (error) {
+      console.error('Error generating Excel:', error);
+      notification.error({
+        message: 'Export Error',
+        description: 'Failed to export Excel file. Please try again.',
+      });
+    }
   };
 
   // Menu items for the export dropdown
@@ -458,12 +525,14 @@ const handleFieldChange = (fields) => {
       {
         key: '1',
         icon: <FilePdfOutlined style={{ fontSize: '30px', color: '#ff4d4f' }} />,
-        label: <span onClick={downloadPDF}></span>
+       
+        onClick: downloadPDF
       },
       {
         key: '2',
         icon: <FileExcelOutlined style={{ fontSize: '30px', color: '#52c41a' }} />,
-        label: <span onClick={downloadExcel}></span>
+       
+        onClick: downloadExcel
       }
     ]
   };
@@ -544,7 +613,7 @@ const handleFieldChange = (fields) => {
               <Button
                 type="primary"
                 icon={<FileSearchOutlined style={{ color: 'white' }} />}
-                onClick={fetchReportData}
+                onClick={() => fetchReportData(true)}
                 size="large"
               >
                 Fetch Data
@@ -567,12 +636,17 @@ const handleFieldChange = (fields) => {
               </Button>
             </Space>
 
-            <Dropdown menu={exportMenu} trigger={['click']}>
+            <Dropdown
+              menu={exportMenu}
+              trigger={['click']}
+              disabled={!reportData || reportData.length === 0 || !selectedFields || selectedFields.length === 0}
+            >
               <Button
                 type="primary"
                 icon={<DownloadOutlined style={{ fontSize: '16px', color: 'white' }} />}
                 size="large"
                 style={{ display: 'flex', alignItems: 'center' }}
+                disabled={!reportData || reportData.length === 0 || !selectedFields || selectedFields.length === 0}
               >
                 Export <DownOutlined style={{ fontSize: '12px', marginLeft: '4px' }} />
               </Button>

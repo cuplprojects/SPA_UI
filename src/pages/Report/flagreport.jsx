@@ -195,99 +195,161 @@ const Flagreport = () => {
   };
 
   const handlePDFAction = () => {
-    const doc = new jsPDF();
+    // Validation
+    if (!data || data.length === 0) {
+      notification.warning({
+        message: 'No Data',
+        description: 'Please fetch and show data first before exporting to PDF.',
+      });
+      return;
+    }
 
-    // Title
-    doc.text(`Flag Report for ${projectName}`, 14, 16);
+    if (!sortedFields || sortedFields.length === 0) {
+      notification.warning({
+        message: 'No Fields Selected',
+        description: 'Please select fields to display before exporting to PDF.',
+      });
+      return;
+    }
 
-    // Columns and Rows
-    const tableColumn = ['S.No.', ...sortedFields];
-    const tableRows = data.map(item => tableColumn.map(field => item[field]));
+    try {
+      const doc = new jsPDF();
 
-    // Add Table
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 30,
-      styles: {
-        fontSize: 6,
-        cellPadding: 2,
-        lineColor: [44, 62, 80],
-        lineWidth: 0.2,
-        textColor: [0, 0, 0],
-      },
-      headStyles: {
-        fontSize: 8,
-        fillColor: [22, 160, 133],
-        textColor: [255, 255, 255],
-        lineColor: [44, 62, 80],
-        lineWidth: 0.2,
-        halign: 'center',
-        valign: 'middle',
-      },
-      theme: 'striped',
-      margin: { top: 20 },
-      didDrawPage: (data) => {
-        const pageCount = doc.internal.getNumberOfPages();
-        const pageSize = doc.internal.pageSize;
-        const pageHeight = pageSize.height || pageSize.getHeight();
-        const pageWidth = pageSize.width || pageSize.getWidth();
+      // Title
+      doc.text(`Flag Report for ${projectName}`, 14, 16);
 
-        doc.setFontSize(8);
-        const pageNumberText = `Page ${data.pageNumber} of ${pageCount}`;
-        const textWidth = doc.getStringUnitWidth(pageNumberText) * doc.internal.scaleFactor;
-        const xPosition = pageWidth - textWidth - 10;
-        const yPosition = pageHeight - 10;
+      // Columns and Rows
+      const tableColumn = ['S.No.', ...sortedFields];
+      const tableRows = data.map(item => tableColumn.map(field => item[field]));
 
-        doc.text(pageNumberText, xPosition, yPosition);
-      },
-    });
+      // Add Table
+      doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 30,
+        styles: {
+          fontSize: 6,
+          cellPadding: 2,
+          lineColor: [44, 62, 80],
+          lineWidth: 0.2,
+          textColor: [0, 0, 0],
+        },
+        headStyles: {
+          fontSize: 8,
+          fillColor: [22, 160, 133],
+          textColor: [255, 255, 255],
+          lineColor: [44, 62, 80],
+          lineWidth: 0.2,
+          halign: 'center',
+          valign: 'middle',
+        },
+        theme: 'striped',
+        margin: { top: 20 },
+        didDrawPage: (data) => {
+          const pageCount = doc.internal.getNumberOfPages();
+          const pageSize = doc.internal.pageSize;
+          const pageHeight = pageSize.height || pageSize.getHeight();
+          const pageWidth = pageSize.width || pageSize.getWidth();
 
-    // Save the PDF
-    doc.save(`flag_report_${projectName}.pdf`);
+          doc.setFontSize(8);
+          const pageNumberText = `Page ${data.pageNumber} of ${pageCount}`;
+          const textWidth = doc.getStringUnitWidth(pageNumberText) * doc.internal.scaleFactor;
+          const xPosition = pageWidth - textWidth - 10;
+          const yPosition = pageHeight - 10;
+
+          doc.text(pageNumberText, xPosition, yPosition);
+        },
+      });
+
+      // Save the PDF
+      doc.save(`flag_report_${projectName}.pdf`);
+
+      // Show success notification
+      notification.success({
+        message: 'Success',
+        description: 'PDF exported successfully!',
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      notification.error({
+        message: 'Export Error',
+        description: 'Failed to export PDF. Please try again.',
+      });
+    }
   };
 
   const handleExcelAction = () => {
-    const title = [`Flag Report for ${projectName}`];
-    const headers = ['S.No.', ...sortedFields];
-    const cleanData = data.map(({ key, ...rest }) => rest);
+    // Validation
+    if (!data || data.length === 0) {
+      notification.warning({
+        message: 'No Data',
+        description: 'Please fetch and show data first before exporting to Excel.',
+      });
+      return;
+    }
 
-    const worksheet = XLSX.utils.json_to_sheet([], { header: headers });
+    if (!sortedFields || sortedFields.length === 0) {
+      notification.warning({
+        message: 'No Fields Selected',
+        description: 'Please select fields to display before exporting to Excel.',
+      });
+      return;
+    }
 
-    XLSX.utils.sheet_add_aoa(worksheet, [title], { origin: 'A1' });
+    try {
+      const title = [`Flag Report for ${projectName}`];
+      const headers = ['S.No.', ...sortedFields];
+      const cleanData = data.map(({ key, ...rest }) => rest);
 
-    XLSX.utils.sheet_add_aoa(worksheet, [headers], { origin: 'A2' });
+      const worksheet = XLSX.utils.json_to_sheet([], { header: headers });
 
-    XLSX.utils.sheet_add_json(worksheet, cleanData, { header: headers, skipHeader: true, origin: 'A3' });
+      XLSX.utils.sheet_add_aoa(worksheet, [title], { origin: 'A1' });
 
-    worksheet['!merges'] = [
-      {
-        s: { r: 0, c: 0 },
-        e: { r: 0, c: headers.length - 1 }
-      }
-    ];
+      XLSX.utils.sheet_add_aoa(worksheet, [headers], { origin: 'A2' });
 
-    worksheet['A1'] = {
-      v: title[0],
-      s: {
-        fill: {
-          fgColor: { rgb: 'ff0000' }
-        },
-        alignment: {
-          horizontal: 'center',
-          vertical: 'center'
-        },
-        font: {
-          sz: 14,
-          bold: true
+      XLSX.utils.sheet_add_json(worksheet, cleanData, { header: headers, skipHeader: true, origin: 'A3' });
+
+      worksheet['!merges'] = [
+        {
+          s: { r: 0, c: 0 },
+          e: { r: 0, c: headers.length - 1 }
         }
-      }
-    };
+      ];
 
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+      worksheet['A1'] = {
+        v: title[0],
+        s: {
+          fill: {
+            fgColor: { rgb: 'ff0000' }
+          },
+          alignment: {
+            horizontal: 'center',
+            vertical: 'center'
+          },
+          font: {
+            sz: 14,
+            bold: true
+          }
+        }
+      };
 
-    XLSX.writeFile(workbook, `flag_report_${projectName}.xlsx`);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+
+      XLSX.writeFile(workbook, `flag_report_${projectName}.xlsx`);
+
+      // Show success notification
+      notification.success({
+        message: 'Success',
+        description: 'Excel file exported successfully!',
+      });
+    } catch (error) {
+      console.error('Error generating Excel:', error);
+      notification.error({
+        message: 'Export Error',
+        description: 'Failed to export Excel file. Please try again.',
+      });
+    }
   };
 
   // Define table columns based on sorted fields and include 'S.No.'
@@ -356,12 +418,14 @@ const Flagreport = () => {
       {
         key: '1',
         icon: <FilePdfOutlined style={{ fontSize: '30px', color: '#ff4d4f' }} />,
-        label: <span onClick={handlePDFAction} style={{ color: '#262626', fontWeight: 500 }}></span>
+       
+        onClick: handlePDFAction
       },
       {
         key: '2',
         icon: <FileExcelOutlined style={{ fontSize: '30px', color: '#52c41a' }} />,
-        label: <span onClick={handleExcelAction} style={{ color: '#262626', fontWeight: 500 }}></span>
+        
+        onClick: handleExcelAction
       }
     ]
   };
@@ -419,11 +483,16 @@ const Flagreport = () => {
                     Hide Table
                   </Button>
                 )}
-                <Dropdown menu={exportMenu} trigger={['click']} disabled={!reportGenerated}>
+                <Dropdown
+                  menu={exportMenu}
+                  trigger={['click']}
+                  disabled={!reportGenerated || !data || data.length === 0 || !sortedFields || sortedFields.length === 0}
+                >
                   <Button
                     type="primary"
                     icon={<DownloadOutlined style={{ fontSize: '16px' }} />}
                     style={{ display: 'flex', alignItems: 'center' }}
+                    disabled={!reportGenerated || !data || data.length === 0 || !sortedFields || sortedFields.length === 0}
                   >
                     Export <DownOutlined style={{ fontSize: '12px', marginLeft: '4px' }} />
                   </Button>
