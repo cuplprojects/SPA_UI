@@ -69,7 +69,7 @@ const MarksAllotmentForm = () => {
             );
 
             if (response.data) {
-                setSections(response.data.sectionNames.map(n=>n.name));
+                setSections(response.data.sectionNames.map(n => n.name));
                 // Auto-set the setCode from fieldnames[0]
                 if (response.data.fieldnames && response.data.fieldnames.length > 0) {
                     setFormState(prevState => ({
@@ -193,7 +193,7 @@ const MarksAllotmentForm = () => {
             // Extract the question group number from the key (format: "questionNumber-setIndex")
             const [questionNum] = row.key.split('-');
             const questionGroup = `group_${questionNum}`;
-            
+
             return {
                 projectId,
                 markingId: formState.markingLogic,
@@ -322,7 +322,7 @@ const MarksAllotmentForm = () => {
                     const isSetA = j === 0; // Check if this is Set A
                     const questionGroup = `group_${i}`; // Group identifier for ABCD sets
                     const isDisabled = formState.optionsJumbled === "No" && j > 0;
-                    
+
                     const questionNumberInput = (
                         <Input
                             type="number"
@@ -399,7 +399,7 @@ const MarksAllotmentForm = () => {
     return (
         <Form layout="vertical" style={{ maxWidth: '2000px', margin: '50px auto 0 auto' }}>
             <Row gutter={5}>
-                <Col span={6}>
+                <Col span={4}>
                     <Form.Item label="Course">
                         <Select
                             name="selectedCourse"
@@ -424,12 +424,12 @@ const MarksAllotmentForm = () => {
                             onChange={handleChange}
                             style={{ borderRadius: '0' }}
                             placeholder=''
-                             min="0"
+                            min="0"
                         />
                     </Form.Item>
                 </Col>
-                
-                <Col className="d-flex justify-content-center" span={6}>
+
+                <Col className="d-flex justify-content-center" span={4}>
                     <Form.Item label="Options Jumbled?">
                         <Radio.Group
                             name="optionsJumbled"
@@ -443,7 +443,7 @@ const MarksAllotmentForm = () => {
                         </Radio.Group>
                     </Form.Item>
                 </Col>
-                <Col span={10}>
+                <Col span={6}>
                     <Form.Item label="Marking Logic">
                         <Select
                             name="markingLogic"
