@@ -84,7 +84,7 @@ const ReportForm = () => {
     if (projectId) {
       const fetchAssignedUsers = async () => {
         try {
-          const response = await axios.get(`${apiUrl}/Projects/users/${projectId}?WhichDatabase=Local`,{
+          const response = await axios.get(`${apiUrl}/Projects/users/${projectId}?WhichDatabase=Local`, {
             headers: {
               Authorization: `Bearer ${token}`
             }
@@ -108,11 +108,11 @@ const ReportForm = () => {
   const fetchSortOrder = async () => {
     try {
       const response = await axios.get(
-        `${apiUrl}/Report?WhichDatabase=${database}&UserId=${userId}`,{
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+        `${apiUrl}/Report?WhichDatabase=${database}&UserId=${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
         }
+      }
       );
       if (response.data.length > 0) {
         const savedSortOrder = JSON.parse(JSON.parse(response?.data[0]?.reportData));
@@ -131,128 +131,134 @@ const ReportForm = () => {
   const fetchReportData = async () => {
     setLoading(true);
     try {
-        const postdata = {
-            fields: ['registrationData', 'score'],
+      const postdata = {
+        fields: ['registrationData', 'score'],
+      };
+      const response = await axios.post(
+        `${apiUrl}/Report/GetFilteredData?WhichDatabase=${database}&ProjectId=${projectId}`,
+        postdata, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+      );
+      console.log('API Response:', response.data);
+
+      // Map through the response data and structure it as desired
+      const structuredData = response.data.map((item) => {
+        // Destructure and exclude omrData and registrationData
+        const { omrData, registrationData, ...rest } = item;
+
+        let omrParsed = {};
+        if (omrData) {
+          try {
+            omrParsed = JSON.parse(omrData);
+             delete omrParsed["Roll Number"];; // Remove RollNumber key
+          } catch (parseError) {
+            console.error('Error parsing omrData:', parseError);
+          }
+        }
+
+        // Return the desired structure
+        return {
+          ...rest, // Spread the remaining fields
+          ...registrationData, // Spread the fields from registrationData directly
+          ...omrParsed // If omrParsed contains useful information, spread it here
         };
-        const response = await axios.post(
-            `${apiUrl}/Report/GetFilteredData?WhichDatabase=${database}&ProjectId=${projectId}`,
-            postdata, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            }
-        );
-        console.log('API Response:', response.data);
+      });
 
-        // Map through the response data and structure it as desired
-        const structuredData = response.data.map((item) => {
-            // Destructure and exclude omrData and registrationData
-            const { omrData, registrationData, ...rest } = item;
+      console.log('Structured Data:', structuredData);
 
-            // Optionally parse omrData if you need it, otherwise leave it out
-            const omrParsed = omrData ? JSON.parse(omrData) : {}; // Parse omrData if it's a string
-
-            // Return the desired structure
-            return {
-                ...rest, // Spread the remaining fields
-                ...registrationData, // Spread the fields from registrationData directly
-                // Include only the relevant data from omrParsed, or exclude it entirely
-                ...omrParsed // If omrParsed contains useful information, spread it here
-            };
-        });
-
-        console.log('Structured Data:', structuredData);
-
-        setReportData(structuredData);
-        setDataKeys(Object.keys(structuredData[0] || {})); // Update dataKeys here
+      setReportData(structuredData);
+      setDataKeys(Object.keys(structuredData[0] || {})); // Update dataKeys here
     } catch (error) {
-        console.error('Error fetching report data:', error);
+      console.error('Error fetching report data:', error);
     }
     setLoading(false);
-};
+  };
 
 
 
-const handleFieldChange = (fields) => {
-  // Update the field order to only include fields that are still selected
-  const updatedFieldOrder = fieldOrder.filter(field => fields.includes(field));
+  const handleFieldChange = (fields) => {
+    // Update the field order to only include fields that are still selected
+    const updatedFieldOrder = fieldOrder.filter(field => fields.includes(field));
 
-  // Only update fieldOrder if it has changed
-  if (JSON.stringify(updatedFieldOrder) !== JSON.stringify(fieldOrder)) {
-    setFieldOrder(updatedFieldOrder);
-  }
-
-  // Create a map of all selected fields
-  const fieldsMap = {};
-  fields.forEach(field => {
-    fieldsMap[field] = true;
-  });
-
-  // Create columns based on the field order first, then add any remaining selected fields
-  let orderedFields = [];
-
-  // First add fields that are in the order
-  updatedFieldOrder.forEach(field => {
-    if (fieldsMap[field]) {
-      orderedFields.push(field);
-      // Remove from map to track which ones we've added
-      delete fieldsMap[field];
+    // Only update fieldOrder if it has changed
+    if (JSON.stringify(updatedFieldOrder) !== JSON.stringify(fieldOrder)) {
+      setFieldOrder(updatedFieldOrder);
     }
-  });
 
-  // Then add any remaining selected fields that aren't in the order
-  fields.forEach(field => {
-    if (fieldsMap[field]) {
-      orderedFields.push(field);
-    }
-  });
+    // Create a map of all selected fields
+    const fieldsMap = {};
+    fields.forEach(field => {
+      fieldsMap[field] = true;
+    });
 
-  // Create the columns in the correct order
-  const dynamicColumns = orderedFields.map((field) => {
-    return {
-      title: fieldTitleMapping[field] || field,
-      dataIndex: field,
-      key: field,
-      sorter: (a, b) => {
-        if (typeof a[field] === 'string' && typeof b[field] === 'string') {
-          return a[field].localeCompare(b[field]);
-        } else if (typeof a[field] === 'number' && typeof b[field] === 'number') {
-          return a[field] - b[field];
-        }
-        return 0;
-      },
-      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-        <div style={{ padding: 8 }}>
-          <Input
-            placeholder={`Search ${fieldTitleMapping[field] || field}`}
-            value={selectedKeys[0]}
-            onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-            onPressEnter={() => confirm()}
-            style={{ marginBottom: 8, display: 'block' }}
-          />
-          <Space>
-            <Button
-              type="primary"
-              onClick={() => confirm()}
-              size="small"
-              style={{ width: 90 }}
-            >
-              Search
-            </Button>
-            <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
-              Reset
-            </Button>
-          </Space>
-        </div>
-      ),
-      onFilter: (value, record) =>
-        record[field]?.toString().toLowerCase().includes(value.toLowerCase()),
-    };
-  });
+    // Create columns based on the field order first, then add any remaining selected fields
+    let orderedFields = [];
 
-  setColumns(dynamicColumns);
-  setSortableFields(fields);
-};
+    // First add fields that are in the order
+    updatedFieldOrder.forEach(field => {
+      if (fieldsMap[field]) {
+        orderedFields.push(field);
+        // Remove from map to track which ones we've added
+        delete fieldsMap[field];
+      }
+    });
+
+    // Then add any remaining selected fields that aren't in the order
+    fields.forEach(field => {
+      if (fieldsMap[field]) {
+        orderedFields.push(field);
+      }
+    });
+
+    // Create the columns in the correct order
+    const dynamicColumns = orderedFields.map((field) => {
+      return {
+        title: fieldTitleMapping[field] || field,
+        dataIndex: field,
+        key: field,
+        sorter: (a, b) => {
+          if (typeof a[field] === 'string' && typeof b[field] === 'string') {
+            return a[field].localeCompare(b[field]);
+          } else if (typeof a[field] === 'number' && typeof b[field] === 'number') {
+            return a[field] - b[field];
+          }
+          return 0;
+        },
+        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+          <div style={{ padding: 8 }}>
+            <Input
+              placeholder={`Search ${fieldTitleMapping[field] || field}`}
+              value={selectedKeys[0]}
+              onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+              onPressEnter={() => confirm()}
+              style={{ marginBottom: 8, display: 'block' }}
+            />
+            <Space>
+              <Button
+                type="primary"
+                onClick={() => confirm()}
+                size="small"
+                style={{ width: 90 }}
+              >
+                Search
+              </Button>
+              <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+                Reset
+              </Button>
+            </Space>
+          </div>
+        ),
+        onFilter: (value, record) =>
+          record[field]?.toString().toLowerCase().includes(value.toLowerCase()),
+      };
+    });
+
+    setColumns(dynamicColumns);
+    setSortableFields(fields);
+  };
 
 
 
@@ -278,22 +284,22 @@ const handleFieldChange = (fields) => {
           reportId: existingReportId, // You should have an existingReportId to update the correct report
           reportData: JSON.stringify(fieldOrder), // Save the field order as a JSON string
           userId: userId,
-        },{
+        }, {
           headers: {
-              Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${token}`
           }
-      });
+        });
       } else {
         // If the order does not exist, send a POST request to create a new one
         response = await axios.post(`${apiUrl}/Report?WhichDatabase=${database}&UserId=${userId}`, {
           reportId: 0, // Assuming reportId is 0 for new reports, adjust as needed
           reportData: JSON.stringify(fieldOrder), // Save the field order as a JSON string
           userId: userId,
-        },{
+        }, {
           headers: {
-              Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${token}`
           }
-      });
+        });
       }
 
       // Handle response
@@ -477,7 +483,7 @@ const handleFieldChange = (fields) => {
             {assignedUsers.length > 0 && (
               <div style={{ backgroundColor: '#f0f7ff', padding: '20px', borderRadius: '2px', border: '1px solid #d6e4ff' }}>
                 <Text strong style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', color: '#4b5563' }}>
-                  
+
 
                   <div style={{
                     backgroundColor: '#1890ff',
@@ -492,7 +498,7 @@ const handleFieldChange = (fields) => {
                     position: 'relative'
                   }}>
                     <TeamOutlined style={{ fontSize: '18px' }} />
-                    
+
 
                     <div style={{
                       position: 'absolute',
