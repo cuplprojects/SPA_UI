@@ -13,6 +13,7 @@ import { useProjectId } from '@/store/ProjectState';
 import { handleDecrypt, handleEncrypt } from '@/Security/Security';
 import { useDatabase } from '@/store/DatabaseStore';
 import { useUserToken } from '@/store/UserDataStore';
+import Extracted from './ExtractedData';
 
 //const apiurl = import.meta.env.VITE_API_URL_PROD;
 const apiurl = import.meta.env.VITE_API_URL;
@@ -39,9 +40,9 @@ const Import = () => {
     if (file && activetab === 'OMRImages') {
       console.log('Files uploaded:', e.target.files);
       setSelectedFile(file);
-    } else if (file && ['scanned', 'registration', 'absentee'].includes(activetab)) {
+    } else if (file && ['scanned','extracted', 'registration', 'absentee'].includes(activetab)) {
       if (
-        activetab === 'scanned' &&
+        (activetab === 'scanned' || activetab === 'extracted') &&
         (file.type === 'text/csv' || file.type === 'application/dat')
       ) {
         setSelectedFile(file);
@@ -268,7 +269,7 @@ const Import = () => {
 
 
   useEffect(() => {
-    if (activetab === 'scanned') {
+    if (activetab === 'scanned' || activetab === 'extracted') {
       if (selectedFile) {
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -345,6 +346,37 @@ const Import = () => {
         duartion: 3,
       })
       console.error('Error deleting scanned data:', error.response ? error.response.data : error.message);
+    }
+  };
+
+  const handleDeleteExtracted = async (projectId) => {
+    setLoading(true)
+    try {
+      const response = await axios.delete(`${apiurl}/Extracted/Extracted?WhichDatabase=${database}&ProjectId=${ProjectId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setLoading(false)
+      fetchCounts();
+      notification.success({
+        message: 'Extracted data deleted',
+        duartion: 3,
+      })
+      // Handle the response here
+      console.log('Deletion successful:', response.data);
+    } catch (error) {
+      setLoading(false)
+      notification.error({
+        message: 'Error in deleting Extracted',
+        duartion: 3,
+      })
+      // Handle errors here
+      notification.error({
+        message: 'Error in deleting Extracted',
+        duartion: 3,
+      })
+      console.error('Error deleting Extracted data:', error.response ? error.response.data : error.message);
     }
   };
 
@@ -460,6 +492,121 @@ const Import = () => {
           //   },
           // );
           const response = await axios.post(`${apiurl}/OMRData/uploadcsv`, encryptedscanneddatatosend, {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            params: {
+              WhichDatabase: database,
+              ProjectId: ProjectId,
+            },
+          });
+          const contentType = response.headers.get('content-type');
+
+          if (contentType && contentType.indexOf('application/json') !== -1) {
+            const data = response.data;
+            notification.success({
+              message: 'Upload successful!',
+              duration: 3
+            })
+          } else {
+            // const text = await response.text();
+            notification.success({
+              message: 'Upload successful!',
+              duration: 3
+            })
+          }
+          fetchCounts();
+        } catch (error) {
+          console.error('Error uploading data:', error);
+          notification.error({
+            message: 'Error uploading data!',
+            duration: 3
+          })
+        } finally {
+          setLoading(false);
+          setSelectedFile(null); // Reset selected file after upload
+        }
+      };
+      reader.readAsText(selectedFile);
+      setSelectedFile(null)
+    } else {
+      console.error('No file selected.');
+      notification.warning({
+        message: 'No file selected!',
+        duration: 3
+      })
+      setLoading(false);
+    }
+    setSelectedFile(null);
+  };
+
+   const handleExtractedUpload = async () => {
+    if (!totalQues || totalQues <= 0) {
+      notification.error({
+        message: 'Response Configuration Missing',
+        description: 'You must upload the response configuration first.',
+        duration: 10,
+      });
+      return; // Prevent further execution if totalQues is not set
+    }
+    if (selectedFile) {
+      setLoading(true);
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const content = event.target.result;
+        const rows = content.split('\n').map((row) => row.split(','));
+        const headers = rows[0].map((header) => header.trim().replace(/"/g, ''));
+        const mappingObject = {};
+
+        headers.forEach((header) => {
+          const matchingField = Object.keys(fieldMappings).find(
+            (key) => fieldMappings[key] === header,
+          );
+          if (matchingField) {
+            mappingObject[header] = matchingField;
+          } else {
+            console.warn(`No matching field found for header "${header}"`);
+          }
+        });
+
+        const parsedData = rows.slice(1, -1).map((row) => {
+          const rowData = {};
+          row.forEach((value, index) => {
+            const cleanedValue = value.replace(/"/g, '');
+            const matchingField = mappingObject[headers[index]];
+            if (matchingField) {
+              rowData[matchingField] = cleanedValue;
+            }
+          });
+
+          if (rowData['Answers']) {
+            const answers = {};
+            const ansArray = rowData['Answers'].split('');
+            for (let i = 0; i < totalQues; i++) {
+              if (i < ansArray.length) {
+                let answer = ansArray[i];
+                // Trim trailing white spaces
+                answer = answer.replace(/\s+$/, '');
+                // Preserve leading white spaces and wrap in quotes
+                answers[i + 1] = `'${answer}'`;
+              } else {
+                answers[i + 1] = "''";
+              }
+            }
+            rowData['Answers'] = JSON.stringify(answers).replace(/"/g, '');
+          }
+
+          return rowData;
+        });
+
+        try {
+          const jsonmappedscanneddata = JSON.stringify(parsedData);
+          const encryptedData = handleEncrypt(jsonmappedscanneddata);
+          const encryptedscanneddatatosend = {
+            cyphertextt: encryptedData,
+          };
+          const response = await axios.post(`${apiurl}/Extracted/uploadcsv`, encryptedscanneddatatosend, {
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${token}`,
@@ -686,8 +833,6 @@ const Import = () => {
                     >
                       <a data-toggle="tab" title="OMR Images">
                         <span className="round-tabs-pq one-pq">
-                          {/* <Badge count={dataCounts?.omrImages} overflowCount={Infinity}>
-                        </Badge> */}
                           <i className="fa-regular fa-image " style={{ color: colorPrimary }}></i>
                         </span>
                       </a>
@@ -706,6 +851,24 @@ const Import = () => {
                     }}
                   >
                     <a data-toggle="tab" title="Scanned Data">
+                      <span className="round-tabs-pq two-pq">
+                        <i className="fa-solid fa-file-csv" style={{ color: colorPrimary }}></i>
+                      </span>
+                    </a>
+                  </li>
+                  </Badge>
+                  <span className="tabline"></span>
+                  <Badge offset={[-10, 10]} size="large" count={ dataCounts?.extractedOMRData} overflowCount = {Infinity} >
+                  <li
+                    style={{ border: `2px solid ${colorPrimary}` }}
+                    className="tabcircle"
+                    onClick={() => {
+                      setActivetab('extracted');
+                      setSelectedFile(null);
+                      setHeaders([]);
+                    }}
+                  >
+                    <a data-toggle="tab" title="Extracted Data">
                       <span className="round-tabs-pq two-pq">
                         <i className="fa-solid fa-file-csv" style={{ color: colorPrimary }}></i>
                       </span>
@@ -770,6 +933,19 @@ const Import = () => {
                     fieldMappings={fieldMappings}
                     handleFieldMappingChange={handleFieldMappingChange}
                     scannedCount={dataCounts?.scannedData}
+                  />
+                )}
+                {activetab === 'extracted' && (
+                  <Extracted
+                    handleFileUpload={handleFileUpload}
+                    handleExtractedUpload={handleExtractedUpload}
+                    selectedFile={selectedFile}
+                    handleDeleteExtracted={handleDeleteExtracted}
+                    loading={loading}
+                    headers={headers}
+                    fieldMappings={fieldMappings}
+                    handleFieldMappingChange={handleFieldMappingChange}
+                    extractedCount={dataCounts?.extractedOMRData}
                   />
                 )}
                 {activetab === 'registration' && (

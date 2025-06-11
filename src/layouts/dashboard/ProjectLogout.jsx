@@ -11,6 +11,7 @@ const ProjectLogout = () => {
 
   const onClickProjectLogout = () => {
     setProjectId(0); // Update the state
+    localStorage.removeItem("annotations")
     navigate('/dashboard'); // Navigate to the new route
   };
 

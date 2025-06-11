@@ -67,7 +67,7 @@ const expandedRowRender = (record) => {
   return <Table columns={nestedColumns} dataSource={nestedData} pagination={false} bordered/>;
 };
 
-const ViewSegmentation = ({ courseName,data , fetchData }) => {
+const ViewSegmentation = ({ courseName,data , fetchData, onCancel }) => {
   
   const [expandedRowKeys, setExpandedRowKeys] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -123,6 +123,7 @@ const ViewSegmentation = ({ courseName,data , fetchData }) => {
         message: 'Selected data deleted',
         duration: 3,
       });
+      onCancel();
     } catch (error) {
       notification.error({
         message: 'Error deleting data',

@@ -16,18 +16,30 @@ function Archive() {
   const { userId } = useUserInfo();
   const database = useDatabase();
   const token = useUserToken();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     fetchData();
   }, []);
 
+  const handlePaginationChange = (page, pageSize) => {
+    setCurrentPage(page);
+    setPageSize(pageSize);
+  };
+
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
   const fetchData = async () => {
     try {
       const response = await fetch(
-        `${apiurl}/Projects/ArchivedByUser?userId=${userId}&WhichDatabase=${database}`,{
-          headers:{
-          Authorization : `Bearer ${token}`
-        }}
+        `${apiurl}/Projects/ArchivedByUser?userId=${userId}&WhichDatabase=${database}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
       );
       const data = await response.json();
       const processedData = data.map((item, index) => ({
@@ -56,7 +68,7 @@ function Archive() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization : `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
             },
           },
         );
@@ -154,13 +166,21 @@ function Archive() {
           value={searchTerm}
           onChange={handleSearchChange}
           style={{ width: 200, marginRight: 8 }}
+          allowClear
         />
       </div>
       <Table
         bordered
-        dataSource={filteredData}
+        dataSource={paginatedData}
         columns={columns}
         rowKey="key"
+        pagination={{
+          current: currentPage,
+          pageSize: pageSize,
+          onChange: handlePaginationChange, // Handle page change
+          showSizeChanger: true,
+          pageSizeOptions: ['5', '10', '20', '50'],
+        }}
         onChange={handleChange}
       />
       <Modal

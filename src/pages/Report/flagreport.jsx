@@ -62,11 +62,11 @@ const Flagreport = () => {
 
   const fetchProjectDetails = async () => {
     try {
-      const response = await fetch(`${apiUrl}/Projects/${projectId}?WhichDatabase=${database}`,{
+      const response = await fetch(`${apiUrl}/Projects/${projectId}?WhichDatabase=${database}`, {
         headers: {
-            Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`
         }
-    });
+      });
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -80,9 +80,9 @@ const Flagreport = () => {
   const fetchFlagData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${apiUrl}/Flags/ByProject/${projectId}?WhichDatabase=${database}`,{
+      const response = await fetch(`${apiUrl}/Report/ByProject/${projectId}?WhichDatabase=${database}`, {
         headers: {
-            Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`
         }
       });
 
@@ -108,7 +108,7 @@ const Flagreport = () => {
       flagData.forEach(item => {
         if (item.field) fieldsSet.add('Field');
         if (item.fieldNameValue) fieldsSet.add('Old Value');
-
+        if (item.correctedValue) fieldsSet.add('Correct Value')
         if (item.remarks) fieldsSet.add('Remarks');
         if (item.barCode) fieldsSet.add('Bar Code');
         if (item.updatedByUserId) fieldsSet.add('Updated By');
@@ -156,6 +156,7 @@ const Flagreport = () => {
           ...(selectedFieldsToUse.includes('Remarks') && { 'Remarks': item.remarks }),
           ...(selectedFieldsToUse.includes('Bar Code') && { 'Bar Code': item.barCode }),
           ...(selectedFieldsToUse.includes('Updated By') && { 'Updated By': updatedByName || '' }),
+          ...(selectedFieldsToUse.includes('Correct Value') && { 'Correct Value': item.correctedValue || '' }),
         };
         return filteredItem;
       }));
