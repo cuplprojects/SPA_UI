@@ -6,6 +6,8 @@ import AntdConfig from '@/theme/antd';
 // import '@/assets/iconcss/fs-all.min.css'
 import 'boxicons/css/boxicons.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 import { MotionLazy } from './components/animate/motion-lazy';
 // import { FileUploadProvider } from './pages/Imports/Importfile';

@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProgressBar, Container, Row, Col, Card, Button, Nav, Badge } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap-icons/font/bootstrap-icons.css';
 import './SubscriptionPage.css';
 import Footer from '@/components/wrapper/Footer';
 import NavbarComponent from '@/components/wrapper/Navbar';

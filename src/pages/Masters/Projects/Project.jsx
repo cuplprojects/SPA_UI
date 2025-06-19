@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Button,
   Form,
@@ -15,34 +15,35 @@ import {
 import './Project.css';
 import { useUserInfo, useUserToken } from '@/store/UserDataStore';
 import axios from 'axios';
+import Draggable from 'react-draggable';
 import { useDatabase } from '@/store/DatabaseStore';
 import ImportProject from './ImportProject';
 
 const apiurl = import.meta.env.VITE_API_URL;
 
-function EditableCell({
+const EditableCell = ({
   editing,
   dataIndex,
   title,
   inputType,
   record,
   index,
-  options = [],
   children,
+  options,
   ...restProps
-}) {
+}) => {
   let inputNode;
+
   if (inputType === 'number') {
     inputNode = <InputNumber />;
   } else if (inputType === 'select') {
     inputNode = (
-      <Select mode="multiple" style={{ width: '100%' }}>
-        {options.map((option) => (
-          <Select.Option key={option.value} value={option.value}>
-            {option.label}
-          </Select.Option>
-        ))}
-      </Select>
+      <Select
+        mode="multiple"
+        options={options}
+        placeholder="Select users"
+        allowClear
+      />
     );
   } else {
     inputNode = <Input />;
@@ -57,7 +58,7 @@ function EditableCell({
           rules={[
             {
               required: true,
-              message: `Please Input ${title}!`,
+              message: `Please input/select ${title}!`,
             },
           ]}
         >
@@ -68,13 +69,16 @@ function EditableCell({
       )}
     </td>
   );
-}
+};
+
 
 function Project() {
   const [form] = Form.useForm();
   const [data, setData] = useState([]);
   const [editingKey, setEditingKey] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [disabled, setDisabled] = useState(true);
+  const [open, setOpen] = useState(false);
   const [sortedInfo, setSortedInfo] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [users, setUsers] = useState([]);
@@ -86,6 +90,13 @@ function Project() {
   const token = useUserToken();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [bounds, setBounds] = useState({
+    left: 0,
+    top: 0,
+    bottom: 0,
+    right: 0,
+  });
+  const draggleRef = useRef(null);
 
   useEffect(() => {
     fetchData();
@@ -101,6 +112,25 @@ function Project() {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
+
+  const handleCancel = () => {
+    setOpen(false);
+    form.resetFields();
+  };
+
+  const onStart = (_event, uiData) => {
+    const { clientWidth, clientHeight } = window.document.documentElement;
+    const targetRect = draggleRef.current?.getBoundingClientRect();
+    if (!targetRect) {
+      return;
+    }
+    setBounds({
+      left: -targetRect.left + uiData.x,
+      right: clientWidth - (targetRect.right - uiData.x),
+      top: -targetRect.top + uiData.y,
+      bottom: clientHeight - (targetRect.bottom - uiData.y),
+    });
+  };
 
   const fetchData = async () => {
     try {
@@ -279,6 +309,33 @@ function Project() {
     handleConfirmModalOk(projectKey);
   };
 
+  const handleOk = async () => {
+    try {
+      const newRow = await form.validateFields();
+      const newRowKey = data.length + 1;
+      const userAssignedIds = newRow.userAssigned.map(
+        (userLabel) => users.find((user) => user.label === userLabel)?.value || userLabel
+      );
+
+      const formattedRow = {
+        ...newRow,
+        key: newRowKey.toString(),
+        serialNo: newRowKey,
+        method: 'POST',
+        userAssigned: userAssignedIds,
+      };
+
+      await addRow(formattedRow);
+      setData([...data, formattedRow]);
+      setFilteredData([...data, formattedRow]);
+      setOpen(false);
+      form.resetFields();
+    } catch (errInfo) {
+      console.log('Validate Failed:', errInfo);
+    }
+  };
+
+
   // final archive confirm
   const handleConfirmModalOk = async (projectToArchive) => {
     if (projectToArchive) {
@@ -332,21 +389,12 @@ function Project() {
       setFilteredData(data); // Reset to full data when search term is cleared
     }
   };
+
   const handleAdd = () => {
-    console.log('Start');
-    const newRowKey = data.length + 1;
-    const newData = {
-      key: newRowKey.toString(),
-      serialNo: newRowKey,
-      projectName: '',
-      userAssigned: [],
-      method: 'POST',
-    };
-    setData([newData, ...data]);
-    setFilteredData([newData, ...data]);
-    setEditingKey(newRowKey.toString());
+    setOpen(true);
     setHasUnsavedChanges(true);
   };
+
 
   const columns = [
     {
@@ -444,7 +492,6 @@ function Project() {
           onClick={handleAdd}
           type="primary"
           style={{ marginBottom: 16 }}
-          disabled={hasUnsavedChanges}
         >
           Add Project
         </Button>
@@ -480,6 +527,71 @@ function Project() {
           onChange={handleChange}
         />
       </Form>
+      <Modal
+        title={
+          <div
+            style={{
+              width: '100%',
+              cursor: 'move',
+            }}
+            onMouseOver={() => {
+              if (disabled) {
+                setDisabled(false);
+              }
+            }}
+            onMouseOut={() => {
+              setDisabled(true);
+            }}
+          >
+            Add New Project
+          </div>
+        }
+        open={open}
+        onOk={handleOk}
+        onCancel={handleCancel}
+        modalRender={(modal) => (
+          <Draggable
+            disabled={disabled}
+            bounds={bounds}
+            nodeRef={draggleRef}
+            onStart={(event, uiData) => onStart(event, uiData)}
+          >
+            <div ref={draggleRef}>{modal}</div>
+          </Draggable>
+        )}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="projectName"
+            label="Project Name"
+            rules={[
+              {
+                required: true,
+                message: 'Please input the project name!',
+              },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="userAssigned"
+            label="User Assigned"
+            rules={[
+              {
+                required: true,
+                message: 'Please input the project name!',
+              },
+            ]}
+          >
+            <Select
+              mode="multiple"
+              placeholder="Select users"
+              options={users}
+              allowClear
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }

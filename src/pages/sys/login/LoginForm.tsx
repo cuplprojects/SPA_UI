@@ -1,4 +1,4 @@
-import { Button, Checkbox, Col, Divider, Form, Input, Row } from 'antd';
+import { Button, Col, Divider, Form, Input, Row } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
