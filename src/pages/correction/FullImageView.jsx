@@ -29,7 +29,7 @@ const FullImageView = ({ data, onUpdate, onNext, setIsViewRegData }) => {
   };
 
   const handleKeyDown = (e) => {
-    const fieldAttributes = JSON.parse(data.fieldConfig.FieldAttributesJson)[0];
+    const fieldAttributes = JSON.parse(data?.fieldConfig.FieldAttributesJson)[0];
     const rawValidValues = fieldAttributes?.Responses?.split(',').map(val => val.trim()) || [];
     
     // Filter out blank strings from validValues

@@ -227,7 +227,8 @@ const MarksAllotmentForm = () => {
                 message: 'Error adding Marks Allotment',
                 duration: 3,
             });
-
+            setAmbfetchdata([]);
+            getAmbiguity();
         }
         finally {
             setIsSubmitting(false);

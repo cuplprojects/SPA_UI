@@ -34,6 +34,7 @@ const GenerateScore = () => {
   const [globalFile, setGlobalFile] = useState(null);
   const [sectionNames, setSectionNames] = useState([]);
   const [fieldnames, setFieldnames] = useState([]);
+  const [ambiguous, setAmbiguous] = useState([]);
 
   useEffect(() => {
     getdata();
@@ -44,6 +45,7 @@ const GenerateScore = () => {
     fetchCourseNames();
     fetchCourseCounts();
     fetchKeyCounts();
+    fetchAmbiguous();
   };
   const fetchCourseNames = async () => {
     try {
@@ -238,6 +240,15 @@ const GenerateScore = () => {
     }
   };
 
+  const fetchAmbiguous = async () => {
+    try {
+      const response = await axios.get(`${apiurl}/Ambiguity/ContainsMarkingRule/${ProjectId}`)
+      setAmbiguous(response.data)
+    }
+    catch (err) {
+      console.error("Failed to get Ambiguous question")
+    }
+  }
 
 
   const downloadExcelTemplate = (sectionNames, fieldnames) => {
@@ -307,7 +318,7 @@ const GenerateScore = () => {
     const formData = new FormData();
     formData.append('file', updateFile.file);
     formData.append('courseName', courseName);
-   formData.append('subjectRanges', JSON.stringify(subjectRanges));
+    formData.append('subjectRanges', JSON.stringify(subjectRanges));
     // Show confirmation modal
     Modal.confirm({
       title: 'Update Key',
@@ -354,9 +365,9 @@ const GenerateScore = () => {
         }
       },
       onCancel: async () => {
-       console.log('Update cancelled');
-       setFile()
-       setFileInfo({})
+        console.log('Update cancelled');
+        setFile()
+        setFileInfo({})
       },
     });
   };
@@ -549,32 +560,55 @@ const GenerateScore = () => {
     {
       title: 'Action',
       key: 'action',
-      render: (text, record) => (
-        <div>
-          {keycount[record.courseName] > 0 && (
-            <>
-              <Upload
-                showUploadList={false}
-                customRequest={({ file }) => handleUpdateFileChange(file, record.courseName)}
-                accept=".xlsx"
-              >
-                <Button icon={<UploadOutlined />}>
-                  {fileInfo[record.courseName]?.name || 'Click to Update'}
+      render: (text, record) => {
+        const entryCount = courseCounts[record.courseName] || 0;
+        const hasKeys = keycount[record.courseName] > 0;
+        const isAmbiguous = ambiguous.includes(record.courseName);
+        const file = fileInfo[record.courseName];
+        const isUpdating = updateLoading[record.courseName];
+
+        return (
+          <div>
+            {hasKeys && (
+              <>
+                <Upload
+                  showUploadList={false}
+                  customRequest={({ file }) =>
+                    handleUpdateFileChange(file, record.courseName)
+                  }
+                  accept=".xlsx"
+                >
+                  <Button icon={<UploadOutlined />}>
+                    {file?.name || 'Click to Update'}
+                  </Button>
+                </Upload>
+
+                <Button
+                  className="ms-2"
+                  type="primary"
+                  onClick={() => handleUpdateClick(record.courseName)}
+                  disabled={isUpdating || !file?.name}
+                >
+                  {isUpdating ? 'Updating...' : 'Update Key'}
                 </Button>
-              </Upload>
+              </>
+            )}
+
+            {isAmbiguous && entryCount > 0 && (
               <Button
                 className="ms-2"
-                type="primary"
-                onClick={() => handleUpdateClick(record.courseName)}
-                disabled={updateLoading[record.courseName] || !fileInfo[record.courseName]?.name}
+                type="default"
+                onClick={() => handleRunAudit(record.courseName)}
+                danger
               >
-                {updateLoading[record.courseName] ? 'Updating...' : 'Update Key'}
+                Run Audit
               </Button>
-            </>
-          )}
-        </div>
-      ),
-    },
+            )}
+          </div>
+        );
+      },
+    }
+
   ];
   return (
     <div>
