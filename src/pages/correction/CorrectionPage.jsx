@@ -201,11 +201,22 @@ const CorrectionPage = () => {
         return;
       }
 
+      // check if field is answer
+      const isAnswerField = currentData.FieldName === "Answers";
+
+      const questionNumber = isAnswerField
+        ? parseInt((currentData.remarks.match(/question\s+(\d+)/i) || [])[1] || 0, 10)
+        : null;
+
       const payload = {
         barCode: currentData.barCode,
         fieldName: currentData.FieldName,
-        value: currentData.fieldNameValue,
+        value: isAnswerField
+          ? `${questionNumber}:${currentData.fieldNameValue}`
+          : currentData.fieldNameValue,
       };
+
+      console.log("Payload:", payload);
 
       const payloadtobesend = {
         cyphertextt: handleEncrypt(JSON.stringify(payload)),
