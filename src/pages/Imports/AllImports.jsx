@@ -761,13 +761,6 @@ const Import = () => {
           cyphertextt: encryptedData,
         };
 
-        // const response = await fetch(`${apiurl}/Registration?WhichDatabase=Local&ProjectId=${ProjectId}`, {
-        //   method: 'POST',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify(validMappedData),
-        // });
         const response = await axios.post(`${apiurl}/Registration?`, encryptedregdatatosend, {
           headers: {
             'Content-Type': 'application/json',
