@@ -29,20 +29,20 @@ const FullImageView = ({ data, onUpdate, onNext, setIsViewRegData }) => {
   };
 
   const handleKeyDown = (e) => {
-    const fieldAttributes = JSON.parse(data.fieldConfig.FieldAttributesJson)[0];
+    const fieldAttributes = JSON.parse(data?.fieldConfig.FieldAttributesJson)[0];
     const rawValidValues = fieldAttributes?.Responses?.split(',').map(val => val.trim()) || [];
-    
+
     // Filter out blank strings from validValues
     const filteredValidValues = rawValidValues.filter(val => val !== '');
-  
+
     console.log('Filtered Valid Values:', filteredValidValues);
-  
+
     if (e.key === 'Enter') {
       const inputValue = e.target.value.trim();
-      
+
       // Skip validation if filteredValidValues is empty
       const isValidValue = filteredValidValues.length === 0 || filteredValidValues.includes(inputValue);
-  
+
       if (isValidValue) {
         if (fieldAttributes?.NumberOfBlocks == inputValue.length) {
           onUpdate(inputValue);
@@ -66,7 +66,7 @@ const FullImageView = ({ data, onUpdate, onNext, setIsViewRegData }) => {
       }
     }
   };
-  
+
 
   if (!data || !data.coordinates) {
     return null; // Handle case where data or coordinates are not yet available
@@ -103,20 +103,31 @@ const FullImageView = ({ data, onUpdate, onNext, setIsViewRegData }) => {
           border: '2px solid black',
         }}
       >
-        <input
-          type="text"
-          ref={inputRef}
-          className="form-control border-danger text-center p-0"
-          value={value}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          style={{
-            width: '100%', // Make input full width of its container
-            boxSizing: 'border-box', // Ensure padding and border are included in width and height
-          }}
-          required
-          autoFocus
-        />
+
+        <div class="input-group">
+          {
+            (data?.FieldName === 'Answers') && (
+              <div class="input-group-prepend">
+                <div class="input-group-text fw-bold">Q.No.: {parseInt((data?.remarks?.match(/question\s+(\d+)/i) || [])[1] || 0, 10)}</div>
+              </div>)
+          }
+          <input
+            id="inlineFormInputGroup"
+            type="text"
+            ref={inputRef}
+            className="form-control border-danger text-center p-0"
+            value={value}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            style={{
+              // width: '100%', // Make input full width of its container
+              boxSizing: 'border-box', // Ensure padding and border are included in width and height
+            }}
+            required
+            autoFocus
+          />
+        </div>
+
       </div>
     </div>
   );

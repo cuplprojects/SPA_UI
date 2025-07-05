@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Form, ProgressBar, Badge } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap-icons/font/bootstrap-icons.css';
-import './RegistrationPage.css';
+
 import Footer from '@/components/wrapper/Footer';
 import NavbarComponent from '@/components/wrapper/Navbar';
 import BackButton from '@/components/wrapper/BackButton';

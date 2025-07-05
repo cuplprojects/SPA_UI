@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Col, Row, Card, Table, Pagination, Dropdown, Spinner} from 'react-bootstrap';
+import { Col, Row, Card, Table, Pagination, Dropdown, Spinner } from 'react-bootstrap';
 import { Button, notification } from 'antd';
 import ChartComponent from './ChartComponent';
 import { useProjectId } from '@/store/ProjectState';
@@ -21,7 +21,7 @@ const AuditButton = () => {
   const { flags, remarksCounts, corrected, remaining, totalCount, getFlags } = useFlags(ProjectId);
   // const WIP = ((corrected / totalCount) * 100).toFixed(3);
   const [WIP, setWIP] = useState(0);
- const [isAuditing, setIsAuditing] = useState(false);
+  const [isAuditing, setIsAuditing] = useState(false);
   const { setSelectedField } = useSelectedFieldActions();
   const navigate = useNavigate();
   const database = useDatabase();
@@ -29,8 +29,11 @@ const AuditButton = () => {
   const [selectedAudit, setSelectedAudit] = useState('');
   const [regData, setRegData] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [ambiguous, setAmbiguous] = useState([]);
+
   useEffect(() => {
     getFlags();
+    fetchAmbiguous();
     if (totalCount > 0) {
       setWIP(((corrected / totalCount) * 100).toFixed(3));
     }
@@ -44,10 +47,11 @@ const AuditButton = () => {
   const handleClickAudit = async () => {
     try {
       setIsAuditing(true);
-      const response = await fetch(`${APIURL}/Audit/audit?WhichDatabase=${database}&ProjectID=${ProjectId}`,{
-        headers:{
-        Authorization : `Bearer ${token}`
-      }});
+      const response = await fetch(`${APIURL}/Audit/audit?WhichDatabase=${database}&ProjectID=${ProjectId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
 
       setIsAuditing(false);
       notification.success({
@@ -71,11 +75,21 @@ const AuditButton = () => {
           Authorization: `Bearer ${token}`
         }
       });
-      setRegData(response.data); 
+      setRegData(response.data);
     } catch (error) {
       console.error('Error fetching registration data:', error);
     }
   };
+
+  const fetchAmbiguous = async () => {
+    try {
+      const response = await axios.get(`${APIURL}/Ambiguity/ContainsMarkingRule/${ProjectId}`)
+      setAmbiguous(response.data)
+    }
+    catch (err) {
+      console.error("Failed to get Ambiguous question")
+    }
+  }
 
   const ClickedOnErrorName = (fieldName) => {
     setSelectedField(fieldName);
@@ -148,7 +162,8 @@ const AuditButton = () => {
       DuplicateRollNumberAudit: 'DuplicateRollNumberAudit',
       ContainsCharacterAudit: 'ContainsCharacterAudit',
       MissingRollNumbers: 'MissingRollNumbers',
-      MismatchedWithExtracted: 'MismatchedWithExtracted'
+      MismatchedWithExtracted: 'MismatchedWithExtracted',
+      MultipleResponses : 'MultipleResponses',
     };
 
     const selectedApi = apiEndpoints[eventKey];
@@ -192,25 +207,26 @@ const AuditButton = () => {
           <Button type="primary" onClick={handleClickAudit} disabled={isAuditing}>
             {isAuditing ? 'Auditing' : 'Run Audit'}
           </Button> */}
-          <Dropdown  onSelect={handleSelect}>
-          <Dropdown.Toggle variant="success" id="dropdown-basic">
-        {loading ? (
-          <Spinner animation="border" size="sm" /> // Spinner while loading
-        ) : (
-          'Audit'
-        )}
-      </Dropdown.Toggle>
+          <Dropdown onSelect={handleSelect}>
+            <Dropdown.Toggle variant="success" id="dropdown-basic">
+              {loading ? (
+                <Spinner animation="border" size="sm" /> // Spinner while loading
+              ) : (
+                'Audit'
+              )}
+            </Dropdown.Toggle>
 
-      <Dropdown.Menu>
-        <Dropdown.Item eventKey="RangeAudit">Range Audit</Dropdown.Item>
-         <Dropdown.Item eventKey="ContainsCharacterAudit">Contains Character Audit</Dropdown.Item> 
-         <Dropdown.Item eventKey="DuplicateRollNumberAudit">Duplicate Roll Number Audit</Dropdown.Item>  
-        <Dropdown.Item eventKey="RegistrationAudit" disabled={regData <= 1}>Registration Audit</Dropdown.Item>       
-        <Dropdown.Item eventKey="MissingRollNumbers" disabled={regData <= 1}>Missing Roll Numbers</Dropdown.Item>
-        <Dropdown.Item eventKey="MismatchedWithExtracted">Mismatched With Software</Dropdown.Item>
-        
-      </Dropdown.Menu>
-    </Dropdown>
+            <Dropdown.Menu>
+              <Dropdown.Item eventKey="RangeAudit">Range Audit</Dropdown.Item>
+              <Dropdown.Item eventKey="ContainsCharacterAudit">Contains Character Audit</Dropdown.Item>
+              <Dropdown.Item eventKey="DuplicateRollNumberAudit">Duplicate Roll Number Audit</Dropdown.Item>
+              <Dropdown.Item eventKey="RegistrationAudit" disabled={regData <= 1}>Registration Audit</Dropdown.Item>
+              <Dropdown.Item eventKey="MissingRollNumbers" disabled={regData <= 1}>Missing Roll Numbers</Dropdown.Item>
+              <Dropdown.Item eventKey="MismatchedWithExtracted">Mismatched With Software</Dropdown.Item>
+              <Dropdown.Item eventKey="MultipleResponses" disabled={ambiguous<=1} >Multiple Responses</Dropdown.Item>
+
+            </Dropdown.Menu>
+          </Dropdown>
         </div>
       </div>
       <Card style={{ height: 'auto' }}>

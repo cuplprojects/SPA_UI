@@ -158,18 +158,18 @@ const ZoomedImage = ({ data, onUpdate, onNext }) => {
   const handleKeyDown = (e) => {
     const fieldAttributes = JSON.parse(data.fieldConfig.FieldAttributesJson)[0];
     const rawValidValues = fieldAttributes?.Responses?.split(',').map(val => val.trim()) || [];
-    
+
     // Filter out blank strings from validValues
     const filteredValidValues = rawValidValues.filter(val => val !== '');
-  
+
     console.log('Filtered Valid Values:', filteredValidValues);
-  
+
     if (e.key === 'Enter') {
       const inputValue = e.target.value.trim();
-      
+
       // Skip validation if filteredValidValues is empty
       const isValidValue = filteredValidValues.length === 0 || filteredValidValues.includes(inputValue);
-  
+
       if (isValidValue) {
         if (fieldAttributes?.NumberOfBlocks == inputValue.length) {
           onUpdate(inputValue);
@@ -192,7 +192,7 @@ const ZoomedImage = ({ data, onUpdate, onNext }) => {
       }
     }
   };
-  
+
   if (!data || !data.coordinates) {
     onNext();
     return null;
@@ -249,15 +249,24 @@ const ZoomedImage = ({ data, onUpdate, onNext }) => {
             ))}
           </Select>
         ) : (
-          <input
-            type="text"
-            className="form-control border-danger p-0 text-center"
-            value={selectedResponse}
-            onChange={(e) => setSelectedResponse(e.target.value)}
-            onKeyDown={handleKeyDown}
-            required
-            autoFocus
-          />
+
+          <div class="input-group">
+            {
+              (data?.FieldName === 'Answers') && (
+                <div class="input-group-prepend">
+                  <div class="input-group-text">Q.No.: {parseInt((data?.remarks?.match(/question\s+(\d+)/i) || [])[1] || 0, 10)}</div>
+                </div>)
+            }
+            <input
+              type="text"
+              className="form-control border-danger p-0 text-center"
+              value={selectedResponse}
+              onChange={(e) => setSelectedResponse(e.target.value)}
+              onKeyDown={handleKeyDown}
+              required
+              autoFocus
+            />
+          </div>
         )}
       </div>
     </div>
