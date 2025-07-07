@@ -1,10 +1,9 @@
-import { useUserToken } from "@/store/UserDataStore";
-
 const apiUrl = import.meta.env.VITE_API_URL;
 
-export const fetchUserName = async (userId, database) => {
-  const token = useUserToken()
+export const fetchUserName = async (userId, database, token) => {
   try {
+    if (!userId) return '';
+
     const response = await fetch(`${apiUrl}/Users/${userId}?WhichDatabase=${database}`,{
       headers:{
         'Authorization': `Bearer ${token}`
