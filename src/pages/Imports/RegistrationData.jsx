@@ -28,13 +28,19 @@ const Registration = ({
   const apiurl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-
-    // Check if all properties in mapping have a corresponding header in headers
     const isValid = Object.keys(registrationMapping).every(field => headers.includes(registrationMapping[field]));
     setIsValidData(isValid);
   }, [headers, registrationMapping]);
+  const cleanedMapping = Object.fromEntries(
+    Object.entries(registrationMapping).filter(
+      ([key, _]) => key !== "Answers" && key !== "Test Booklet Number"
+    )
+  );
 
-  const mappedHeaders = Object.values(registrationMapping);
+  // If you want to use the cleaned mapping:
+  console.log(cleanedMapping);
+
+  const mappedHeaders = Object.values(cleanedMapping);
 
   return (
     <>

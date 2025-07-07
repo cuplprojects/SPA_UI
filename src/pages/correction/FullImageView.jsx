@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { notification } from 'antd'; // Import Ant Design notification
 import './style.css';
 
-const FullImageView = ({ data, onUpdate, onNext, setIsViewRegData }) => {
+const FullImageView = ({ data, onUpdate, onNext, handleClose}) => {
   const [value, setValue] = useState('');
   const inputRef = useRef(null);
 
@@ -47,7 +47,7 @@ const FullImageView = ({ data, onUpdate, onNext, setIsViewRegData }) => {
         if (fieldAttributes?.NumberOfBlocks == inputValue.length) {
           onUpdate(inputValue);
           onNext();
-          setIsViewRegData(false);
+          handleClose();
         } else {
           // Using Ant Design's notification
           notification.error({

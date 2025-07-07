@@ -28,6 +28,7 @@ const AuditButton = () => {
   const token = useUserToken();
   const [selectedAudit, setSelectedAudit] = useState('');
   const [regData, setRegData] = useState(0);
+  const [extractedData, setExtractedData] = useState(0);
   const [loading, setLoading] = useState(false);
   const [ambiguous, setAmbiguous] = useState([]);
 
@@ -38,6 +39,7 @@ const AuditButton = () => {
       setWIP(((corrected / totalCount) * 100).toFixed(3));
     }
     fetchRegData(ProjectId); // Fetch registration data
+    fetchExtractedData(ProjectId)
   }, [corrected, totalCount, ProjectId, database]);
 
   // Pagination state
@@ -78,6 +80,19 @@ const AuditButton = () => {
       setRegData(response.data);
     } catch (error) {
       console.error('Error fetching registration data:', error);
+    }
+  };
+
+  const fetchExtractedData = async (ProjectId) => {
+    try {
+      const response = await axios.get(`${APIURL}/Projects/GetProjectCounts?ProjectId=${ProjectId}&CategoryName=ExtractedOMRData&WhichDatabase=${database}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setExtractedData(response.data);
+    } catch (error) {
+      console.error('Error fetching extracted data:', error);
     }
   };
 
@@ -168,7 +183,7 @@ const AuditButton = () => {
 
     const selectedApi = apiEndpoints[eventKey];
     if (selectedApi) {
-      const url = `${baseUrl}/${selectedApi}?WhichDatabase=${database}&ProjectId=${ProjectId}`;
+      const url = `${baseUrl}/${selectedApi}?WhichDatabase=${database}&ProjectId=${ProjectId}`
       setLoading(true);
       try {
         const response = await axios.get(url, {
@@ -222,7 +237,7 @@ const AuditButton = () => {
               <Dropdown.Item eventKey="DuplicateRollNumberAudit">Duplicate Roll Number Audit</Dropdown.Item>
               <Dropdown.Item eventKey="RegistrationAudit" disabled={regData <= 1}>Registration Audit</Dropdown.Item>
               <Dropdown.Item eventKey="MissingRollNumbers" disabled={regData <= 1}>Missing Roll Numbers</Dropdown.Item>
-              <Dropdown.Item eventKey="MismatchedWithExtracted">Mismatched With Software</Dropdown.Item>
+              <Dropdown.Item eventKey="MismatchedWithExtracted" disabled={extractedData <=1}>Mismatched With Software </Dropdown.Item>
               <Dropdown.Item eventKey="MultipleResponses" disabled={ambiguous<=1} >Multiple Responses</Dropdown.Item>
 
             </Dropdown.Menu>
