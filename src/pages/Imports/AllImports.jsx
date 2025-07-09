@@ -34,6 +34,7 @@ const Import = () => {
   const token = useUserToken();
   const [totalQues, setTotalQues] = useState([]);
   const [dataCounts, setDataCounts] = useState([]);
+  const [fileList, setFileList] = useState([]);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -481,16 +482,6 @@ const Import = () => {
           const encryptedscanneddatatosend = {
             cyphertextt: encryptedData,
           };
-          // const response = await fetch(
-          //   `${apiurl}/OMRData/uploadcsv?WhichDatabase=Local&ProjectId=${ProjectId}`,
-          //   {
-          //     method: 'POST',
-          //     headers: {
-          //       'Content-Type': 'application/json',
-          //     },
-          //     body: JSON.stringify(parsedData),
-          //   },
-          // );
           const response = await axios.post(`${apiurl}/OMRData/uploadcsv`, encryptedscanneddatatosend, {
             headers: {
               'Content-Type': 'application/json',
@@ -510,7 +501,6 @@ const Import = () => {
               duration: 3
             })
           } else {
-            // const text = await response.text();
             notification.success({
               message: 'Upload successful!',
               duration: 3
@@ -526,10 +516,10 @@ const Import = () => {
         } finally {
           setLoading(false);
           setSelectedFile(null); // Reset selected file after upload
+          setFileList([]);
         }
       };
       reader.readAsText(selectedFile);
-      setSelectedFile(null)
     } else {
       console.error('No file selected.');
       notification.warning({
@@ -538,7 +528,6 @@ const Import = () => {
       })
       setLoading(false);
     }
-    setSelectedFile(null);
   };
 
    const handleExtractedUpload = async () => {
@@ -778,17 +767,16 @@ const Import = () => {
           message: 'Upload successful!',
           duration: 3
         })
-        setSelectedFile(null);
       } catch (error) {
         console.error('Error uploading registration data:', error);
         notification.error({
           message: 'Error uploading data!',
           duration: 3
         })
-        setSelectedFile(null);
       } finally {
         setLoading(false);
         setSelectedFile(null);
+        setFileList([]);
       }
     };
 
@@ -926,6 +914,9 @@ const Import = () => {
                     fieldMappings={fieldMappings}
                     handleFieldMappingChange={handleFieldMappingChange}
                     scannedCount={dataCounts?.scannedData}
+                    fileList = {fileList}
+                    setFileList = {setFileList}
+                    setSelectedFile= {setSelectedFile}
                   />
                 )}
                 {activetab === 'extracted' && (
@@ -939,6 +930,9 @@ const Import = () => {
                     fieldMappings={fieldMappings}
                     handleFieldMappingChange={handleFieldMappingChange}
                     extractedCount={dataCounts?.extractedOMRData}
+                    fileList = {fileList}
+                    setFileList = {setFileList}
+                    setSelectedFile= {setSelectedFile}
                   />
                 )}
                 {activetab === 'registration' && (
@@ -952,6 +946,9 @@ const Import = () => {
                     handleRegistrationMappingChange={handleRegistrationMappingChange}
                     loading={loading}
                     registrationCount={dataCounts?.registration}
+                    fileList = {fileList}
+                    setFileList = {setFileList}
+                    setSelectedFile= {setSelectedFile}
                   />
                 )}
                 {activetab === 'absentee' && (
@@ -965,6 +962,9 @@ const Import = () => {
                     handleMappingChange={handleMappingChange}
                     loading={loading}
                     absenteeCount={dataCounts?.absenteesUpload}
+                    fileList = {fileList}
+                    setFileList = {setFileList}
+                    setSelectedFile= {setSelectedFile}
                   />
                 )}
                 <div className="clearfix-pq"></div>

@@ -18,7 +18,10 @@ const Scanned = ({
   headers,
   fieldMappings,
   handleFieldMappingChange,
-  scannedCount
+  scannedCount,
+  fileList,
+  setFileList,
+  setSelectedFile
 }) => {
   const [isValidData, setIsValidData] = useState(false);
   const [count, setCount] = useState([]);
@@ -33,6 +36,8 @@ const Scanned = ({
     );
     setIsValidData(isValid);
   }, [headers, fieldMappings]);
+
+
 
   const mappedHeaders = Object.values(fieldMappings);
 
@@ -52,7 +57,13 @@ const Scanned = ({
                       accept=".csv"
                       beforeUpload={(file) => {
                         handleFileUpload({ target: { files: [file] } });
+                        setFileList([file]);
                         return false; // Prevent automatic upload
+                      }}
+                      fileList={fileList} // Control the file list explicitly
+                      onRemove={() => {
+                        setSelectedFile(null);
+                        setFileList([]);
                       }}
                       maxCount={1}
                     >

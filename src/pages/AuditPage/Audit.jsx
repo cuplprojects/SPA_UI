@@ -27,14 +27,26 @@ const AuditButton = () => {
   const database = useDatabase();
   const token = useUserToken();
   const [selectedAudit, setSelectedAudit] = useState('');
+  const [steps, setSteps] = useState('')
   const [regData, setRegData] = useState(0);
   const [extractedData, setExtractedData] = useState(0);
   const [loading, setLoading] = useState(false);
   const [ambiguous, setAmbiguous] = useState([]);
 
+  const orderedAuditSteps = [
+    "RangeAudit",
+    "ContainsCharacterAudit",
+    "DuplicateRollNumberAudit",
+    "RegistrationAudit",
+    "MissingRollNumbers",
+    "MismatchedWithExtracted",
+    "MultipleResponses",
+  ];
+
   useEffect(() => {
     getFlags();
     fetchAmbiguous();
+    fetchAudit(ProjectId);
     if (totalCount > 0) {
       setWIP(((corrected / totalCount) * 100).toFixed(3));
     }
@@ -106,6 +118,20 @@ const AuditButton = () => {
     }
   }
 
+  const fetchAudit = async (ProjectId) => {
+    try {
+      const response = await axios.get(`${APIURL}/Audit?WhichDatabase=${database}&ProjectId=${ProjectId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      console.log(response.data)
+      setSteps(response.data)
+    }
+    catch (err) {
+      console.error("Failed to get Audit steps")
+    }
+  }
   const ClickedOnErrorName = (fieldName) => {
     setSelectedField(fieldName);
     navigate('/correction');
@@ -178,7 +204,7 @@ const AuditButton = () => {
       ContainsCharacterAudit: 'ContainsCharacterAudit',
       MissingRollNumbers: 'MissingRollNumbers',
       MismatchedWithExtracted: 'MismatchedWithExtracted',
-      MultipleResponses : 'MultipleResponses',
+      MultipleResponses: 'MultipleResponses',
     };
 
     const selectedApi = apiEndpoints[eventKey];
@@ -218,10 +244,6 @@ const AuditButton = () => {
       <div className="d-flex align-items-center justify-content-between mb-3 mr-3 mt-3 gap-2">
         {/* <AllotFlag remaining={remaining}/> */}
         <div className="d-flex align-items-center justify-content-end mb-3 mr-3 mt-3 gap-2">
-          {/* <AuditMissingRollNo getFlags={getFlags} />
-          <Button type="primary" onClick={handleClickAudit} disabled={isAuditing}>
-            {isAuditing ? 'Auditing' : 'Run Audit'}
-          </Button> */}
           <Dropdown onSelect={handleSelect}>
             <Dropdown.Toggle variant="success" id="dropdown-basic">
               {loading ? (
@@ -235,12 +257,24 @@ const AuditButton = () => {
               <Dropdown.Item eventKey="RangeAudit">Range Audit</Dropdown.Item>
               <Dropdown.Item eventKey="ContainsCharacterAudit">Contains Character Audit</Dropdown.Item>
               <Dropdown.Item eventKey="DuplicateRollNumberAudit">Duplicate Roll Number Audit</Dropdown.Item>
-              <Dropdown.Item eventKey="RegistrationAudit" disabled={regData <= 1}>Registration Audit</Dropdown.Item>
-              <Dropdown.Item eventKey="MissingRollNumbers" disabled={regData <= 1}>Missing Roll Numbers</Dropdown.Item>
-              <Dropdown.Item eventKey="MismatchedWithExtracted" disabled={extractedData <=1}>Mismatched With Software </Dropdown.Item>
-              <Dropdown.Item eventKey="MultipleResponses" disabled={ambiguous<=1} >Multiple Responses</Dropdown.Item>
 
+              {regData > 1 && (
+                <Dropdown.Item eventKey="RegistrationAudit">Registration Audit</Dropdown.Item>
+              )}
+
+              {regData > 1 && remaining == 0 && (
+                <Dropdown.Item eventKey="MissingRollNumbers">Missing Roll Numbers</Dropdown.Item>
+              )}
+
+              {extractedData > 1 && (
+                <Dropdown.Item eventKey="MismatchedWithExtracted">Mismatched With Software</Dropdown.Item>
+              )}
+
+              {ambiguous > 1 && (
+                <Dropdown.Item eventKey="MultipleResponses">Multiple Responses</Dropdown.Item>
+              )}
             </Dropdown.Menu>
+
           </Dropdown>
         </div>
       </div>

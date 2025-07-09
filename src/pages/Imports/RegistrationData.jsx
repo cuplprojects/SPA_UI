@@ -19,6 +19,9 @@ const Registration = ({
   handleRegistrationMappingChange,
   registrationCount,
   loading,
+  fileList,
+  setFileList,
+  setSelectedFile
 }) => {
   const [isValidData, setIsValidData] = useState(false);
   const [count, setCount] = useState([]);
@@ -58,11 +61,13 @@ const Registration = ({
                       accept=".xlsx"
                       beforeUpload={(file) => {
                         handleFileUpload({ target: { files: [file] } });
+                        setFileList([file]);
                         return false;
                       }}
+                      fileList={fileList} // Control the file list explicitly
                       onRemove={() => {
-                        handleFileUpload({ target: { files: [] } });
-                        return true;
+                        setSelectedFile(null);
+                        setFileList([]);
                       }}
                       maxCount={1}
                     >
@@ -172,7 +177,7 @@ const Registration = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.keys(registrationMapping).map((field) => (
+                    {Object.keys(cleanedMapping).map((field) => (
                       <tr key={field}>
                         <td style={{ wordWrap: 'break-word' }}>{field}</td>
                         <td style={{ wordWrap: 'break-word', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

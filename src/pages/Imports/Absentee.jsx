@@ -41,7 +41,10 @@ const Absentee = ({
   mapping,
   handleMappingChange,
   loading,
-  absenteeCount
+  absenteeCount,
+  fileList,
+  setFileList,
+  setSelectedFile
 }) => {
   const [isValidData, setIsValidData] = useState(false);
   const [showAbsenteeList, setShowAbsenteeList] = useState(false);
@@ -355,32 +358,6 @@ const Absentee = ({
             </Col>
           </Row>
 
-          {/* {headers.length > 0 && (
-        <>
-          <Divider orientation="center">
-            <Space>
-              <InfoCircleOutlined />
-              <span>Map Excel Headers to Properties</span>
-            </Space>
-          </Divider>
-
-         
-            <Col xs={24} lg={8} xl={8}>
-              <Table
-
-                columns={columns}
-                dataSource={tableData}
-                pagination={false}
-                size="middle"
-                bordered
-                className="mapping-table"
-                style={{ marginBottom: 14 }}
-              />
-            </Col>
-      
-        </>
-      )} */}
-
           {selectedFile && (
             <Row justify="center" style={{ marginTop: 2 }}>
               <Col>
@@ -398,11 +375,7 @@ const Absentee = ({
                 >
                   {loading ? <Spin size="small" /> : 'Upload Data'}
                 </Button>
-                {headers.length > 0 && (
-                  <div style={{ marginTop: 8 }}>
-                    <Text type="danger">Please map all required fields</Text>
-                  </div>
-                )}
+               
               </Col>
             </Row>
           )}
