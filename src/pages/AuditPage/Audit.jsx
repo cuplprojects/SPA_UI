@@ -12,6 +12,7 @@ import AllotFlag from '../correction/AllotFlags';
 import { useDatabase } from '@/store/DatabaseStore';
 import { useUserToken } from '@/store/UserDataStore';
 import axios from 'axios';
+import { CheckOutlined } from '@ant-design/icons';
 
 const APIURL = import.meta.env.VITE_API_URL;
 const baseUrl = `${APIURL}/Audit`;
@@ -218,6 +219,7 @@ const AuditButton = () => {
           }
         });
         getFlags(); // Call your function to handle the response data
+        fetchAudit(ProjectId);
         notification.success({
           message: 'Audit Data Fetched Successfully!',
           description: `The data for ${eventKey} has been fetched successfully.`,
@@ -239,6 +241,10 @@ const AuditButton = () => {
     }
   };
 
+  const completedSteps = Array.isArray(steps)
+  ? steps.map(s => s.split(' ')[0].trim()) // Extract step name from string
+  : [];
+
   return (
     <div>
       <div className="d-flex align-items-center justify-content-between mb-3 mr-3 mt-3 gap-2">
@@ -254,25 +260,33 @@ const AuditButton = () => {
             </Dropdown.Toggle>
 
             <Dropdown.Menu>
-              <Dropdown.Item eventKey="RangeAudit">Range Audit</Dropdown.Item>
-              <Dropdown.Item eventKey="ContainsCharacterAudit">Contains Character Audit</Dropdown.Item>
-              <Dropdown.Item eventKey="DuplicateRollNumberAudit">Duplicate Roll Number Audit</Dropdown.Item>
+              {orderedAuditSteps.map((step, index) => {
+                const prevStepCompleted = index === 0 || completedSteps.includes(orderedAuditSteps[index - 1]);
+                const isCompleted = completedSteps.includes(step);
+                const isEnabled = prevStepCompleted && remaining === 0;
 
-              {regData > 1 && (
-                <Dropdown.Item eventKey="RegistrationAudit">Registration Audit</Dropdown.Item>
-              )}
+                // Conditional visibility rules
+                if (step === "RegistrationAudit" && regData <= 1) return null;
+                if (step === "MissingRollNumbers" && (regData <= 1 || remaining > 0)) return null;
+                if (step === "MismatchedWithExtracted" && extractedData <= 1) return null;
+                if (step === "MultipleResponses" && ambiguous <= 1) return null;
 
-              {regData > 1 && remaining == 0 && (
-                <Dropdown.Item eventKey="MissingRollNumbers">Missing Roll Numbers</Dropdown.Item>
-              )}
-
-              {extractedData > 1 && (
-                <Dropdown.Item eventKey="MismatchedWithExtracted">Mismatched With Software</Dropdown.Item>
-              )}
-
-              {ambiguous > 1 && (
-                <Dropdown.Item eventKey="MultipleResponses">Multiple Responses</Dropdown.Item>
-              )}
+                return (
+                  <Dropdown.Item
+                    key={step}
+                    eventKey={step}
+                    disabled={!isEnabled || loading}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <span>{step.replace(/([A-Z])/g, ' $1').trim()}</span>
+                    {isCompleted && <CheckOutlined style={{ color: 'green' }} />}
+                  </Dropdown.Item>
+                );
+              })}
             </Dropdown.Menu>
 
           </Dropdown>
