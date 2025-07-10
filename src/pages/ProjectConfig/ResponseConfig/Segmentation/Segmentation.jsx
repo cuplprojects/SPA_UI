@@ -475,7 +475,6 @@ const Segmentation = () => {
                   onCancel={closeModal}
                   footer={null}
                   width={1000}
-                  style={{ overflowX: 'scroll' }}
                 >
                   {modalVisible && (
                     <ViewSegmentation
