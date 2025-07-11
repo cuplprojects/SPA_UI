@@ -11,7 +11,8 @@ a:focus {
 .tab .nav-tabs {
   background-color: transparent;
   border: none;
-
+  position: sticky;
+  top: 0;
   margin-top: 1rem;
   left: 0;
   width: 100%;

@@ -22,7 +22,11 @@ function ResetForm() {
       const response = await axios.put(`${apiUrl}/Login/Forgotpassword`, resetdata);
 
       if (response.status === 200) {
-        notification.success({ message: 'Reset password link sent to your email' });
+        notification.success({
+          message: 'Reset password link sent to your email', onClose: () => {
+            backToLogin();
+          },
+        });
       } else {
         notification.error({ message: 'Failed to send reset password link' });
       }

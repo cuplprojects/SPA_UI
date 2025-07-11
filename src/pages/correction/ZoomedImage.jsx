@@ -141,7 +141,7 @@ import './style.css';
 
 const { Option } = Select;
 
-const ZoomedImage = ({ data, onUpdate, onNext }) => {
+const ZoomedImage = ({ data, onUpdate, onNext, handleClose }) => {
   const [selectedResponse, setSelectedResponse] = useState('');
 
   useEffect(() => {
@@ -174,6 +174,7 @@ const ZoomedImage = ({ data, onUpdate, onNext }) => {
         if (fieldAttributes?.NumberOfBlocks == inputValue.length) {
           onUpdate(inputValue);
           onNext();
+         handleClose();
         } else {
           // Using Ant Design's notification
           notification.error({

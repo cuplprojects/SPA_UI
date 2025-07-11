@@ -111,6 +111,14 @@ const CorrectionPage = () => {
     }
   };
 
+  const handleClose = async()=>{
+    setIsViewRegData(false)
+    setRegData([])
+    setFilters([{ fieldName: '', fieldValue: '' }])
+    setAvailableOptions([])
+    setparsedData([])
+  }
+
   const fetchFlagData = async () => {
     setCurrentIndex(0);
     setLoading(true);
@@ -480,7 +488,7 @@ const CorrectionPage = () => {
         {isViewRegData ? (
           <div className="w-50 me-2 border p-2">
             <div className="c-pointer text-end">
-              <span onClick={() => setIsViewRegData(false)}>
+              <span onClick={() => handleClose()}>
                 <CloseCircleOutlined style={{ fontSize: '24px', color: 'red' }} />
               </span>
             </div>
@@ -604,8 +612,7 @@ const CorrectionPage = () => {
                     newValue,
                   )
                 }
-                onNext={handleNext}
-                setIsViewRegData={setIsViewRegData}
+               handleClose = {handleClose}
               />
             ) : (
               <ZoomedImage
@@ -618,6 +625,8 @@ const CorrectionPage = () => {
                 }
                 onNext={handleNext}
                 setIsViewRegData={setIsViewRegData}
+                 setRegData = {setRegData}
+                setFilters = {setFilters}
               />
             )
           ) : (

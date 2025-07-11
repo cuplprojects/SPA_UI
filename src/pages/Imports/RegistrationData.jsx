@@ -19,6 +19,9 @@ const Registration = ({
   handleRegistrationMappingChange,
   registrationCount,
   loading,
+  fileList,
+  setFileList,
+  setSelectedFile
 }) => {
   const [isValidData, setIsValidData] = useState(false);
   const [count, setCount] = useState([]);
@@ -28,13 +31,19 @@ const Registration = ({
   const apiurl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-
-    // Check if all properties in mapping have a corresponding header in headers
     const isValid = Object.keys(registrationMapping).every(field => headers.includes(registrationMapping[field]));
     setIsValidData(isValid);
   }, [headers, registrationMapping]);
+  const cleanedMapping = Object.fromEntries(
+    Object.entries(registrationMapping).filter(
+      ([key, _]) => key !== "Answers" && key !== "Test Booklet Number"
+    )
+  );
 
-  const mappedHeaders = Object.values(registrationMapping);
+  // If you want to use the cleaned mapping:
+  console.log(cleanedMapping);
+
+  const mappedHeaders = Object.values(cleanedMapping);
 
   return (
     <>
@@ -52,11 +61,13 @@ const Registration = ({
                       accept=".xlsx"
                       beforeUpload={(file) => {
                         handleFileUpload({ target: { files: [file] } });
+                        setFileList([file]);
                         return false;
                       }}
+                      fileList={fileList} // Control the file list explicitly
                       onRemove={() => {
-                        handleFileUpload({ target: { files: [] } });
-                        return true;
+                        setSelectedFile(null);
+                        setFileList([]);
                       }}
                       maxCount={1}
                     >
@@ -166,7 +177,7 @@ const Registration = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.keys(registrationMapping).map((field) => (
+                    {Object.keys(cleanedMapping).map((field) => (
                       <tr key={field}>
                         <td style={{ wordWrap: 'break-word' }}>{field}</td>
                         <td style={{ wordWrap: 'break-word', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
