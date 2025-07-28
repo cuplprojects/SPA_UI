@@ -111,7 +111,7 @@ const CorrectionPage = () => {
     }
   };
 
-  const handleClose = async()=>{
+  const handleClose = async () => {
     setIsViewRegData(false)
     setRegData([])
     setFilters([{ fieldName: '', fieldValue: '' }])
@@ -612,7 +612,8 @@ const CorrectionPage = () => {
                     newValue,
                   )
                 }
-               handleClose = {handleClose}
+                onNext={handleNext}
+                handleClose={handleClose}
               />
             ) : (
               <ZoomedImage
@@ -625,8 +626,8 @@ const CorrectionPage = () => {
                 }
                 onNext={handleNext}
                 setIsViewRegData={setIsViewRegData}
-                 setRegData = {setRegData}
-                setFilters = {setFilters}
+                setRegData={setRegData}
+                setFilters={setFilters}
               />
             )
           ) : (
