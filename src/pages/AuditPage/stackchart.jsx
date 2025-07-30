@@ -62,11 +62,15 @@ const StackedHorizontalBarChart = ({ data }) => {
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
             }}
           />
-          <Legend
+           <Legend
             layout="horizontal"
             verticalAlign="bottom"
             align="center"
-            wrapperStyle={{ paddingTop: '10px' }}
+            wrapperStyle={{  display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          overflowY: 'auto',
+          maxHeight: 100 }}
           />
           {Object.keys(transformedData).map((key, index) => {
             if (key !== 'name') {

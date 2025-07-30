@@ -206,8 +206,10 @@ function Project() {
 
       if (index > -1) {
         const isDuplicate = newData.some(
-          (item, idx) => idx !== index && item.projectName === row.projectName,
-        );
+          (item) =>
+            item.projectName === row.projectName &&
+            item.key !== key // Exclude the current editing row
+        )
         if (isDuplicate) {
           notification.error({
             message: 'Duplicate Project Name',
@@ -284,26 +286,6 @@ function Project() {
     }
   };
 
-  const addRow = async (newRow) => {
-    try {
-      const response = await fetch(`${apiurl}/Projects?WhichDatabase=${database}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(newRow),
-      });
-      if (!response.ok) {
-        cancel();
-        throw new Error('Failed to add new project');
-      }
-      fetchData();
-      setHasUnsavedChanges(false);
-    } catch (error) {
-      console.error('Error adding new project:', error);
-    }
-  };
 
   const showConfirmModal = (projectKey) => {
     handleConfirmModalOk(projectKey);
