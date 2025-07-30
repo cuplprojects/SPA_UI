@@ -111,7 +111,7 @@ const CorrectionPage = () => {
     }
   };
 
-  const handleClose = async()=>{
+  const handleClose = async () => {
     setIsViewRegData(false)
     setRegData([])
     setFilters([{ fieldName: '', fieldValue: '' }])
@@ -336,8 +336,6 @@ const CorrectionPage = () => {
   };
 
 
-
-
   // get student filterd data
   const handleSubmitFilter = async (e) => {
     try {
@@ -518,6 +516,11 @@ const CorrectionPage = () => {
                         <Input
                           value={filter.fieldValue}
                           onChange={(e) => handleFilterChange(index, 'fieldValue', e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleSubmitFilter();
+                            }
+                          }}
                           style={{ width: 200, marginRight: 8 }}
                           placeholder="Enter value"
                         />
@@ -612,7 +615,8 @@ const CorrectionPage = () => {
                     newValue,
                   )
                 }
-               handleClose = {handleClose}
+                onNext={handleNext}
+                handleClose={handleClose}
               />
             ) : (
               <ZoomedImage
@@ -625,8 +629,8 @@ const CorrectionPage = () => {
                 }
                 onNext={handleNext}
                 setIsViewRegData={setIsViewRegData}
-                 setRegData = {setRegData}
-                setFilters = {setFilters}
+                setRegData={setRegData}
+                setFilters={setFilters}
               />
             )
           ) : (
