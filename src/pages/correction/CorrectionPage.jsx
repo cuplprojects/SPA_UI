@@ -336,8 +336,6 @@ const CorrectionPage = () => {
   };
 
 
-
-
   // get student filterd data
   const handleSubmitFilter = async (e) => {
     try {
@@ -518,6 +516,11 @@ const CorrectionPage = () => {
                         <Input
                           value={filter.fieldValue}
                           onChange={(e) => handleFilterChange(index, 'fieldValue', e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleSubmitFilter();
+                            }
+                          }}
                           style={{ width: 200, marginRight: 8 }}
                           placeholder="Enter value"
                         />

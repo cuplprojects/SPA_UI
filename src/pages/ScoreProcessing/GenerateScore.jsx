@@ -468,13 +468,20 @@ const GenerateScore = () => {
         <Button
           type="primary"
           onClick={async () => {
-            await fetchSections(record.courseName);
-            downloadExcelTemplate(sectionNames, fieldnames);
+            const sectionResult = await fetchSections(record.courseName);
+            if (sectionResult && sectionResult.length > 0) {
+              downloadExcelTemplate(sectionResult, fieldnames); // pass directly from fetch result
+            } else {
+              notification.error({
+                message: 'Failed to download template. Section data not available.',
+                duration: 3,
+              });
+            }
           }}
           disabled={!record.courseName}
         >
           Download Key Template
-        </Button>
+        </Button >
       ),
       width: '30%',
     },
