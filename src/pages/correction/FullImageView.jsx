@@ -117,8 +117,8 @@ const FullImageView = ({ data, onUpdate, onNext, handleClose }) => {
 
               return (
                 <div className="input-group-prepend">
-                  <div className="input-group-text fw-bold">
-                    Q.No.: {questionNumber ?? 'N/A'}{scannedAnswer ? ` (${scannedAnswer})` : ''}
+                  <div className="input-group-text fw-bold bg-success text-white">
+                    Q.No: {questionNumber ?? 'N/A'} Scanned:{scannedAnswer ? ` (${scannedAnswer})` : ''}
                   </div>
                 </div>
               );
