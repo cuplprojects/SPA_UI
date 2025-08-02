@@ -251,7 +251,14 @@ const AuditButton = () => {
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
         <Dropdown onSelect={handleSelect}>
           <Dropdown.Toggle variant="success" id="dropdown-basic">
-            Audit
+            {loading ? (
+              <>
+                <LoadingOutlined spin style={{ marginRight: 8 }} />
+                Auditing...
+              </>
+            ) : (
+              'Audit'
+            )}
           </Dropdown.Toggle>
 
           <Dropdown.Menu>

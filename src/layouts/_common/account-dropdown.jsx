@@ -24,9 +24,8 @@ export default function AccountDropdown() {
 
   const logout = () => {
     try {
-      // todo const logoutMutation = useMutation(userService.logout);
-      // todo logoutMutation.mutateAsync();
       clearUserInfoAndToken();
+      localStorage.removeItem("2dde77c1728a1b036P")
       backToLogin();
     } catch (error) {
       console.log(error);
