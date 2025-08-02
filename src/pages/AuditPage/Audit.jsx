@@ -99,11 +99,12 @@ const AuditButton = () => {
 
   const fetchExtractedData = async (ProjectId) => {
     try {
-      const response = await axios.get(`${APIURL}/Projects/GetProjectCounts?ProjectId=${ProjectId}&CategoryName=ExtractedOMRData&WhichDatabase=${database}`, {
+      const response = await axios.get(`${APIURL}/Projects/GetProjectCounts?ProjectId=${ProjectId}&CategoryName=Extracted&WhichDatabase=${database}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
+      console.log(extractedData)
       setExtractedData(response.data);
     } catch (error) {
       console.error('Error fetching extracted data:', error);
