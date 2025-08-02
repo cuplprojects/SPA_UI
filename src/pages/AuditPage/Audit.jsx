@@ -266,13 +266,16 @@ const AuditButton = () => {
               const prevStepCompleted = index === 0 || completedSteps.includes(orderedAuditSteps[index - 1]);
               const isCompleted = completedSteps.includes(step);
               const isEnabled = prevStepCompleted && remaining === 0;
-              const isStepFreeAccess = step === "MismatchedWithExtracted" && step === "MultipleResponses" && remaining === 0;
+              const isStepFreeAccess =
+                (step === "MismatchedWithExtracted" && extractedData > 0) ||
+                (step === "MultipleResponses" && ambiguous > 1);
+
               if (step === "MismatchedWithExtracted" && extractedData <= 0) return null;
-               if (step === "MultipleResponses" && ambiguous <= 1) return null;
+              if (step === "MultipleResponses" && ambiguous <= 1) return null;
               // Conditional visibility rules
               if (step === "RegistrationAudit" && regData <= 1) return null;
               if (step === "MissingRollNumbers" && (regData <= 1 || remaining > 0)) return null;
-             
+
 
               return (
                 <Dropdown.Item
