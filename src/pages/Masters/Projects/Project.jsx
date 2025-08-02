@@ -375,7 +375,40 @@ function Project() {
   const handleAdd = () => {
     setOpen(true);
     setHasUnsavedChanges(true);
+    setEditingKey('');
+    form.resetFields();
   };
+
+  const addRow = async (newProject) => {
+    try {
+      const response = await fetch(`${apiurl}/Projects?WhichDatabase=${database}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newProject),
+      });
+
+      if (!response.ok) throw new Error('Failed to add new project');
+
+      fetchData();
+
+      notification.success({
+        message: 'Success',
+        description: 'Project added successfully',
+      });
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error adding project:', error);
+      notification.error({
+        message: 'Error',
+        description: 'Failed to add project',
+      });
+    }
+  };
+
 
 
   const columns = [

@@ -170,7 +170,7 @@ const FieldConfiguration = () => {
       ],
     };
 
-   
+
 
     let newConfigJson = JSON.stringify(newConfig);
     let encrypteddata = handleEncrypt(newConfigJson);
@@ -199,7 +199,7 @@ const FieldConfiguration = () => {
           });
 
 
-          
+
           // Check if flags exist for the project
           const flagsExistResponse = await axios.get(
             `${APIURL}/Flags/FlagExist?id=${ProjectId}&WhichDatabase=${database}`,
@@ -260,7 +260,7 @@ const FieldConfiguration = () => {
             duration: 3,
           });
         });
-        
+
     } else {
       axios
         .post(`${APIURL}/FieldConfigurations?WhichDatabase=${database}`, encrypteddatatosend, {
@@ -403,8 +403,24 @@ const FieldConfiguration = () => {
       title: 'Preferred Responses',
       dataIndex: ['FieldAttributes', 0, 'Responses'],
       key: 'responses',
+      width: 200,
+      ellipsis: true,
       sorter: (a, b) =>
         a.FieldAttributes[0].Responses.localeCompare(b.FieldAttributes[0].Responses),
+      render: (text) => (
+        <Tooltip title={text}>
+          <div
+            style={{
+              maxWidth: '200px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {text}
+          </div>
+        </Tooltip>
+      )
     },
     {
       title: 'Number of Blocks',
@@ -463,7 +479,7 @@ const FieldConfiguration = () => {
                 value={fieldName}
                 onChange={setFieldName}
                 style={{ width: '100%' }}
-                
+
               >
                 {fields.map((field) => (
                   <Option key={field.fieldName} value={field.fieldName}>
@@ -556,6 +572,8 @@ const FieldConfiguration = () => {
         rowKey="fieldConfigurationId"
         pagination={pagination}
         onChange={(pag) => setPagination(pag)}
+        scroll={{ x: 'max-content' }}
+        tableLayout="fixed"
       />
     </div>
   );

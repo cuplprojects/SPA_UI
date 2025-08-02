@@ -212,14 +212,14 @@ const Registration = ({
           {/* Upload button */}
           <div className="d-flex justify-content-center mt-4">
             {selectedFile && (
-              <Button
-                type="primary"
+              <button
+                className="btn btn-primary"
                 onClick={handleRegistrationUpload}
                 disabled={loading}
-                icon={<UploadOutlined />}
+               
               >
                 {loading ? 'Uploading...' : 'Upload'}
-              </Button>
+              </button>
             )}
           </div>
         </div>
