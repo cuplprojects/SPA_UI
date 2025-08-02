@@ -80,7 +80,7 @@ const ComparisonReport = () => {
   const fetchFlagData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${apiUrl}/Report/ByProject/${projectId}?WhichDatabase=${database}`, {
+      const response = await fetch(`${apiUrl}/Report/ComparisonRepor/${projectId}?WhichDatabase=${database}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -534,6 +534,6 @@ const ComparisonReport = () => {
   );
 };
 
-export default Comparisonreport;
+export default ComparisonReport;
 
 
