@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { notification } from 'antd'; // Import Ant Design notification
 import './style.css';
 
-const FullImageView = ({ data, onUpdate, onNext, handleClose}) => {
+const FullImageView = ({ data, onUpdate, onNext, handleClose }) => {
   const [value, setValue] = useState('');
   const inputRef = useRef(null);
 
@@ -30,10 +30,10 @@ const FullImageView = ({ data, onUpdate, onNext, handleClose}) => {
 
   const handleKeyDown = (e) => {
     const fieldAttributes = JSON.parse(data?.fieldConfig.FieldAttributesJson)[0];
-    const rawValidValues = fieldAttributes?.Responses?.split(',').map(val => val.trim()) || [];
+    const rawValidValues = fieldAttributes?.Responses?.split(',').map((val) => val.trim()) || [];
 
     // Filter out blank strings from validValues
-    const filteredValidValues = rawValidValues.filter(val => val !== '');
+    const filteredValidValues = rawValidValues.filter((val) => val !== '');
 
     console.log('Filtered Valid Values:', filteredValidValues);
 
@@ -41,7 +41,8 @@ const FullImageView = ({ data, onUpdate, onNext, handleClose}) => {
       const inputValue = e.target.value.trim();
 
       // Skip validation if filteredValidValues is empty
-      const isValidValue = filteredValidValues.length === 0 || filteredValidValues.includes(inputValue);
+      const isValidValue =
+        filteredValidValues.length === 0 || filteredValidValues.includes(inputValue);
 
       if (isValidValue) {
         if (fieldAttributes?.NumberOfBlocks == inputValue.length) {
@@ -67,7 +68,6 @@ const FullImageView = ({ data, onUpdate, onNext, handleClose}) => {
     }
   };
 
-
   if (!data || !data.coordinates) {
     return null; // Handle case where data or coordinates are not yet available
   }
@@ -78,7 +78,7 @@ const FullImageView = ({ data, onUpdate, onNext, handleClose}) => {
 
   return (
     <div
-      className="m-auto zoomimg"
+      className="zoomimg m-auto"
       style={{
         position: 'relative',
         width: `${originalWidth}px`, // Set the width of the container to the original image width
@@ -103,31 +103,42 @@ const FullImageView = ({ data, onUpdate, onNext, handleClose}) => {
           border: '2px solid black',
         }}
       >
+        <div className="input-group">
+          {data?.FieldName === 'Answers' &&
+            (() => {
+              const match = data?.remarks?.match(/Question[:\s]+(\d+)/i);
+              const questionNumber = match ? parseInt(match[1], 10) : null;
+              
+              // Extract scanned answer from remarks
+              const scannedMatch = data?.remarks?.match(/ScannedAns\s*:\s*([A-Z])/i);
+              const scannedAnswer = scannedMatch ? scannedMatch[1] : null;
 
-        <div class="input-group">
-          {
-            (data?.FieldName === 'Answers') && (
-              <div class="input-group-prepend">
-                <div class="input-group-text fw-bold">Q.No.: {parseInt((data?.remarks?.match(/question\s+(\d+)/i) || [])[1] || 0, 10)}</div>
-              </div>)
-          }
+              console.log('Extracted Q.No.:', questionNumber, 'Scanned Answer:', scannedAnswer, 'from remarks:', data?.remarks);
+
+              return (
+                <div className="input-group-prepend">
+                  <div className="input-group-text fw-bold">
+                    Q.No.: {questionNumber ?? 'N/A'}{scannedAnswer ? ` (${scannedAnswer})` : ''}
+                  </div>
+                </div>
+              );
+            })()}
+
           <input
             id="inlineFormInputGroup"
             type="text"
             ref={inputRef}
-            className="form-control border-danger text-center p-0"
+            className="form-control border-danger p-0 text-center"
             value={value}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             style={{
-              // width: '100%', // Make input full width of its container
-              boxSizing: 'border-box', // Ensure padding and border are included in width and height
+              boxSizing: 'border-box',
             }}
             required
             autoFocus
           />
         </div>
-
       </div>
     </div>
   );

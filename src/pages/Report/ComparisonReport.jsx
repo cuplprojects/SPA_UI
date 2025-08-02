@@ -9,7 +9,7 @@ import {
   Dropdown,
   Input,
   Table,
-  Select,
+  Tag,
   Spin,
   notification,
   Space,
@@ -25,9 +25,10 @@ import {
   DatabaseOutlined,
   EyeOutlined,
   EyeInvisibleOutlined,
-  OrderedListOutlined,
   FileSearchOutlined,
-  SearchOutlined
+  SearchOutlined,
+  CheckCircleOutlined,
+  ExclamationCircleOutlined
 } from '@ant-design/icons';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
@@ -42,14 +43,12 @@ const apiUrl = import.meta.env.VITE_API_URL;
 
 const ComparisonReport = () => {
   const [projectName, setProjectName] = useState('');
-  const [data, setData] = useState([]);
+  const [overviewData, setOverviewData] = useState([]);
+  const [detailData, setDetailData] = useState([]);
   const [reportGenerated, setReportGenerated] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [selectedFields, setSelectedFields] = useState([]);
-  const [sortedFields, setSortedFields] = useState([]);
-  const [fieldOptions, setFieldOptions] = useState([]);
-  const [flagData, setFlagData] = useState([]);
+  const [rawFlagData, setRawFlagData] = useState([]);
   const [loading, setLoading] = useState(false);
   const token = useUserToken()
 
@@ -80,7 +79,7 @@ const ComparisonReport = () => {
   const fetchFlagData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${apiUrl}/Report/ComparisonRepor/${projectId}?WhichDatabase=${database}`, {
+      const response = await fetch(`${apiUrl}/Report/ComparisonReport/${projectId}?WhichDatabase=${database}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -91,7 +90,7 @@ const ComparisonReport = () => {
       }
 
       const flagData = await response.json();
-      console.log('Fetched Flag Data:', flagData); // Debug log to see the data structure
+      console.log('Fetched Flag Data:', flagData);
 
       if (flagData.length === 0) {
         notification.info({
@@ -103,31 +102,12 @@ const ComparisonReport = () => {
         return;
       }
 
-      // Extract fields from fetched data
-      const fieldsSet = new Set();
-      flagData.forEach(item => {
-        if (item.field) fieldsSet.add('Field');
-        if (item.fieldNameValue) fieldsSet.add('Old Value');
-        if (item.correctedValue) fieldsSet.add('Correct Value')
-        if (item.remarks) fieldsSet.add('Remarks');
-        if (item.barCode) fieldsSet.add('Bar Code');
-        if (item.updatedByUserId) fieldsSet.add('Updated By');
-      });
-
-      const fieldsArray = Array.from(fieldsSet);
-
-      // Update dropdown options dynamically
-      setFieldOptions(fieldsArray.map(field => ({ label: field, value: field })));
-      setSelectedFields(fieldsArray); // Set to all fields initially
-      setSortedFields(fieldsArray);   // Set to all fields initially
-      setFlagData(flagData); // Save flagData for later use
-
-      // No longer automatically process and display the data
-      // User will need to click "Show Data" button
+      setRawFlagData(flagData);
+      await processAndDisplayData(flagData);
 
       notification.success({
         message: 'Flag Data Loaded',
-        description: `Successfully loaded ${flagData.length} flag records. Click "Show Data" to display.`,
+        description: `Successfully loaded ${flagData.length} barcode records with flags.`,
         duration: 3,
       });
     } catch (error) {
@@ -142,26 +122,83 @@ const ComparisonReport = () => {
     }
   };
 
-  // New function to process and display data
-  const processAndDisplayData = async (flagDataToProcess, selectedFieldsToUse) => {
+  // Process and display data with new structure
+  const processAndDisplayData = async (flagDataToProcess) => {
     try {
-      const updatedData = await Promise.all(flagDataToProcess.map(async (item, index) => {
-        const updatedByName = await fetchUserName(item?.updatedByUserId, database, token);
-        // Filter and include only selected fields
-        const filteredItem = {
-          key: index + 1,
+      // Create overview data
+      const overview = flagDataToProcess.map((item, index) => {
+        const totalFlags = item.flags.length;
+        
+        // Count different types of errors based on field types
+        const errorCounts = {};
+        Object.keys(item.fieldCounts || {}).forEach(fieldType => {
+          errorCounts[fieldType] = item.fieldCounts[fieldType];
+        });
+        
+        return {
+          key: item.barcode,
           'S.No.': index + 1,
-          ...(selectedFieldsToUse.includes('Field') && { 'Field': item.field }),
-          ...(selectedFieldsToUse.includes('Old Value') && { 'Old Value': item.fieldNameValue }),
-          ...(selectedFieldsToUse.includes('Remarks') && { 'Remarks': item.remarks }),
-          ...(selectedFieldsToUse.includes('Bar Code') && { 'Bar Code': item.barCode }),
-          ...(selectedFieldsToUse.includes('Updated By') && { 'Updated By': updatedByName || '' }),
-          ...(selectedFieldsToUse.includes('Correct Value') && { 'Correct Value': item.correctedValue || '' }),
+          'Bar Code': item.barcode,
+          'Unmatched': totalFlags,
+          ...errorCounts // This will add columns like "Answers": 2, "Roll Number": 1, etc.
         };
-        return filteredItem;
-      }));
+      });
 
-      setData(updatedData);
+      // Create detailed data for all flags
+      const details = [];
+      let detailIndex = 1;
+      
+      for (const item of flagDataToProcess) {
+        for (const flag of item.flags) {
+          const updatedByName = flag.updatedByUserId ? 
+            await fetchUserName(flag.updatedByUserId, database, token) : '';
+          
+          let scannedValue = '';
+          let extractedValue = '';
+          let questionNumber = '';
+          
+          // Process based on field type
+          if (flag.field === 'Answers') {
+            // Extract question number from remarks
+            const questionMatch = flag.remarks.match(/Question:\s*(\d+)/);
+            questionNumber = questionMatch ? questionMatch[1] : '';
+            
+            // Extract scanned answer from remarks
+            const scannedMatch = flag.remarks.match(/ScannedAns\s*:\s*([A-Z])/);
+            scannedValue = scannedMatch ? scannedMatch[1] : '';
+            
+            // For answers, fieldNameValue is the extracted value
+            extractedValue = flag.fieldNameValue;
+          } else {
+            // For other fields, extract scanned value from remarks and fieldNameValue is extracted value
+            // Try to extract scanned value from remarks (look for patterns like "000265" in remarks)
+            const remarksScannedMatch = flag.remarks.match(/(\*?\d+)/);
+            scannedValue = remarksScannedMatch ? remarksScannedMatch[1] : '';
+            
+            // fieldNameValue is the extracted value
+            extractedValue = flag.fieldNameValue;
+          }
+          
+          details.push({
+            key: `${item.barcode}-${flag.flagId}`,
+            'S.No.': detailIndex++,
+            'Bar Code': flag.barCode,
+            'Flag ID': flag.flagId,
+            'Field': flag.field,
+            'Question Number': flag.field === 'Answers' ? questionNumber : '',
+            'Scanned Value': scannedValue,
+            'Extracted Value': extractedValue,
+            'Old Value': scannedValue, // Keep for backward compatibility
+            'Remarks': flag.remarks,
+            'Is Corrected': flag.isCorrected ? 'Yes' : 'No',
+            'Updated By': updatedByName || 'N/A',
+            'Project ID': flag.projectId
+          });
+        }
+      }
+
+      setOverviewData(overview);
+      setDetailData(details);
       setReportGenerated(true);
     } catch (error) {
       console.error('Error processing flag data:', error);
@@ -170,23 +207,6 @@ const ComparisonReport = () => {
         description: error.message || 'Failed to process flag data.',
         duration: 3,
       });
-    }
-  };
-
-  const handleShowData = async () => {
-    setLoading(true);
-    try {
-      // Use the existing flagData but with the current selectedFields
-      await processAndDisplayData(flagData, selectedFields);
-    } catch (error) {
-      console.error('Error processing flag data:', error);
-      notification.error({
-        message: 'Error Showing Data',
-        description: error.message || 'Failed to process and display flag data.',
-        duration: 3,
-      });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -199,26 +219,26 @@ const ComparisonReport = () => {
     const doc = new jsPDF();
 
     // Title
-    doc.text(`Flag Report for ${projectName}`, 14, 16);
+    doc.text(`Comparison Report for ${projectName}`, 14, 16);
 
-    // Columns and Rows
-    const tableColumn = ['S.No.', ...sortedFields];
-    const tableRows = data.map(item => tableColumn.map(field => item[field]));
+    // Overview Table
+    const fieldTypes = getFieldTypes();
+    const overviewColumns = ['S.No.', 'Bar Code', 'Unmatched', ...fieldTypes];
+    const overviewRows = overviewData.map(item => overviewColumns.map(field => item[field] || 0));
 
-    // Add Table
     doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
+      head: [overviewColumns],
+      body: overviewRows,
       startY: 30,
       styles: {
-        fontSize: 6,
+        fontSize: 8,
         cellPadding: 2,
         lineColor: [44, 62, 80],
         lineWidth: 0.2,
         textColor: [0, 0, 0],
       },
       headStyles: {
-        fontSize: 8,
+        fontSize: 9,
         fillColor: [22, 160, 133],
         textColor: [255, 255, 255],
         lineColor: [44, 62, 80],
@@ -228,127 +248,255 @@ const ComparisonReport = () => {
       },
       theme: 'striped',
       margin: { top: 20 },
-      didDrawPage: (data) => {
-        const pageCount = doc.internal.getNumberOfPages();
-        const pageSize = doc.internal.pageSize;
-        const pageHeight = pageSize.height || pageSize.getHeight();
-        const pageWidth = pageSize.width || pageSize.getWidth();
-
-        doc.setFontSize(8);
-        const pageNumberText = `Page ${data.pageNumber} of ${pageCount}`;
-        const textWidth = doc.getStringUnitWidth(pageNumberText) * doc.internal.scaleFactor;
-        const xPosition = pageWidth - textWidth - 10;
-        const yPosition = pageHeight - 10;
-
-        doc.text(pageNumberText, xPosition, yPosition);
-      },
     });
 
     // Save the PDF
-    doc.save(`flag_report_${projectName}.pdf`);
+    doc.save(`comparison_report_${projectName}.pdf`);
   };
 
   const handleExcelAction = () => {
-    const title = [`Flag Report for ${projectName}`];
-    const headers = ['S.No.', ...sortedFields];
-    const cleanData = data.map(({ key, ...rest }) => rest);
+    const workbook = XLSX.utils.book_new();
 
-    const worksheet = XLSX.utils.json_to_sheet([], { header: headers });
+    // Sheet 1: Overview
+    const overviewTitle = [`Comparison Report Overview - ${projectName}`];
+    const fieldTypes = getFieldTypes();
+    const overviewHeaders = ['S.No.', 'Bar Code', 'Unmatched', ...fieldTypes];
+    const overviewCleanData = overviewData.map(({ key, ...rest }) => rest);
 
-    XLSX.utils.sheet_add_aoa(worksheet, [title], { origin: 'A1' });
+    const overviewWorksheet = XLSX.utils.json_to_sheet([], { header: overviewHeaders });
+    
+    XLSX.utils.sheet_add_aoa(overviewWorksheet, [overviewTitle], { origin: 'A1' });
+    XLSX.utils.sheet_add_aoa(overviewWorksheet, [overviewHeaders], { origin: 'A2' });
+    XLSX.utils.sheet_add_json(overviewWorksheet, overviewCleanData, { 
+      header: overviewHeaders, 
+      skipHeader: true, 
+      origin: 'A3' 
+    });
 
-    XLSX.utils.sheet_add_aoa(worksheet, [headers], { origin: 'A2' });
+    overviewWorksheet['!merges'] = [{
+      s: { r: 0, c: 0 },
+      e: { r: 0, c: overviewHeaders.length - 1 }
+    }];
 
-    XLSX.utils.sheet_add_json(worksheet, cleanData, { header: headers, skipHeader: true, origin: 'A3' });
-
-    worksheet['!merges'] = [
-      {
-        s: { r: 0, c: 0 },
-        e: { r: 0, c: headers.length - 1 }
-      }
-    ];
-
-    worksheet['A1'] = {
-      v: title[0],
+    overviewWorksheet['A1'] = {
+      v: overviewTitle[0],
       s: {
-        fill: {
-          fgColor: { rgb: 'ff0000' }
-        },
-        alignment: {
-          horizontal: 'center',
-          vertical: 'center'
-        },
-        font: {
-          sz: 14,
-          bold: true
-        }
+        fill: { fgColor: { rgb: '4472C4' } },
+        alignment: { horizontal: 'center', vertical: 'center' },
+        font: { sz: 14, bold: true, color: { rgb: 'FFFFFF' } }
       }
     };
 
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    // Sheet 2: Detailed Data
+    const detailTitle = [`Comparison Report Details - ${projectName}`];
+    const detailHeaders = ['S.No.', 'Bar Code', 'Field', 'Question Number', 'Scanned Value', 'Extracted Value', 'Remarks'];
+    const detailCleanData = detailData.map(({ key, 'Old Value': oldValue, 'Flag ID': flagId, 'Is Corrected': isCorrected, 'Updated By': updatedBy, 'Project ID': projectId, ...rest }) => rest);
 
-    XLSX.writeFile(workbook, `flag_report_${projectName}.xlsx`);
+    const detailWorksheet = XLSX.utils.json_to_sheet([], { header: detailHeaders });
+    
+    XLSX.utils.sheet_add_aoa(detailWorksheet, [detailTitle], { origin: 'A1' });
+    XLSX.utils.sheet_add_aoa(detailWorksheet, [detailHeaders], { origin: 'A2' });
+    XLSX.utils.sheet_add_json(detailWorksheet, detailCleanData, { 
+      header: detailHeaders, 
+      skipHeader: true, 
+      origin: 'A3' 
+    });
+
+    detailWorksheet['!merges'] = [{
+      s: { r: 0, c: 0 },
+      e: { r: 0, c: detailHeaders.length - 1 }
+    }];
+
+    detailWorksheet['A1'] = {
+      v: detailTitle[0],
+      s: {
+        fill: { fgColor: { rgb: '70AD47' } },
+        alignment: { horizontal: 'center', vertical: 'center' },
+        font: { sz: 14, bold: true, color: { rgb: 'FFFFFF' } }
+      }
+    };
+
+    // Add both sheets to workbook
+    XLSX.utils.book_append_sheet(workbook, overviewWorksheet, 'Overview');
+    XLSX.utils.book_append_sheet(workbook, detailWorksheet, 'Details');
+
+    XLSX.writeFile(workbook, `comparison_report_${projectName}.xlsx`);
   };
 
-  // Define table columns based on sorted fields and include 'S.No.'
-  const columns = ['S.No.', ...sortedFields].map(field => ({
-    title: field,
-    dataIndex: field,
-    key: field,
-    sorter: (a, b) => {
-      if (typeof a[field] === 'string' && typeof b[field] === 'string') {
-        return a[field].localeCompare(b[field]);
-      } else if (typeof a[field] === 'number' && typeof b[field] === 'number') {
-        return a[field] - b[field];
-      }
-      return 0;
-    },
-    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-      <div style={{ padding: 8 }}>
-        <Input
-          placeholder={`Search ${field}`}
-          value={selectedKeys[0]}
-          onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-          onPressEnter={() => confirm()}
-          style={{ marginBottom: 8, display: 'block', width: 188 }}
-        />
-        <Space>
-          <Button
-            type="primary"
-            onClick={() => confirm()}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Search
-          </Button>
-          <Button
-            onClick={() => clearFilters()}
-            size="small"
-            style={{ width: 90 }}
-          >
-            Reset
-          </Button>
-        </Space>
-      </div>
-    ),
-    onFilter: (value, record) =>
-      record[field]?.toString().toLowerCase().includes(value.toLowerCase()),
-    filterIcon: filtered => (
-      <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
-    ),
-  }));
+  // Get all unique field types from the data to create dynamic columns
+  const getFieldTypes = () => {
+    const fieldTypes = new Set();
+    rawFlagData.forEach(item => {
+      Object.keys(item.fieldCounts || {}).forEach(fieldType => {
+        fieldTypes.add(fieldType);
+      });
+    });
+    return Array.from(fieldTypes);
+  };
 
-  // Filter the options for sorting based on selected fields
-  const sortFieldOptions = fieldOptions.filter(option => selectedFields.includes(option.value));
+  // Define overview table columns dynamically
+  const getOverviewColumns = () => {
+    const fieldTypes = getFieldTypes();
+    
+    const baseColumns = [
+      {
+        title: 'S.No.',
+        dataIndex: 'S.No.',
+        key: 'S.No.',
+        width: 80,
+        sorter: (a, b) => a['S.No.'] - b['S.No.'],
+      },
+      {
+        title: 'Bar Code',
+        dataIndex: 'Bar Code',
+        key: 'Bar Code',
+        sorter: (a, b) => a['Bar Code'].localeCompare(b['Bar Code']),
+        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+          <div style={{ padding: 8 }}>
+            <Input
+              placeholder="Search Bar Code"
+              value={selectedKeys[0]}
+              onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+              onPressEnter={() => confirm()}
+              style={{ marginBottom: 8, display: 'block', width: 188 }}
+            />
+            <Space>
+              <Button type="primary" onClick={() => confirm()} size="small" style={{ width: 90 }}>
+                Search
+              </Button>
+              <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+                Reset
+              </Button>
+            </Space>
+          </div>
+        ),
+        onFilter: (value, record) =>
+          record['Bar Code']?.toString().toLowerCase().includes(value.toLowerCase()),
+        filterIcon: filtered => (
+          <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
+        ),
+      },
+      {
+        title: 'Unmatched',
+        dataIndex: 'Unmatched',
+        key: 'Unmatched',
+        width: 120,
+        sorter: (a, b) => a['Unmatched'] - b['Unmatched'],
+        render: (value) => <Tag color="red">{value}</Tag>
+      }
+    ];
+
+    // Add dynamic columns for each field type
+    const fieldTypeColumns = fieldTypes.map(fieldType => ({
+      title: fieldType,
+      dataIndex: fieldType,
+      key: fieldType,
+      width: 120,
+      sorter: (a, b) => (a[fieldType] || 0) - (b[fieldType] || 0),
+      render: (value) => value ? <Tag color="orange">{value}</Tag> : <Tag color="green">0</Tag>
+    }));
+
+    return [...baseColumns, ...fieldTypeColumns];
+  };
+
+  // Define detail table columns for expanded rows
+  const detailColumns = [
+    {
+      title: 'Flag ID',
+      dataIndex: 'Flag ID',
+      key: 'Flag ID',
+      width: 100,
+    },
+    {
+      title: 'Field',
+      dataIndex: 'Field',
+      key: 'Field',
+      width: 120,
+    },
+    {
+      title: 'Question Number',
+      dataIndex: 'Question Number',
+      key: 'Question Number',
+      width: 120,
+      render: (value, record) => {
+        if (record.Field === 'Answers' && value) {
+          return <Tag color="blue">Q{value}</Tag>;
+        }
+        return value || '-';
+      },
+    },
+    {
+      title: 'Scanned Value',
+      dataIndex: 'Scanned Value',
+      key: 'Scanned Value',
+      width: 120,
+      render: (value, record) => {
+        if (record.Field === 'Answers') {
+          return <Tag color="green">{value}</Tag>;
+        }
+        return <span style={{ fontFamily: 'monospace' }}>{value}</span>;
+      },
+    },
+    {
+      title: 'Extracted Value',
+      dataIndex: 'Extracted Value',
+      key: 'Extracted Value',
+      width: 120,
+      render: (value, record) => {
+        if (record.Field === 'Answers' && value) {
+          // Check if scanned and extracted values are different
+          const isDifferent = record['Scanned Value'] !== value;
+          return <Tag color={isDifferent ? "red" : "orange"}>{value}</Tag>;
+        }
+        return value || '-';
+      },
+    },
+    {
+      title: 'Remarks',
+      dataIndex: 'Remarks',
+      key: 'Remarks',
+      ellipsis: true,
+    },
+    {
+      title: 'Is Corrected',
+      dataIndex: 'Is Corrected',
+      key: 'Is Corrected',
+      width: 120,
+      render: (value) => (
+        <Tag 
+          icon={value === 'Yes' ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />}
+          color={value === 'Yes' ? 'success' : 'error'}
+        >
+          {value}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Updated By',
+      dataIndex: 'Updated By',
+      key: 'Updated By',
+      width: 120,
+    }
+  ];
+
+  // Expandable row render function
+  const expandedRowRender = (record) => {
+    const barCodeFlags = detailData.filter(detail => detail['Bar Code'] === record['Bar Code']);
+    
+    return (
+      <Table
+        columns={detailColumns}
+        dataSource={barCodeFlags}
+        pagination={false}
+        size="small"
+        style={{ margin: '0 48px' }}
+      />
+    );
+  };
 
   const handleTableChange = (pagination, filters, sorter) => {
     setCurrentPage(pagination.current);
     setPageSize(pagination.pageSize);
-
-    // You can add additional handling for filters and sorter if needed
-    console.log('Filters:', filters);
-    console.log('Sorter:', sorter);
   };
 
   // Dropdown menu with styled icons
@@ -357,12 +505,12 @@ const ComparisonReport = () => {
       {
         key: '1',
         icon: <FilePdfOutlined style={{ fontSize: '18px', color: '#ff4d4f' }} />,
-        label: <span onClick={handlePDFAction} style={{ color: '#262626', fontWeight: 500 }}>Download PDF</span>
+        label: <span onClick={handlePDFAction} style={{ color: '#262626', fontWeight: 500 }}>Download PDF (Overview)</span>
       },
       {
         key: '2',
         icon: <FileExcelOutlined style={{ fontSize: '18px', color: '#52c41a' }} />,
-        label: <span onClick={handleExcelAction} style={{ color: '#262626', fontWeight: 500 }}>Download Excel</span>
+        label: <span onClick={handleExcelAction} style={{ color: '#262626', fontWeight: 500 }}>Download Excel (2 Sheets)</span>
       }
     ]
   };
@@ -374,7 +522,7 @@ const ComparisonReport = () => {
           title={
             <span style={{ display: 'flex', alignItems: 'center' }}>
               <FlagOutlined style={{ marginRight: '8px', color: '#1890ff', fontSize: '20px' }} />
-              Flag Report
+              Comparison Report
             </span>
           }
           style={{
@@ -387,7 +535,7 @@ const ComparisonReport = () => {
           <Row gutter={[24, 16]} style={{ marginBottom: 16 }}>
             <Col xs={24} md={12}>
               <Paragraph type="secondary" style={{ marginBottom: 8 }}>
-                Generate and view flag reports for project: <Text strong>{projectName}</Text>
+                Generate and view comparison reports for project: <Text strong>{projectName}</Text>
               </Paragraph>
               <Input
                 value={projectName}
@@ -404,19 +552,9 @@ const ComparisonReport = () => {
                   onClick={fetchFlagData}
                   loading={loading}
                 >
-                  Fetch Flag Data
+                  Fetch Comparison Data
                 </Button>
-                {!reportGenerated ? (
-                  <Button
-                    type="primary"
-                    icon={<EyeOutlined />}
-                    onClick={handleShowData}
-                    loading={loading}
-                    disabled={flagData.length === 0}
-                  >
-                    Show Data
-                  </Button>
-                ) : (
+                {reportGenerated && (
                   <Button
                     type="default"
                     icon={<EyeInvisibleOutlined />}
@@ -438,48 +576,33 @@ const ComparisonReport = () => {
             </Col>
           </Row>
 
-          <Divider style={{ margin: '16px 0' }} />
-
-          {flagData.length > 0 && (
-            <Row gutter={[24, 24]} style={{ marginBottom: 16 }}>
-              <Col xs={24} lg={12}>
-                <Text strong style={{ display: 'block', marginBottom: '12px', color: '#4b5563' }}>
-                  <EyeOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
-                  Select Fields to Display
-                </Text>
-                <Select
-                  mode="multiple"
-                  style={{ width: '100%' }}
-                  placeholder="Select fields"
-                  value={selectedFields}
-                  onChange={setSelectedFields}
-                  options={fieldOptions}
-                  disabled={loading}
-                  maxTagCount={5}
-                  showSearch
-                  allowClear
+          {reportGenerated && (
+            <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+              <Col xs={24} sm={8}>
+                <Statistic
+                  title="Total Barcodes"
+                  value={overviewData.length}
+                  prefix={<DatabaseOutlined style={{ color: '#1890ff' }} />}
                 />
               </Col>
-              <Col xs={24} lg={12}>
-                <Text strong style={{ display: 'block', marginBottom: '12px', color: '#4b5563' }}>
-                  <OrderedListOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
-                  Sort Fields
-                </Text>
-                <Select
-                  mode="multiple"
-                  style={{ width: '100%' }}
-                  placeholder="Sort fields"
-                  value={sortedFields}
-                  onChange={setSortedFields}
-                  options={sortFieldOptions}
-                  disabled={loading}
-                  maxTagCount={5}
-                  showSearch
-                  allowClear
+              <Col xs={24} sm={8}>
+                <Statistic
+                  title="Total Unmatched"
+                  value={overviewData.reduce((sum, item) => sum + (item['Unmatched'] || 0), 0)}
+                  prefix={<FlagOutlined style={{ color: '#ff4d4f' }} />}
+                />
+              </Col>
+              <Col xs={24} sm={8}>
+                <Statistic
+                  title="Barcodes with Issues"
+                  value={overviewData.filter(item => item['Unmatched'] > 0).length}
+                  prefix={<ExclamationCircleOutlined style={{ color: '#faad14' }} />}
                 />
               </Col>
             </Row>
           )}
+
+          <Divider style={{ margin: '16px 0' }} />
 
 
 
@@ -488,7 +611,7 @@ const ComparisonReport = () => {
               title={
                 <span style={{ display: 'flex', alignItems: 'center' }}>
                   <DatabaseOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
-                  Flag Data ({data.length} records)
+                  Comparison Report Overview ({overviewData.length} barcodes)
                 </span>
               }
               style={{
@@ -509,12 +632,16 @@ const ComparisonReport = () => {
               }
             >
               <Table
-                dataSource={data}
-                columns={columns}
+                dataSource={overviewData}
+                columns={getOverviewColumns()}
+                expandable={{
+                  expandedRowRender,
+                  rowExpandable: (record) => record['Unmatched'] > 0,
+                }}
                 pagination={{
                   current: currentPage,
                   pageSize: pageSize,
-                  total: data.length,
+                  total: overviewData.length,
                   showSizeChanger: true,
                   showQuickJumper: true,
                   showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`
@@ -535,5 +662,3 @@ const ComparisonReport = () => {
 };
 
 export default ComparisonReport;
-
-
