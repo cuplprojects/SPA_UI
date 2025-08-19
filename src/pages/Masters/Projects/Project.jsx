@@ -529,7 +529,7 @@ function Project() {
             },
           }}
           bordered
-          dataSource={paginatedData}
+          dataSource={filteredData}
           columns={mergedColumns}
           rowClassName="editable-row"
           pagination={{

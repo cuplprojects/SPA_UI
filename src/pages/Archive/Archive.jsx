@@ -171,7 +171,7 @@ function Archive() {
       </div>
       <Table
         bordered
-        dataSource={paginatedData}
+        dataSource={filteredData}
         columns={columns}
         rowKey="key"
         pagination={{

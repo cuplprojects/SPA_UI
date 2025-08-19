@@ -347,7 +347,7 @@ const Field = () => {
             },
           }}
           bordered
-          dataSource={paginatedData}
+          dataSource={filteredData}
           columns={mergedColumns}
           rowClassName="editable-row"
           pagination={{
