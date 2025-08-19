@@ -44,6 +44,8 @@ const GeneralTab = () => {
   const [deletingLoading, setDeletingLoading] = useState(false); // State for deleting loading
   const database = useDatabase();
   const token = useUserToken();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const fetchUsersAndRoles = async () => {
     try {
@@ -98,6 +100,16 @@ const GeneralTab = () => {
     const { name, value } = e.target;
     setUserData((prev) => ({ ...prev, [name]: value }));
   };
+
+  const handlePaginationChange = (page, pageSize) => {
+    setCurrentPage(page);
+    setPageSize(pageSize);
+  };
+
+  const paginatedData = filteredUserList.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   const handleRoleChange = (value) => {
     const selectedRole = roles.find((role) => role.roleId === value);
@@ -179,6 +191,13 @@ const GeneralTab = () => {
   const showDeleteConfirm = (userId) => {
     setUserIdToDelete(userId);
     setDeleteModalVisible(true);
+  };
+
+    const handleChanges = (pagination, filters, sorter) => {
+    setSortedInfo({
+      order: sorter.order,
+      columnKey: sorter.field,
+    });
   };
 
   const handleDelete = async () => {
@@ -342,6 +361,14 @@ const GeneralTab = () => {
         rowKey="userId"
         style={{ marginTop: 16 }}
         bordered
+        pagination={{
+          current: currentPage,
+          pageSize: pageSize,
+          onChange: handlePaginationChange, // Handle page change
+          showSizeChanger: true,
+          pageSizeOptions: ['5', '10', '20', '50'],
+        }}
+        onChange={handleChanges}
       />
       <Modal
         title="Delete User"
