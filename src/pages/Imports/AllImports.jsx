@@ -41,7 +41,7 @@ const Import = () => {
     if (file && activetab === 'OMRImages') {
       console.log('Files uploaded:', e.target.files);
       setSelectedFile(file);
-    } else if (file && ['scanned','extracted', 'registration', 'absentee'].includes(activetab)) {
+    } else if (file && ['scanned', 'extracted', 'registration', 'absentee'].includes(activetab)) {
       if (
         (activetab === 'scanned' || activetab === 'extracted') &&
         (file.type === 'text/csv' || file.type === 'application/dat')
@@ -417,6 +417,8 @@ const Import = () => {
 
   console.log(totalQues);
 
+  const CHUNK_SIZE = 1000; // rows per batch
+
   const handleScannedUpload = async () => {
     if (!totalQues || totalQues <= 0) {
       notification.error({
@@ -424,29 +426,38 @@ const Import = () => {
         description: 'You must upload the response configuration first.',
         duration: 10,
       });
-      return; // Prevent further execution if totalQues is not set
+      return;
     }
-    if (selectedFile) {
-      setLoading(true);
-      const reader = new FileReader();
-      reader.onload = async (event) => {
+
+    if (!selectedFile) {
+      notification.warning({
+        message: 'No file selected!',
+        duration: 3,
+      });
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    const reader = new FileReader();
+
+    reader.onload = async (event) => {
+      try {
         const content = event.target.result;
         const rows = content.split('\n').map((row) => row.split(','));
         const headers = rows[0].map((header) => header.trim().replace(/"/g, ''));
-        const mappingObject = {};
 
+        const mappingObject = {};
         headers.forEach((header) => {
           const matchingField = Object.keys(fieldMappings).find(
             (key) => fieldMappings[key] === header,
           );
           if (matchingField) {
             mappingObject[header] = matchingField;
-          } else {
-            console.warn(`No matching field found for header "${header}"`);
           }
         });
 
-        const parsedData = rows.slice(1, -1).map((row) => {
+        const rowDataArray = rows.slice(1, -1).map((row) => {
           const rowData = {};
           row.forEach((value, index) => {
             const cleanedValue = value.replace(/"/g, '');
@@ -460,15 +471,9 @@ const Import = () => {
             const answers = {};
             const ansArray = rowData['Answers'].split('');
             for (let i = 0; i < totalQues; i++) {
-              if (i < ansArray.length) {
-                let answer = ansArray[i];
-                // Trim trailing white spaces
-                answer = answer.replace(/\s+$/, '');
-                // Preserve leading white spaces and wrap in quotes
-                answers[i + 1] = `'${answer}'`;
-              } else {
-                answers[i + 1] = "''";
-              }
+              answers[i + 1] = i < ansArray.length
+                ? `'${ansArray[i].replace(/\s+$/, '')}'`
+                : "''";
             }
             rowData['Answers'] = JSON.stringify(answers).replace(/"/g, '');
           }
@@ -476,61 +481,63 @@ const Import = () => {
           return rowData;
         });
 
-        try {
-          const jsonmappedscanneddata = JSON.stringify(parsedData);
-          const encryptedData = handleEncrypt(jsonmappedscanneddata);
-          const encryptedscanneddatatosend = {
-            cyphertextt: encryptedData,
-          };
-          const response = await axios.post(`${apiurl}/OMRData/uploadcsv`, encryptedscanneddatatosend, {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            params: {
-              WhichDatabase: database,
-              ProjectId: ProjectId,
-            },
-          });
-          const contentType = response.headers.get('content-type');
+        const totalChunks = Math.ceil(rowDataArray.length / CHUNK_SIZE);
 
-          if (contentType && contentType.indexOf('application/json') !== -1) {
-            const data = response.data;
+        for (let i = 0; i < totalChunks; i++) {
+          const chunk = rowDataArray.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+          const encryptedChunk = handleEncrypt(JSON.stringify(chunk));
+          const payload = { cyphertextt: encryptedChunk };
+
+          try {
+            await axios.post(`${apiurl}/OMRData/uploadcsv`, payload, {
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              params: {
+                WhichDatabase: database,
+                ProjectId: ProjectId,
+              },
+            });
+
             notification.success({
-              message: 'Upload successful!',
-              duration: 3
-            })
-          } else {
-            notification.success({
-              message: 'Upload successful!',
-              duration: 3
-            })
+              message: `Uploaded chunk ${i + 1} of ${totalChunks}`,
+              duration: 1,
+            });
+          } catch (err) {
+            console.error(`Error uploading chunk ${i + 1}:`, err);
+            notification.error({
+              message: `Failed to upload chunk ${i + 1}`,
+              duration: 5,
+            });
           }
-          fetchCounts();
-        } catch (error) {
-          console.error('Error uploading data:', error);
-          notification.error({
-            message: 'Error uploading data!',
-            duration: 3
-          })
-        } finally {
-          setLoading(false);
-          setSelectedFile(null); // Reset selected file after upload
-          setFileList([]);
         }
-      };
-      reader.readAsText(selectedFile);
-    } else {
-      console.error('No file selected.');
-      notification.warning({
-        message: 'No file selected!',
-        duration: 3
-      })
-      setLoading(false);
-    }
+
+        notification.success({
+          message: 'All data uploaded successfully!',
+          duration: 5,
+        });
+
+        fetchCounts();
+      } catch (error) {
+        console.error('Error parsing/uploading file:', error);
+        notification.error({
+          message: 'Upload failed due to a parsing error.',
+          duration: 5,
+        });
+      } finally {
+        setLoading(false);
+        setSelectedFile(null);
+        setFileList([]);
+      }
+    };
+
+    reader.readAsText(selectedFile);
   };
 
-   const handleExtractedUpload = async () => {
+
+
+  const handleExtractedUpload = async () => {
     if (!totalQues || totalQues <= 0) {
       notification.error({
         message: 'Response Configuration Missing',
@@ -539,10 +546,18 @@ const Import = () => {
       });
       return; // Prevent further execution if totalQues is not set
     }
-    if (selectedFile) {
-      setLoading(true);
-      const reader = new FileReader();
-      reader.onload = async (event) => {
+    if (!selectedFile) {
+      notification.warning({
+        message: 'No file selected!',
+        duration: 3,
+      });
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
         const content = event.target.result;
         const rows = content.split('\n').map((row) => row.split(','));
         const headers = rows[0].map((header) => header.trim().replace(/"/g, ''));
@@ -554,8 +569,6 @@ const Import = () => {
           );
           if (matchingField) {
             mappingObject[header] = matchingField;
-          } else {
-            console.warn(`No matching field found for header "${header}"`);
           }
         });
 
@@ -588,61 +601,55 @@ const Import = () => {
 
           return rowData;
         });
+        const totalChunks = Math.ceil(rowDataArray.length / CHUNK_SIZE);
 
-        try {
-          const jsonmappedscanneddata = JSON.stringify(parsedData);
-          const encryptedData = handleEncrypt(jsonmappedscanneddata);
-          const encryptedscanneddatatosend = {
-            cyphertextt: encryptedData,
-          };
-          const response = await axios.post(`${apiurl}/Extracted/uploadcsv`, encryptedscanneddatatosend, {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            params: {
-              WhichDatabase: database,
-              ProjectId: ProjectId,
-            },
-          });
-          const contentType = response.headers.get('content-type');
-
-          if (contentType && contentType.indexOf('application/json') !== -1) {
-            const data = response.data;
+        for (let i = 0; i < totalChunks; i++) {
+          const chunk = rowDataArray.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+          const encryptedChunk = handleEncrypt(JSON.stringify(chunk));
+          const payload = { cyphertextt: encryptedChunk };
+          try {
+            await axios.post(`${apiurl}/Extracted/uploadcsv`, payload, {
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              params: {
+                WhichDatabase: database,
+                ProjectId: ProjectId,
+              },
+            });
             notification.success({
-              message: 'Upload successful!',
-              duration: 3
-            })
-          } else {
-            // const text = await response.text();
-            notification.success({
-              message: 'Upload successful!',
-              duration: 3
-            })
+              message: `Uploaded chunk ${i + 1} of ${totalChunks}`,
+              duration: 1,
+            });
           }
-          fetchCounts();
-        } catch (error) {
-          console.error('Error uploading data:', error);
-          notification.error({
-            message: 'Error uploading data!',
-            duration: 3
-          })
-        } finally {
-          setLoading(false);
-          setSelectedFile(null); // Reset selected file after upload
+          catch (err) {
+            console.error(`Error uploading chunk ${i + 1}:`, err);
+            notification.error({
+              message: `Failed to upload chunk ${i + 1}`,
+              duration: 5,
+            });
+          }
         }
-      };
-      reader.readAsText(selectedFile);
-      setSelectedFile(null)
-    } else {
-      console.error('No file selected.');
-      notification.warning({
-        message: 'No file selected!',
-        duration: 3
-      })
-      setLoading(false);
-    }
-    setSelectedFile(null);
+        notification.success({
+          message: 'Upload successful!',
+          duration: 5
+        })
+
+        fetchCounts();
+      } catch (error) {
+        console.error('Error uploading data:', error);
+        notification.error({
+          message: 'Error uploading data!',
+          duration: 3
+        })
+      } finally {
+        setLoading(false);
+        setSelectedFile(null); // Reset selected file after upload
+        setFileList([]);
+      }
+    };
+    reader.readAsText(selectedFile);
   };
 
   const handleRegistrationMappingChange = (e, field) => {
@@ -802,8 +809,8 @@ const Import = () => {
             <div className="board-pq">
               <div className="">
                 <ul className="d-flex align-items-center justify-content-around my-4" id="myTab">
-                  <Badge count={ dataCounts?.omrImages} overflowCount = {Infinity} offset={[-10, 10]} size="large" >
-                    
+                  <Badge count={dataCounts?.omrImages} overflowCount={Infinity} offset={[-10, 10]} size="large" >
+
                     <li
                       style={{ border: `2px solid ${colorPrimary} ` }}
                       className="tabcircle"
@@ -820,65 +827,65 @@ const Import = () => {
                     </li>
                   </Badge >
                   <span className="tabline"></span>
-                  <Badge offset={[-10, 10]} size="large" count={ dataCounts?.scannedData} overflowCount = {Infinity} >
-                  <li
-                    style={{ border: `2px solid ${colorPrimary}` }}
-                    className="tabcircle"
-                    onClick={() => {
-                      setActivetab('scanned');
-                      setSelectedFile(null);
+                  <Badge offset={[-10, 10]} size="large" count={dataCounts?.scannedData} overflowCount={Infinity} >
+                    <li
+                      style={{ border: `2px solid ${colorPrimary}` }}
+                      className="tabcircle"
+                      onClick={() => {
+                        setActivetab('scanned');
+                        setSelectedFile(null);
 
-                      setHeaders([]);
-                    }}
-                  >
-                    <a data-toggle="tab" title="Scanned Data">
-                      <span className="round-tabs-pq two-pq">
-                        <i className="fa-solid fa-file-csv" style={{ color: colorPrimary }}></i>
-                      </span>
-                    </a>
-                  </li>
+                        setHeaders([]);
+                      }}
+                    >
+                      <a data-toggle="tab" title="Scanned Data">
+                        <span className="round-tabs-pq two-pq">
+                          <i className="fa-solid fa-file-csv" style={{ color: colorPrimary }}></i>
+                        </span>
+                      </a>
+                    </li>
                   </Badge>
                   <span className="tabline"></span>
-                  <Badge offset={[-10, 10]} size="large" count={ dataCounts?.extractedOMRData} overflowCount = {Infinity} >
-                  <li
-                    style={{ border: `2px solid ${colorPrimary}` }}
-                    className="tabcircle"
-                    onClick={() => {
-                      setActivetab('extracted');
-                      setSelectedFile(null);
-                      setHeaders([]);
-                    }}
-                  >
-                    <a data-toggle="tab" title="Extracted Data">
-                      <span className="round-tabs-pq two-pq">
-                        <i className="fa-solid fa-file-csv" style={{ color: colorPrimary }}></i>
-                      </span>
-                    </a>
-                  </li>
+                  <Badge offset={[-10, 10]} size="large" count={dataCounts?.extractedOMRData} overflowCount={Infinity} >
+                    <li
+                      style={{ border: `2px solid ${colorPrimary}` }}
+                      className="tabcircle"
+                      onClick={() => {
+                        setActivetab('extracted');
+                        setSelectedFile(null);
+                        setHeaders([]);
+                      }}
+                    >
+                      <a data-toggle="tab" title="Extracted Data">
+                        <span className="round-tabs-pq two-pq">
+                          <i className="fa-solid fa-file-csv" style={{ color: colorPrimary }}></i>
+                        </span>
+                      </a>
+                    </li>
                   </Badge>
                   <span className="tabline"></span>
-                  <Badge offset={[-10, 10]} size="large" count={ dataCounts?.registration} overflowCount = {Infinity}>
-                  <li
-                    style={{ border: `2px solid ${colorPrimary}` }}
-                    className="tabcircle"
-                    onClick={() => {
-                      setActivetab('registration');
-                      setSelectedFile(null);
-                      setHeaders([]);
+                  <Badge offset={[-10, 10]} size="large" count={dataCounts?.registration} overflowCount={Infinity}>
+                    <li
+                      style={{ border: `2px solid ${colorPrimary}` }}
+                      className="tabcircle"
+                      onClick={() => {
+                        setActivetab('registration');
+                        setSelectedFile(null);
+                        setHeaders([]);
 
-                    }}
-                  >
-                    <a data-toggle="tab" title="Registration Data">
+                      }}
+                    >
+                      <a data-toggle="tab" title="Registration Data">
 
-                      <span className="round-tabs-pq three-pq">
-                        <i className="fa-regular fa-id-card " style={{ color: colorPrimary }}></i>
+                        <span className="round-tabs-pq three-pq">
+                          <i className="fa-regular fa-id-card " style={{ color: colorPrimary }}></i>
 
-                      </span>
-                    </a>
-                  </li>
+                        </span>
+                      </a>
+                    </li>
                   </Badge>
                   <span className="tabline"></span>
-                  <Badge offset={[-10, 10]} size="large" count={ dataCounts?.absenteesUpload} overflowCount = {Infinity}>
+                  <Badge offset={[-10, 10]} size="large" count={dataCounts?.absenteesUpload} overflowCount={Infinity}>
                     <li
                       style={{ border: `2px solid ${colorPrimary}` }}
                       className="tabcircle"
@@ -897,7 +904,7 @@ const Import = () => {
                       </a>
 
                     </li>
-                    </Badge>
+                  </Badge>
                 </ul>
               </div>
               <div className="tab-content-pq">
@@ -914,9 +921,9 @@ const Import = () => {
                     fieldMappings={fieldMappings}
                     handleFieldMappingChange={handleFieldMappingChange}
                     scannedCount={dataCounts?.scannedData}
-                    fileList = {fileList}
-                    setFileList = {setFileList}
-                    setSelectedFile= {setSelectedFile}
+                    fileList={fileList}
+                    setFileList={setFileList}
+                    setSelectedFile={setSelectedFile}
                   />
                 )}
                 {activetab === 'extracted' && (
@@ -930,9 +937,9 @@ const Import = () => {
                     fieldMappings={fieldMappings}
                     handleFieldMappingChange={handleFieldMappingChange}
                     extractedCount={dataCounts?.extractedOMRData}
-                    fileList = {fileList}
-                    setFileList = {setFileList}
-                    setSelectedFile= {setSelectedFile}
+                    fileList={fileList}
+                    setFileList={setFileList}
+                    setSelectedFile={setSelectedFile}
                   />
                 )}
                 {activetab === 'registration' && (
@@ -946,9 +953,9 @@ const Import = () => {
                     handleRegistrationMappingChange={handleRegistrationMappingChange}
                     loading={loading}
                     registrationCount={dataCounts?.registration}
-                    fileList = {fileList}
-                    setFileList = {setFileList}
-                    setSelectedFile= {setSelectedFile}
+                    fileList={fileList}
+                    setFileList={setFileList}
+                    setSelectedFile={setSelectedFile}
                   />
                 )}
                 {activetab === 'absentee' && (
@@ -962,9 +969,9 @@ const Import = () => {
                     handleMappingChange={handleMappingChange}
                     loading={loading}
                     absenteeCount={dataCounts?.absenteesUpload}
-                    fileList = {fileList}
-                    setFileList = {setFileList}
-                    setSelectedFile= {setSelectedFile}
+                    fileList={fileList}
+                    setFileList={setFileList}
+                    setSelectedFile={setSelectedFile}
                   />
                 )}
                 <div className="clearfix-pq"></div>
