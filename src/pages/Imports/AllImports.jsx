@@ -499,11 +499,6 @@ const Import = () => {
                 ProjectId: ProjectId,
               },
             });
-
-            notification.success({
-              message: `Uploaded chunk ${i + 1} of ${totalChunks}`,
-              duration: 1,
-            });
           } catch (err) {
             console.error(`Error uploading chunk ${i + 1}:`, err);
             notification.error({
@@ -617,10 +612,6 @@ const Import = () => {
                 WhichDatabase: database,
                 ProjectId: ProjectId,
               },
-            });
-            notification.success({
-              message: `Uploaded chunk ${i + 1} of ${totalChunks}`,
-              duration: 1,
             });
           }
           catch (err) {
