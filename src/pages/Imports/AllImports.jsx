@@ -596,10 +596,10 @@ const Import = () => {
 
           return rowData;
         });
-        const totalChunks = Math.ceil(rowDataArray.length / CHUNK_SIZE);
+        const totalChunks = Math.ceil(parsedData.length / CHUNK_SIZE);
 
         for (let i = 0; i < totalChunks; i++) {
-          const chunk = rowDataArray.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+          const chunk = parsedData.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
           const encryptedChunk = handleEncrypt(JSON.stringify(chunk));
           const payload = { cyphertextt: encryptedChunk };
           try {
