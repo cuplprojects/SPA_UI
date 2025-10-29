@@ -499,11 +499,6 @@ const Import = () => {
                 ProjectId: ProjectId,
               },
             });
-
-            notification.success({
-              message: `Uploaded chunk ${i + 1} of ${totalChunks}`,
-              duration: 1,
-            });
           } catch (err) {
             console.error(`Error uploading chunk ${i + 1}:`, err);
             notification.error({
@@ -601,10 +596,10 @@ const Import = () => {
 
           return rowData;
         });
-        const totalChunks = Math.ceil(rowDataArray.length / CHUNK_SIZE);
+        const totalChunks = Math.ceil(parsedData.length / CHUNK_SIZE);
 
         for (let i = 0; i < totalChunks; i++) {
-          const chunk = rowDataArray.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+          const chunk = parsedData.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
           const encryptedChunk = handleEncrypt(JSON.stringify(chunk));
           const payload = { cyphertextt: encryptedChunk };
           try {
@@ -617,10 +612,6 @@ const Import = () => {
                 WhichDatabase: database,
                 ProjectId: ProjectId,
               },
-            });
-            notification.success({
-              message: `Uploaded chunk ${i + 1} of ${totalChunks}`,
-              duration: 1,
             });
           }
           catch (err) {
